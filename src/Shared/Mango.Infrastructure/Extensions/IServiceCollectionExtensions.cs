@@ -1,5 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using FluentValidation;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using System.Reflection;
 
 namespace Mango.Infrastructure.Extensions;
 
@@ -30,6 +32,24 @@ public static class IServiceCollectionExtensions
         services.AddScoped<IDbFacadeResolver>(sp => sp.GetRequiredService<TDbContext>());
 
         doMoreActions?.Invoke(services);
+
+        return services;
+    }
+
+    public static IServiceCollection AddValidatorsFromAssembly(this IServiceCollection services, Assembly assembly)
+    {
+        foreach (Type item in from t in assembly.GetTypes()
+                              where t.IsClass 
+                                  && !t.IsAbstract 
+                                  && t.BaseType != null
+                                  && t.BaseType.IsGenericType
+                                  && t.BaseType.GetGenericTypeDefinition() == typeof(AbstractValidator<>)
+                              select t)
+        {
+            Type type = item.BaseType!.GetGenericArguments()[0];
+            Type serviceType = typeof(IValidator<>).MakeGenericType(type);
+            services.AddScoped(serviceType, item);
+        }
 
         return services;
     }

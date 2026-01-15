@@ -11,12 +11,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.AppHost"/>
+    <PackageReference Include="Aspire.Hosting.AppHost" />
     <PackageReference Include="Aspire.Hosting.PostgreSQL" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Services\Mango.Services.Products\Mango.Services.Products\Mango.Services.Products.csproj" />
+    <ProjectReference Include="..\Services\Coupons.API\Coupons.API.csproj" />
+    <ProjectReference Include="..\Services\Products.API\Products.API.csproj" />
   </ItemGroup>
 
 </Project>
