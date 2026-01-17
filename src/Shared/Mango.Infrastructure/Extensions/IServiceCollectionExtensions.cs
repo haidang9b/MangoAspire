@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.OpenApi;
 using System.Reflection;
 
 namespace Mango.Infrastructure.Extensions;
@@ -39,8 +40,8 @@ public static class IServiceCollectionExtensions
     public static IServiceCollection AddValidatorsFromAssembly(this IServiceCollection services, Assembly assembly)
     {
         foreach (Type item in from t in assembly.GetTypes()
-                              where t.IsClass 
-                                  && !t.IsAbstract 
+                              where t.IsClass
+                                  && !t.IsAbstract
                                   && t.BaseType != null
                                   && t.BaseType.IsGenericType
                                   && t.BaseType.GetGenericTypeDefinition() == typeof(AbstractValidator<>)
@@ -50,6 +51,22 @@ public static class IServiceCollectionExtensions
             Type serviceType = typeof(IValidator<>).MakeGenericType(type);
             services.AddScoped(serviceType, item);
         }
+
+        return services;
+    }
+
+    public static IServiceCollection AddDocumentApi(this IServiceCollection services, string title, string version, string description)
+    {
+        services.AddEndpointsApiExplorer();
+        services.AddSwaggerGen(options =>
+        {
+            options.SwaggerDoc(title, new OpenApiInfo
+            {
+                Title = title,
+                Version = version,
+                Description = description
+            });
+        });
 
         return services;
     }

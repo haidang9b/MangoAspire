@@ -43,7 +43,8 @@ public static class IServiceCollectionExtensions
         services.AddExceptionHandler<GlobalExceptionHandler>();
         services.AddProblemDetails();
 
-        return services;
+        services.AddDocumentApi("Products API", "v1", "Products API");
 
+        return services;
     }
 }

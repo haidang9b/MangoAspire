@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Services\Coupons.API\Coupons.API.csproj" />
+    <ProjectReference Include="..\Services\Identity\Identity.API.csproj" />
     <ProjectReference Include="..\Services\Products.API\Products.API.csproj" />
   </ItemGroup>
 

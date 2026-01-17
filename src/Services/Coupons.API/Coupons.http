@@ -1,6 +1,10 @@
-@Coupons_HostAddress = http://localhost:5145
+@Coupons_HostAddress = https://localhost:7002
 
 GET {{Coupons_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###
+
+
+GET {{Coupons_HostAddress}}/api/coupons/10OFF
+Accept: application/json

@@ -1,0 +1,22 @@
+﻿using Coupons.API.Features.Coupons;
+using MediatR;
+
+namespace Coupons.API.Routes;
+
+public static class CouponEndponts
+{
+    public static WebApplication MapCouponEndpoints(this WebApplication app)
+    {
+        var routeGroupBuilder = app.MapGroup("/api/coupons");
+
+        routeGroupBuilder.MapGet("/{code}", async (string code, ISender sender) =>
+        {
+            return await sender.Send(new GetCoupon.Query
+            {
+                Code = code
+            });
+        });
+
+        return app;
+    }
+}

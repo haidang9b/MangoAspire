@@ -8,7 +8,6 @@
 
   <ItemGroup>
     <PackageReference Include="Aspire.Npgsql" />
-    <PackageReference Include="FluentValidation" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools">
