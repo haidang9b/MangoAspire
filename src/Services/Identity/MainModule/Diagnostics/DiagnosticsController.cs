@@ -2,7 +2,6 @@
 // See LICENSE in the project root for license information.
 
 
-using Identity.API.MainModule;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

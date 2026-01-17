@@ -1,5 +1,4 @@
-﻿using Identity.API.Data;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
 namespace Identity.API.Data;
