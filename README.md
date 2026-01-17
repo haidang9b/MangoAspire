@@ -62,7 +62,7 @@ MangoAspire/
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/your-username/MangoAspire.git
+   git clone https://github.com/haidang9b/MangoAspire.git
    cd MangoAspire
    ```
 
