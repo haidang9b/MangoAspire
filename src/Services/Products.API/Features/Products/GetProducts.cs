@@ -14,15 +14,17 @@ public class GetProducts
         {
             public async Task<ResultModel<IEnumerable<ProductDto>>> Handle(Query request, CancellationToken cancellationToken)
             {
-                var data = await dbContext.Products.Select(x => new ProductDto
-                {
-                    Id = x.Id,
-                    Name = x.Name,
-                    Price = x.Price,
-                    CategoryName = x.CategoryName,
-                    Description = x.Description,
-                    ImageUrl = x.ImageUrl
-                }).ToListAsync();
+                var data = await dbContext.Products
+                    .AsNoTracking()
+                    .Select(x => new ProductDto
+                    {
+                        Id = x.Id,
+                        Name = x.Name,
+                        Price = x.Price,
+                        CategoryName = x.CategoryName,
+                        Description = x.Description,
+                        ImageUrl = x.ImageUrl
+                    }).ToListAsync();
 
                 return ResultModel<IEnumerable<ProductDto>>.Create(data);
             }

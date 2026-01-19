@@ -3,15 +3,11 @@ using System.Text.Json.Serialization.Metadata;
 
 namespace EventBus.Abstractions;
 
-public class EventBusSubscriptionInfo
+public class EventBusConsumerInfo
 {
-    public Dictionary<(string TopicName, string SubscriptionName), Type> SubscriptionTypes { get; } = [];
+    public Dictionary<string, Type> EventTypes { get; } = [];
 
-    public Dictionary<string, Type> QueueTypes { get; } = [];
-
-    public Dictionary<string, Type> ConsumerTypes { get; } = [];
-
-    public Dictionary<string, Type> TopicTypes { get; } = [];
+    public required string QueueName { get; init; }
 
     public JsonSerializerOptions JsonSerializerOptions { get; } = new(DefaultSerializerOptions);
 

@@ -6,7 +6,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Identity.API.Extensions;
 
-
 public static class WebApplicationBuilderExtensions
 {
     public static WebApplicationBuilder AddIdentityApiDefaults(
