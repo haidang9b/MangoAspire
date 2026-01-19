@@ -18,22 +18,59 @@ public static class EventBusBuilderExtensions
         return eventBusBuilder;
     }
 
-    public static IEventBusBuilder AddSubscription<T, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TH>(this IEventBusBuilder eventBusBuilder)
-        where T : IntegrationEvent
+    public static IEventBusBuilder AddSubscription<T, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TH>(
+        this IEventBusBuilder eventBusBuilder,
+        string topicName,
+        string subscriptionName
+    ) where T : IntegrationEvent
         where TH : class, IIntegrationEventHandler<T>
     {
-        // Use keyed services to register multiple handlers for the same event type
-        // the consumer can use IKeyedServiceProvider.GetKeyedService<IIntegrationEventHandler>(typeof(T)) to get all
-        // handlers for the event type.
-        eventBusBuilder.Services.AddKeyedTransient<IIntegrationEventHandler, TH>(typeof(T));
+        var key = new SubscriptionInfo(topicName, subscriptionName);
+        eventBusBuilder.Services.AddKeyedTransient<IIntegrationEventHandler, TH>((topicName, subscriptionName).ToString());
 
         eventBusBuilder.Services.Configure<EventBusSubscriptionInfo>(o =>
         {
-            // Keep track of all registered event types and their name mapping. We send these event types over the message bus
-            // and we don't want to do Type.GetType, so we keep track of the name mapping here.
+            o.SubscriptionTypes[key] = typeof(T);
+        });
 
-            // This list will also be used to subscribe to events from the underlying message broker implementation.
-            o.EventTypes[typeof(T).Name] = typeof(T);
+        return eventBusBuilder;
+    }
+
+    public static IEventBusBuilder AddConsumer<T, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TH>(
+        this IEventBusBuilder eventBusBuilder,
+        string queueName
+    ) where T : IntegrationEvent
+        where TH : class, IIntegrationEventHandler<T>
+    {
+        var key = new ConsumerInfo(queueName);
+        eventBusBuilder.Services.AddKeyedTransient<IIntegrationEventHandler, TH>(queueName.ToString());
+
+        eventBusBuilder.Services.Configure<EventBusSubscriptionInfo>(o =>
+        {
+            o.ConsumerTypes[queueName] = typeof(T);
+        });
+
+        return eventBusBuilder;
+    }
+
+    public static IEventBusBuilder AddQueue<T>(this IEventBusBuilder eventBusBuilder, string queueName) where T : IntegrationEvent
+    {
+        eventBusBuilder.Services.Configure<EventBusSubscriptionInfo>(o =>
+        {
+            o.QueueTypes[queueName] = typeof(T);
+        });
+
+        return eventBusBuilder;
+    }
+
+    public static IEventBusBuilder AddTopic<T>(
+        this IEventBusBuilder eventBusBuilder,
+        string topicName
+    ) where T : IntegrationEvent
+    {
+        eventBusBuilder.Services.Configure<EventBusSubscriptionInfo>(o =>
+        {
+            o.TopicTypes[topicName] = typeof(T);
         });
 
         return eventBusBuilder;

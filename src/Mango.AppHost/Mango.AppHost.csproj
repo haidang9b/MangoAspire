@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting.AppHost" />
+    <PackageReference Include="Aspire.Hosting.Azure.ServiceBus" />
     <PackageReference Include="Aspire.Hosting.PostgreSQL" />
   </ItemGroup>
 
@@ -19,6 +20,7 @@
     <ProjectReference Include="..\Services\Coupons.API\Coupons.API.csproj" />
     <ProjectReference Include="..\Services\Identity.API\Identity.API.csproj" />
     <ProjectReference Include="..\Services\Products.API\Products.API.csproj" />
+    <ProjectReference Include="..\Services\ShoppingCart.API\ShoppingCart.API.csproj" />
   </ItemGroup>
 
 </Project>
