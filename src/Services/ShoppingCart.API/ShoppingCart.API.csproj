@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Aspire.Azure.Messaging.ServiceBus" />
     <PackageReference Include="Aspire.Npgsql" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
@@ -17,6 +18,7 @@
   </ItemGroup>
   
   <ItemGroup>
+    <ProjectReference Include="..\..\EventBus.ServiceBus\EventBus.ServiceBus.csproj" />
     <ProjectReference Include="..\..\EventBus\EventBus.csproj" />
     <ProjectReference Include="..\..\Shared\Mango.Core\Mango.Core.csproj" />
     <ProjectReference Include="..\..\Shared\Mango.Infrastructure\Mango.Infrastructure.csproj" />

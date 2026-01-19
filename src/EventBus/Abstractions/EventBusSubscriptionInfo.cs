@@ -5,7 +5,7 @@ namespace EventBus.Abstractions;
 
 public class EventBusSubscriptionInfo
 {
-    public Dictionary<(string TopicName, string SubscriptionName), Type> SubscriptionTypes { get; } = [];
+    public Dictionary<SubscriptionInfo, Type> SubscriptionTypes { get; } = [];
 
     public Dictionary<string, Type> QueueTypes { get; } = [];
 
@@ -26,4 +26,16 @@ public class EventBusSubscriptionInfo
         => new DefaultJsonTypeInfoResolver();
 #pragma warning restore IL3050 // Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling.
 #pragma warning restore IL2026
+}
+
+
+public record SubscriptionInfo(string TopicName, string SubscriptionName)
+{
+    public override string ToString() => $"topic:{TopicName}.subscription:{SubscriptionName}";
+}
+
+
+public record ConsumerInfo(string QueueName)
+{
+    public override string ToString() => $"queue:{QueueName}";
 }

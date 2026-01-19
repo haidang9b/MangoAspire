@@ -3,8 +3,10 @@ using Mango.Infrastructure.Behaviors;
 using Mango.Infrastructure.Extensions;
 using Mango.Infrastructure.Interceptors;
 using Microsoft.EntityFrameworkCore;
+using Refit;
 using ShoppingCart.API.Data;
 using ShoppingCart.API.ExceptionHandlers;
+using ShoppingCart.API.Services;
 
 namespace ShoppingCart.API.Extensions;
 
@@ -44,6 +46,8 @@ public static class IServiceCollectionExtensions
         services.AddProblemDetails();
 
         services.AddDocumentApi("ShoppingCart API", "v1", "ShoppingCart API");
+
+        services.AddRefitClient<ICouponsApi>();
 
         return services;
     }

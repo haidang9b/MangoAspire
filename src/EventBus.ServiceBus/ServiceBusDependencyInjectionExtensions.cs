@@ -11,7 +11,7 @@ public static class ServiceBusDependencyInjectionExtensions
     public static IEventBusBuilder AddServiceBusEventBus(this IHostApplicationBuilder builder, string connectionName)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
-        builder.AddServiceBusEventBus(connectionName);
+        builder.AddAzureServiceBusClient(connectionName);
 
         builder.Services.AddOpenTelemetry()
            .WithTracing(tracing =>

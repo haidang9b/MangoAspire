@@ -1,4 +1,4 @@
-var builder = DistributedApplication.CreateBuilder(args);
+﻿var builder = DistributedApplication.CreateBuilder(args);
 
 var postgresPassword = builder.AddParameter("postgres-password", "postgres");
 
@@ -10,10 +10,13 @@ var productdb = postgres.AddDatabase("productdb");
 var orderdb = postgres.AddDatabase("orderdb");
 var coupondb = postgres.AddDatabase("coupondb");
 var identitydb = postgres.AddDatabase("identitydb");
+var shoppingcartdb = postgres.AddDatabase("shoppingcartdb");
 
-
-var serviceBus = builder.AddAzureServiceBus("mango-service-bus")
+var serviceBus = builder.AddAzureServiceBus("mango")
     .RunAsEmulator();
+
+var checkedOutEventTopic = serviceBus
+    .AddServiceBusTopic("checked-out-events");
 
 var identity = builder.AddProject<Projects.Identity_API>("identity-app")
     .WaitFor(identitydb)
@@ -27,6 +30,10 @@ builder.AddProject<Projects.Coupons_API>("coupons-api")
     .WaitFor(coupondb)
     .WithReference(coupondb);
 
-builder.AddProject<Projects.ShoppingCart_API>("shoppingcart-api");
+builder.AddProject<Projects.ShoppingCart_API>("shoppingcart-api")
+    .WaitFor(shoppingcartdb)
+    .WaitFor(serviceBus)
+    .WithReference(shoppingcartdb)
+    .WithReference(serviceBus);
 
 builder.Build().Run();

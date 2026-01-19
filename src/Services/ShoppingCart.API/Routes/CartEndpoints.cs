@@ -7,46 +7,46 @@ public static class CartEndpoints
 {
     public static RouteGroupBuilder MapCartApi(this WebApplication routeGroupBuilder)
     {
-        var group = routeGroupBuilder.MapGroup("/api/cart")
-            .WithTags("Cart");
+        var group = routeGroupBuilder.MapGroup("/api/carts")
+            .WithTags("Carts");
 
-        group.MapGet("/GetCart/{userId}", async (string userId, ISender sender) =>
+        group.MapGet("/{userId}", async (string userId, ISender sender) =>
         {
             var result = await sender.Send(new GetCart.Query { UserId = userId });
             return Results.Ok(result);
         });
 
-        group.MapPost("/AddCart", async (UpsertCart.Command command, ISender sender) =>
+        group.MapPost("/", async (UpsertCart.Command command, ISender sender) =>
         {
             var result = await sender.Send(command);
             return Results.Ok(result);
         });
 
-        group.MapPost("/UpdateCart", async (UpsertCart.Command command, ISender sender) =>
+        group.MapPut("/", async (UpsertCart.Command command, ISender sender) =>
         {
             var result = await sender.Send(command);
             return Results.Ok(result);
         });
 
-        group.MapDelete("/RemoveCart/{cartDetailsId:guid}", async (Guid cartDetailsId, ISender sender) =>
+        group.MapDelete("/item/{cartDetailsId:guid}", async (Guid cartDetailsId, ISender sender) =>
         {
             var result = await sender.Send(new RemoveFromCart.Command { CartDetailsId = cartDetailsId });
             return Results.Ok(result);
         });
 
-        group.MapPost("/ApplyCoupon", async (ApplyCoupon.Command command, ISender sender) =>
+        group.MapPost("/coupon", async (ApplyCoupon.Command command, ISender sender) =>
         {
             var result = await sender.Send(command);
             return Results.Ok(result);
         });
 
-        group.MapPost("/RemoveCoupon", async (RemoveCoupon.Command command, ISender sender) =>
+        group.MapDelete("/coupon/{userId}", async (string userId, ISender sender) =>
         {
-            var result = await sender.Send(command);
+            var result = await sender.Send(new RemoveCoupon.Command { UserId = userId });
             return Results.Ok(result);
         });
 
-        group.MapPost("/Checkout", async (Checkout.Command command, ISender sender) =>
+        group.MapPost("/checkout", async (Checkout.Command command, ISender sender) =>
         {
             var result = await sender.Send(command);
             return Results.Ok(result);

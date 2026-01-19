@@ -25,11 +25,12 @@ public static class EventBusBuilderExtensions
     ) where T : IntegrationEvent
         where TH : class, IIntegrationEventHandler<T>
     {
-        eventBusBuilder.Services.AddKeyedTransient<IIntegrationEventHandler, TH>($"topic:{topicName}_subscription:{subscriptionName}");
+        var key = new SubscriptionInfo(topicName, subscriptionName);
+        eventBusBuilder.Services.AddKeyedTransient<IIntegrationEventHandler, TH>((topicName, subscriptionName).ToString());
 
         eventBusBuilder.Services.Configure<EventBusSubscriptionInfo>(o =>
         {
-            o.SubscriptionTypes[(topicName, subscriptionName)] = typeof(T);
+            o.SubscriptionTypes[key] = typeof(T);
         });
 
         return eventBusBuilder;
@@ -41,7 +42,8 @@ public static class EventBusBuilderExtensions
     ) where T : IntegrationEvent
         where TH : class, IIntegrationEventHandler<T>
     {
-        eventBusBuilder.Services.AddKeyedTransient<IIntegrationEventHandler, TH>($"queue:{queueName}");
+        var key = new ConsumerInfo(queueName);
+        eventBusBuilder.Services.AddKeyedTransient<IIntegrationEventHandler, TH>(queueName.ToString());
 
         eventBusBuilder.Services.Configure<EventBusSubscriptionInfo>(o =>
         {

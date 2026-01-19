@@ -158,11 +158,11 @@ public sealed class ServiceBusEventBus(
                 });
 
             var eventType = subscription.Value;
-            var handlerKey = $"topic:{subscription.Key.TopicName}_subscription:{subscription.Key.SubscriptionName}";
+            var handlerKey = new SubscriptionInfo(subscription.Key.TopicName, subscription.Key.SubscriptionName);
 
             processor.ProcessMessageAsync += async (args) =>
             {
-                await ProcessMessageAsync(args, eventType, handlerKey);
+                await ProcessMessageAsync(args, eventType, handlerKey.ToString());
             };
             processor.ProcessErrorAsync += OnProcessError;
 
@@ -182,10 +182,10 @@ public sealed class ServiceBusEventBus(
             });
 
             var eventType = queue.Value;
-            var handlerKey = $"queue:{queue.Key}";
+            var handlerKey = new ConsumerInfo(queue.Key);
 
             processor.ProcessMessageAsync += async (args) =>
-                await ProcessMessageAsync(args, eventType, handlerKey);
+                await ProcessMessageAsync(args, eventType, handlerKey.ToString());
 
             processor.ProcessErrorAsync += OnProcessError;
 

@@ -23,6 +23,9 @@ This document outines the coding standards to ensures consistency across all mic
 - **Handlers**: Use internal classes for handlers within feature classes.
 - **Commands/Queries**: Use descriptive names like `GetProductById` or `CreateCart`.
 - **Database Tables**: Use plural names (e.g., `Products`, `CartHeaders`).
+- **API Routes**: Follow **RESTful** principles. Expose **resources** (nouns), not actions (verbs). Use **kebab-case** for all route segments.
+  - *Correct*: `GET /api/carts/{userId}`, `POST /api/carts`, `DELETE /api/carts/{cartDetailsId}`
+  - *Incorrect*: `GET /api/cart/get-cart/{userId}`, `POST /api/cart/add-cart`
 - **Dependency Injection**: Use extension methods named `AddApiDefaults()` and `UseApiPipeline()` in `Extensions/` to keep `Program.cs` clean.
 
 ## Error Handling
