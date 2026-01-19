@@ -78,3 +78,57 @@ public static class FeatureEndpoints
     }
 }
 ```
+## Dependency Injection & Middleware Configuration
+
+To keep `Program.cs` clean and consistent across all services, use extension methods to group service registrations and pipeline configuration.
+
+### Extension Patterns
+
+#### 1. `WebApplicationBuilderExtensions.cs`
+Used for high-level builder configurations like Service Defaults, Data Sources, and service groups.
+```csharp
+public static class WebApplicationBuilderExtensions
+{
+    public static WebApplicationBuilder AddApiDefaults(this WebApplicationBuilder builder)
+    {
+        builder.AddServiceDefaults();
+        builder.AddNpgsqlDataSource(connectionName: "mydb");
+        builder.Services.AddServices(builder.Configuration);
+        builder.EnrichNpgsqlDbContext<MyDbContext>();
+        return builder;
+    }
+}
+```
+
+#### 2. `IServiceCollectionExtensions.cs`
+Used for specific `IServiceCollection` registrations like MediatR, Validators, and DbContext details.
+```csharp
+public static class IServiceCollectionExtensions
+{
+    public static IServiceCollection AddServices(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddOpenApi();
+        services.AddPostgresDbContext<MyDbContext>(...);
+        services.AddMediatR(...);
+        services.AddValidatorsFromAssembly(...);
+        return services;
+    }
+}
+```
+
+#### 3. `WebApplicationExtensions.cs`
+Used for configuring the request pipeline and asynchronous initialization tasks.
+```csharp
+public static class WebApplicationExtensions
+{
+    public static WebApplication UseApiPipeline(this WebApplication app)
+    {
+        if (app.Environment.IsDevelopment()) { app.UseSwagger(); ... }
+        app.MapDefaultEndpoints();
+        app.MapMyApi();
+        return app;
+    }
+
+    public static async Task<WebApplication> MigrateDatabaseAsync(this WebApplication app) { ... }
+}
+```

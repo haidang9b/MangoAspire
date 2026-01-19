@@ -15,6 +15,7 @@
     <PackageVersion Include="Duende.IdentityServer" Version="7.4.4" />
     <PackageVersion Include="Duende.IdentityServer.AspNetIdentity" Version="7.4.4" />
     <PackageVersion Include="EFCore.NamingConventions" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="10.0.2" />
     <PackageVersion Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.2" />
     <PackageVersion Include="Microsoft.AspNetCore.Identity.UI" Version="10.0.2" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.2" />
@@ -22,6 +23,7 @@
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.2" />
     <PackageVersion Include="Microsoft.Extensions.Options" Version="10.0.2" />
     <PackageVersion Include="Microsoft.Extensions.Resilience" Version="10.2.0" />
+    <PackageVersion Include="Microsoft.IdentityModel.Protocols.OpenIdConnect" Version="8.15.0" />
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
     <!-- FluentValidation -->
     <PackageVersion Include="FluentValidation" Version="12.1.1" />
@@ -43,5 +45,6 @@
     <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="1.14.0" />
     <PackageVersion Include="Refit.HttpClientFactory" Version="9.0.2" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="10.1.0" />
+    <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.15.0" />
   </ItemGroup>
 </Project>

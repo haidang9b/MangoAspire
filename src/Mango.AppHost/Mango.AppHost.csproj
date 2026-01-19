@@ -19,8 +19,10 @@
   <ItemGroup>
     <ProjectReference Include="..\Services\Coupons.API\Coupons.API.csproj" />
     <ProjectReference Include="..\Services\Identity.API\Identity.API.csproj" />
+    <ProjectReference Include="..\Services\Orders.API\Orders.API.csproj" />
     <ProjectReference Include="..\Services\Products.API\Products.API.csproj" />
     <ProjectReference Include="..\Services\ShoppingCart.API\ShoppingCart.API.csproj" />
+    <ProjectReference Include="..\UI\Mango.Web\Mango.Web.csproj" />
   </ItemGroup>
 
 </Project>

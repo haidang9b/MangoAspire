@@ -1,0 +1,99 @@
+﻿using Mango.Web.Models;
+using Mango.Web.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+
+namespace Mango.Web.Controllers;
+
+public class ProductController : Controller
+{
+    private readonly IProductsApi _productsApi;
+
+    public ProductController(IProductsApi productsApi)
+    {
+        _productsApi = productsApi;
+    }
+
+    [Authorize]
+    public async Task<IActionResult> ProductIndex()
+    {
+        var result = await _productsApi.GetProductsAsync();
+        if (result != null && !result.IsError)
+        {
+            return View(result.Data);
+        }
+        return View(new List<ProductDto>());
+    }
+
+    public async Task<IActionResult> ProductCreate()
+    {
+        return View();
+    }
+
+    [HttpPost]
+    [Authorize(Roles = "Admin")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ProductCreate(ProductDto model)
+    {
+        if (ModelState.IsValid)
+        {
+            var result = await _productsApi.CreateProductAsync(model);
+            if (result != null && !result.IsError)
+            {
+                return RedirectToAction(nameof(ProductIndex));
+            }
+        }
+        return View(model);
+    }
+
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> ProductEdit(Guid productId)
+    {
+        var result = await _productsApi.GetProductByIdAsync(productId);
+        if (result != null && !result.IsError)
+        {
+            return View(result.Data);
+        }
+        return NotFound();
+    }
+
+    [HttpPost]
+    [Authorize(Roles = "Admin")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ProductEdit(ProductDto model)
+    {
+        if (ModelState.IsValid)
+        {
+            var result = await _productsApi.UpdateProductAsync(model);
+            if (result != null && !result.IsError)
+            {
+                return RedirectToAction(nameof(ProductIndex));
+            }
+        }
+        return View(model);
+    }
+
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> ProductDelete(Guid productId)
+    {
+        var result = await _productsApi.GetProductByIdAsync(productId);
+        if (result != null && !result.IsError)
+        {
+            return View(result.Data);
+        }
+        return NotFound();
+    }
+
+    [HttpPost]
+    [Authorize(Roles = "Admin")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ProductDelete(ProductDto model)
+    {
+        var result = await _productsApi.DeleteProductAsync(Guid.Parse(model.Id.ToString()));
+        if (result != null && !result.IsError)
+        {
+            return RedirectToAction(nameof(ProductIndex));
+        }
+        return View(model);
+    }
+}

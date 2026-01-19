@@ -39,11 +39,11 @@ public class Checkout
     {
         public async Task<ResultModel<bool>> Handle(Command request, CancellationToken cancellationToken)
         {
-            var checkoutHeader = request.CheckoutHeader;
+            var checkOutHeader = request.CheckoutHeader;
 
             // 1. Get current cart
             var cartHeader = await dbContext.CartHeaders
-                .FirstOrDefaultAsync(u => u.UserId == checkoutHeader.UserId, cancellationToken)
+                .FirstOrDefaultAsync(u => u.UserId == checkOutHeader.UserId, cancellationToken)
                 ?? throw new DataVerificationException("Cart not found");
 
             var cartDetails = await dbContext.CartDetails
@@ -52,7 +52,7 @@ public class Checkout
                 .ToListAsync(cancellationToken);
 
             // 2. Map cart details to checkout header
-            checkoutHeader.CartDetails = cartDetails.Select(d => new CartDetailsDto
+            checkOutHeader.CartDetails = cartDetails.Select(d => new CartDetailsDto
             {
                 Id = d.Id,
                 CartHeaderId = d.CartHeaderId,
@@ -70,10 +70,10 @@ public class Checkout
             });
 
             // 3. Verify coupon if present
-            if (!string.IsNullOrEmpty(checkoutHeader.CouponCode))
+            if (!string.IsNullOrEmpty(checkOutHeader.CouponCode))
             {
-                var couponDto = await couponsApi.GetCouponAsync(checkoutHeader.CouponCode);
-                if (couponDto != null && checkoutHeader.DiscountTotal != couponDto.DiscountAmount)
+                var couponDto = await couponsApi.GetCouponAsync(checkOutHeader.CouponCode);
+                if (couponDto != null && checkOutHeader.DiscountTotal != couponDto.DiscountAmount)
                 {
                     throw new DataVerificationException("Coupon price has changed, please confirm");
                 }
@@ -84,26 +84,31 @@ public class Checkout
 
             var checkedOutEvent = new CartCheckedOutEvent
             {
-                UserId = checkoutHeader.UserId,
+                UserId = checkOutHeader.UserId,
                 CartId = cartHeader.Id,
-                FirstName = checkoutHeader.FirstName,
-                LastName = checkoutHeader.LastName,
-                Email = checkoutHeader.Email,
-                Phone = checkoutHeader.Phone,
-                CouponCode = checkoutHeader.CouponCode,
-                CardNumber = checkoutHeader.CardNumber,
-                CVV = checkoutHeader.CVV,
-                DiscountTotal = checkoutHeader.DiscountTotal,
-                ExpiryMonthYear = checkoutHeader.ExpiryMonthYear,
-                OrderTotal = checkoutHeader.OrderTotal,
-                PickupDate = checkoutHeader.PickupDate,
-                CartTotalItems = checkoutHeader.CartTotalItems,
-                CartDetails = checkoutHeader.CartDetails.Select(d => new CartCheckedOutEvent.CartDetailsDto
+                FirstName = checkOutHeader.FirstName,
+                LastName = checkOutHeader.LastName,
+                Email = checkOutHeader.Email,
+                Phone = checkOutHeader.Phone,
+                CouponCode = checkOutHeader.CouponCode ?? string.Empty,
+                CardNumber = checkOutHeader.CardNumber,
+                CVV = checkOutHeader.CVV,
+                DiscountTotal = checkOutHeader.DiscountTotal,
+                ExpiryMonthYear = checkOutHeader.ExpiryMonthYear,
+                OrderTotal = checkOutHeader.OrderTotal,
+                PickupDate = checkOutHeader.PickupDate,
+                CartTotalItems = checkOutHeader.CartTotalItems,
+                CartDetails = checkOutHeader.CartDetails.Select(d => new CartCheckedOutEvent.CartDetailsDto
                 {
                     Id = d.Id,
                     CartHeaderId = d.CartHeaderId,
-                    ProductId = d.ProductId,
                     Count = d.Count,
+                    Product = new CartCheckedOutEvent.ProductDto
+                    {
+                        Id = d.Product.Id,
+                        Name = d.Product.Name,
+                        Price = d.Product.Price
+                    }
                 }).ToList()
             };
 
