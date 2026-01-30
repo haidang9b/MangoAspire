@@ -40,8 +40,8 @@ public static class SD
             ClientId= "mango",
             ClientSecrets = {new Secret("secret".ToSha256())},
             AllowedGrantTypes = GrantTypes.Code,
-            RedirectUris = { "https://localhost:7245/signin-oidc" },
-            PostLogoutRedirectUris = { "https://localhost:7245/signout-callback-oidc" },
+            RedirectUris = { "https://localhost:7188/signin-oidc" },
+            PostLogoutRedirectUris = { "https://localhost:7188/signout-callback-oidc" },
             AllowedScopes = new List<string>
             {
                 IdentityServerConstants.StandardScopes.OpenId,

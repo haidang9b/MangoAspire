@@ -1,4 +1,6 @@
-﻿using Mango.Web.Services;
+﻿using Mango.Infrastructure.Extensions;
+using Mango.ServiceDefaults;
+using Mango.Web.Services;
 using Refit;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -7,6 +9,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddTransient<AuthenticationDelegatingHandler>();
+builder.Services.AddCurrentUserContext();
+builder.AddServiceDefaults();
 
 ConfigurationServices(builder.Services);
 
@@ -27,6 +31,8 @@ app.UseRouting();
 
 app.UseAuthorization();
 app.UseAuthorization();
+app.UseCurrentUserContext();
+
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
@@ -37,15 +43,15 @@ app.Run();
 void ConfigurationServices(IServiceCollection services)
 {
     services.AddRefitClient<IProductsApi>()
-        .ConfigureHttpClient(c => c.BaseAddress = new Uri("https+http://products-api"))
+        .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://products-api"))
         .AddHttpMessageHandler<AuthenticationDelegatingHandler>();
 
     services.AddRefitClient<ICartApi>()
-        .ConfigureHttpClient(c => c.BaseAddress = new Uri("https+http://shoppingcart-api"))
+        .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://shoppingcart-api"))
         .AddHttpMessageHandler<AuthenticationDelegatingHandler>();
 
     services.AddRefitClient<ICouponsApi>()
-        .ConfigureHttpClient(c => c.BaseAddress = new Uri("https+http://coupons-api"))
+        .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://coupons-api"))
         .AddHttpMessageHandler<AuthenticationDelegatingHandler>();
 
     services.AddAuthentication(options =>
@@ -56,7 +62,7 @@ void ConfigurationServices(IServiceCollection services)
     .AddCookie("Cookies", c => c.ExpireTimeSpan = TimeSpan.FromMinutes(10))
     .AddOpenIdConnect("oidc", options =>
     {
-        options.Authority = "https://identity-app";
+        options.Authority = "https://localhost:8080/";
         options.GetClaimsFromUserInfoEndpoint = true;
         options.ClientId = "mango";
         options.ClientSecret = "secret";

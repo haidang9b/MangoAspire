@@ -1,4 +1,5 @@
-﻿using Mango.Web.Models;
+﻿using Mango.Core.Auth;
+using Mango.Web.Models;
 using Mango.Web.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -10,10 +11,13 @@ public class CartController : Controller
     private readonly ICartApi _cartApi;
     private readonly ICouponsApi _couponsApi;
 
-    public CartController(ICartApi cartApi, ICouponsApi couponsApi)
+    private readonly ICurrentUserContext _currentUserContext;
+
+    public CartController(ICartApi cartApi, ICouponsApi couponsApi, ICurrentUserContext currentUserContext)
     {
         _cartApi = cartApi;
         _couponsApi = couponsApi;
+        _currentUserContext = currentUserContext;
     }
 
     [Authorize]
@@ -23,7 +27,7 @@ public class CartController : Controller
     }
 
     [Authorize]
-    public async Task<IActionResult> Remove(int cartDetailsId)
+    public async Task<IActionResult> Remove(Guid cartDetailsId)
     {
         var response = await _cartApi.RemoveFromCartAsync(cartDetailsId);
 
@@ -95,8 +99,7 @@ public class CartController : Controller
     [NonAction]
     private async Task<CartDto> LoadCartDtoBasedOnLoggedInUser()
     {
-        var userId = User.Claims.Where(item => item.Type == "sub")?.FirstOrDefault()?.Value;
-        var response = await _cartApi.GetCartByUserIdAsync(userId);
+        var response = await _cartApi.GetCartByUserIdAsync(_currentUserContext.UserId);
         CartDto cartDto = new();
         if (response != null && !response.IsError)
         {

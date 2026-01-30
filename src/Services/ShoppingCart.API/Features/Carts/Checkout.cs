@@ -58,15 +58,7 @@ public class Checkout
                 CartHeaderId = d.CartHeaderId,
                 ProductId = d.ProductId,
                 Count = d.Count,
-                Product = new ProductDto
-                {
-                    Id = d.Product.Id,
-                    Name = d.Product.Name,
-                    Price = d.Product.Price,
-                    Description = d.Product.Description,
-                    CategoryName = d.Product.CategoryName,
-                    ImageUrl = d.Product.ImageUrl
-                },
+
             });
 
             // 3. Verify coupon if present
@@ -103,12 +95,8 @@ public class Checkout
                     Id = d.Id,
                     CartHeaderId = d.CartHeaderId,
                     Count = d.Count,
-                    Product = new CartCheckedOutEvent.ProductDto
-                    {
-                        Id = d.Product.Id,
-                        Name = d.Product.Name,
-                        Price = d.Product.Price
-                    }
+                    ProductId = d.ProductId,
+
                 }).ToList()
             };
 

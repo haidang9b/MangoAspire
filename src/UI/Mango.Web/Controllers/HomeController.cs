@@ -1,4 +1,5 @@
-﻿using Mango.Web.Models;
+﻿using Mango.Core.Auth;
+using Mango.Web.Models;
 using Mango.Web.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,14 +12,19 @@ public class HomeController : Controller
     private readonly ILogger<HomeController> _logger;
     private readonly IProductsApi _productsApi;
     private readonly ICartApi _cartApi;
+    private readonly ICurrentUserContext _currentUserContext;
 
-    public HomeController(ILogger<HomeController> logger
-        , IProductsApi productsApi
-        , ICartApi cartApi)
+    public HomeController(
+        ILogger<HomeController> logger,
+        IProductsApi productsApi,
+        ICartApi cartApi,
+        ICurrentUserContext currentUserContext
+    )
     {
         _logger = logger;
         _productsApi = productsApi;
         _cartApi = cartApi;
+        _currentUserContext = currentUserContext;
     }
 
     public async Task<IActionResult> Index()
@@ -53,7 +59,7 @@ public class HomeController : Controller
         {
             CartHeader = new CartHeaderDto()
             {
-                UserId = User.Claims.Where(u => u.Type == "sub")?.FirstOrDefault().Value,
+                UserId = _currentUserContext.UserId
             }
         };
 

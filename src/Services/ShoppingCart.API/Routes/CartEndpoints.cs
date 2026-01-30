@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using ShoppingCart.API.Features.Carts;
+using ShoppingCart.API.Features.Carts.GetCarts;
 
 namespace ShoppingCart.API.Routes;
 
@@ -12,7 +13,7 @@ public static class CartEndpoints
 
         group.MapGet("/{userId}", async (string userId, ISender sender) =>
         {
-            var result = await sender.Send(new GetCart.Query { UserId = userId });
+            var result = await sender.Send(new GetCardQuery(UserId: userId));
             return Results.Ok(result);
         });
 

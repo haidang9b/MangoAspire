@@ -1,4 +1,4 @@
-var builder = DistributedApplication.CreateBuilder(args);
+﻿var builder = DistributedApplication.CreateBuilder(args);
 
 var postgresPassword = builder.AddParameter("postgres-password", "postgres");
 
@@ -34,18 +34,22 @@ builder.AddProject<Projects.Coupons_API>("coupons-api")
     .WaitFor(coupondb)
     .WithReference(coupondb);
 
-builder.AddProject<Projects.ShoppingCart_API>("shoppingcart-api")
+var shoppingcart = builder.AddProject<Projects.ShoppingCart_API>("shoppingcart-api")
     .WaitFor(shoppingcartdb)
     .WaitFor(serviceBus)
     .WithReference(shoppingcartdb)
     .WithReference(serviceBus);
 
-builder.AddProject<Projects.Orders_API>("orders-api")
+var orders = builder.AddProject<Projects.Orders_API>("orders-api")
     .WaitFor(orderdb)
     .WaitFor(serviceBus)
     .WithReference(orderdb)
     .WithReference(serviceBus);
 
-builder.AddProject<Projects.Mango_Web>("mango-web");
+builder.AddProject<Projects.Mango_Web>("mango-web")
+    .WithReference(identity)
+    .WithReference(products)
+    .WithReference(shoppingcart)
+    .WithReference(orders);
 
 builder.Build().Run();

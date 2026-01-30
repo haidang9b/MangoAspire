@@ -1,4 +1,7 @@
 ﻿using FluentValidation;
+using Mango.Core.Auth;
+using Mango.Infrastructure.Auth;
+using Mango.Infrastructure.Middlewares;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi;
@@ -67,6 +70,15 @@ public static class IServiceCollectionExtensions
                 Description = description
             });
         });
+
+        return services;
+    }
+
+    public static IServiceCollection AddCurrentUserContext(this IServiceCollection services)
+    {
+        services.AddScoped<ICurrentUserContext, CurrentUserContext>();
+
+        services.AddTransient<CurrentUserContextMiddleware>();
 
         return services;
     }

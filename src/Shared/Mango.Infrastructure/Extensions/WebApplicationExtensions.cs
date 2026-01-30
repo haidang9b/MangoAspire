@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using Mango.Infrastructure.Middlewares;
+using Microsoft.AspNetCore.Builder;
 using System.Reflection;
 
 namespace Mango.Infrastructure.Extensions;
@@ -20,6 +21,12 @@ public static class WebApplicationExtensions
             endpoint.MapEndpoints(app);
         }
 
+        return app;
+    }
+
+    public static WebApplication UseCurrentUserContext(this WebApplication app)
+    {
+        app.UseMiddleware<CurrentUserContextMiddleware>();
         return app;
     }
 }

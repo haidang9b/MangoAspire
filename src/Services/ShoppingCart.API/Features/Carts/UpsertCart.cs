@@ -44,12 +44,13 @@ public class UpsertCart
                 product = new Product
                 {
                     Id = cartDetailsDto.ProductId,
-                    Name = cartDetailsDto.Product.Name,
-                    Price = cartDetailsDto.Product.Price,
-                    Description = cartDetailsDto.Product.Description,
-                    CategoryName = cartDetailsDto.Product.CategoryName,
-                    ImageUrl = cartDetailsDto.Product.ImageUrl
+                    Name = string.Empty,
+                    CategoryName    = string.Empty,
+                    Description = string.Empty,
+                    ImageUrl = string.Empty,
+                    Price = 0,
                 };
+
                 dbContext.Products.Add(product);
                 await dbContext.SaveChangesAsync(cancellationToken);
             }

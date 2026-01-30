@@ -33,13 +33,14 @@ public static class WebApplicationExtensions
     {
         using var scope = app.Services.CreateScope();
 
+        var dbContext = scope.ServiceProvider
+            .GetRequiredService<ApplicationDbContext>();
+        await dbContext.Database.MigrateAsync();
+
         var initializer = scope.ServiceProvider
             .GetRequiredService<IDBInitializer>();
         await initializer.InitializesAsync();
 
-        var dbContext = scope.ServiceProvider
-            .GetRequiredService<ApplicationDbContext>();
-        await dbContext.Database.MigrateAsync();
 
         return app;
     }

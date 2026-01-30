@@ -6,24 +6,24 @@ namespace Mango.Web.Services;
 
 public interface ICartApi
 {
-    [Get("/api/carts/GetCart/{userId}")]
+    [Get("/api/carts/{userId}")]
     Task<ResultModel<CartDto>> GetCartByUserIdAsync(string userId);
 
-    [Post("/api/carts/AddCart")]
+    [Post("/api/carts")]
     Task<ResultModel<CartDto>> AddToCartAsync([Body] CartDto cartDto);
 
-    [Put("/api/carts/UpdateCart")]
+    [Put("/api/carts")]
     Task<ResultModel<CartDto>> UpdateCartAsync([Body] CartDto cartDto);
 
-    [Delete("/api/carts/RemoveCart/{cartId}")]
-    Task<ResultModel<bool>> RemoveFromCartAsync(int cartId);
+    [Delete("/api/carts/item/{cartId}")]
+    Task<ResultModel<bool>> RemoveFromCartAsync(Guid cartId);
 
-    [Post("/api/carts/ApplyCoupon")]
+    [Post("/api/carts/coupon")]
     Task<ResultModel<bool>> ApplyCouponAsync([Body] CartDto cartDto);
 
-    [Post("/api/carts/RemoveCoupon")]
+    [Post("/api/carts/coupon")]
     Task<ResultModel<bool>> RemoveCouponAsync([Body] string userId);
 
-    [Post("/api/carts/Checkout")]
+    [Post("/api/carts/checkout")]
     Task<ResultModel<bool>> CheckoutAsync([Body] CartHeaderDto cartHeaderDto);
 }

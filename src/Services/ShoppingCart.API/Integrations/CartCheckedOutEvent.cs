@@ -42,7 +42,7 @@ public record CartCheckedOutEvent : IntegrationEvent
 
         public int Count { get; set; }
 
-        public required ProductDto Product { get; set; }
+        public Guid ProductId { get; set; }
     }
 
     public class ProductDto
