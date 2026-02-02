@@ -1,4 +1,5 @@
 ﻿using Mango.Core.Auth;
+using Mango.RestApis.Requests;
 using Mango.Web.Models;
 using Mango.Web.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -42,7 +43,7 @@ public class CartController : Controller
     [Authorize]
     public async Task<IActionResult> RemoveCoupon(CartDto cartDto)
     {
-        var response = await _cartApi.RemoveCouponAsync(cartDto.CartHeader.UserId);
+        var response = await _cartApi.RemoveCouponAsync();
 
         if (response != null && !response.IsError)
         {
@@ -55,7 +56,10 @@ public class CartController : Controller
     [Authorize]
     public async Task<IActionResult> ApplyCoupon(CartDto cartDto)
     {
-        var response = await _cartApi.ApplyCouponAsync(cartDto);
+        var response = await _cartApi.ApplyCouponAsync(new ApplyCouponRequestDto
+        {
+            CouponCode = cartDto.CartHeader.CouponCode ?? string.Empty
+        });
 
         if (response != null && !response.IsError)
         {
@@ -76,7 +80,23 @@ public class CartController : Controller
     {
         try
         {
-            var response = await _cartApi.CheckoutAsync(cartDto.CartHeader);
+            var response = await _cartApi.CheckoutAsync(new CheckoutRequestDto
+            {
+                CardNumber = cartDto.CartHeader.CardNumber,
+                CVV = cartDto.CartHeader.CVV,
+                Email = cartDto.CartHeader.Email,
+                ExpiryMonthYear = cartDto.CartHeader.ExpiryMonthYear,
+                OrderTotal = cartDto.CartHeader.OrderTotal,
+                FirstName = cartDto.CartHeader.FirstName,
+                LastName = cartDto.CartHeader.LastName,
+                CartTotalItems = cartDto.CartDetails.Count(),
+                PickupDate = cartDto.CartHeader.PickupDateTime,
+                CouponCode = cartDto.CartHeader.CouponCode,
+                DiscountTotal = cartDto.CartHeader.DiscountTotal,
+                Phone = cartDto.CartHeader.Phone
+            });
+
+
             if (response.IsError)
             {
                 TempData["Error"] = response.ErrorMessage;
@@ -105,7 +125,12 @@ public class CartController : Controller
         {
             cartDto = response.Data;
         }
-        if (cartDto.CartHeader != null)
+        else
+        {
+            cartDto = new();
+
+        }
+        if (cartDto?.CartHeader != null)
         {
             if (!string.IsNullOrEmpty(cartDto.CartHeader.CouponCode))
             {

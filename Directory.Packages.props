@@ -16,6 +16,7 @@
     <PackageVersion Include="Duende.IdentityServer" Version="7.4.4" />
     <PackageVersion Include="Duende.IdentityServer.AspNetIdentity" Version="7.4.4" />
     <PackageVersion Include="EFCore.NamingConventions" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.2" />
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="10.0.2" />
     <PackageVersion Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.2" />
     <PackageVersion Include="Microsoft.AspNetCore.Identity.UI" Version="10.0.2" />

@@ -1,11 +1,12 @@
 ﻿using EventBus.Abstractions;
 using FluentValidation;
 using Mango.Core.Domain;
+using Mango.Events.Orders;
+using Mango.Events.Payments;
 using MediatR;
 using Orders.API.Data;
 using Orders.API.Entities;
 using Orders.API.Extensions;
-using Orders.API.Intergrations.Events;
 
 namespace Orders.API.Features.Orders;
 
@@ -38,6 +39,7 @@ public class CreateOrder
             OrderHeader orderHeader = new()
             {
                 Id = Guid.NewGuid(),
+                CartTotalItems = @event.CartTotalItems,
                 UserId = @event.UserId,
                 FirstName = @event.FirstName,
                 LastName = @event.LastName,
@@ -59,9 +61,7 @@ public class CreateOrder
             {
                 OrderDetails orderDetails = new OrderDetails
                 {
-                    ProductId = detailList.Product.Id,
-                    ProductName = detailList.Product.Name,
-                    Price = detailList.Product.Price,
+                    ProductId = detailList.Id,
                     Count = detailList.Count,
                 };
                 orderHeader.CartTotalItems += detailList.Count;

@@ -62,7 +62,7 @@ public sealed class RabbitMQEventBus(
         _disposed = true;
     }
 
-    public async Task PublishAsync(IntegrationEvent @event)
+    public async Task PublishAsync<TEvent>(TEvent @event) where TEvent : class
     {
         await _pipeline.Execute(async () =>
         {
@@ -174,7 +174,7 @@ public sealed class RabbitMQEventBus(
 
     private async Task StartConsumerAsync(string queueName, string routingKey, Type eventType, string handlerKey, bool isTopic)
     {
-        try 
+        try
         {
             var channel = await _rabbitMQConnection.CreateChannelAsync();
             _consumerChannels.TryAdd(queueName, channel);
@@ -219,7 +219,7 @@ public sealed class RabbitMQEventBus(
 
             var consumer = new AsyncEventingBasicConsumer(channel);
 
-            consumer.ReceivedAsync += async (sender, args) => 
+            consumer.ReceivedAsync += async (sender, args) =>
             {
                 await OnMessageReceived(sender, args, eventType, handlerKey);
             };
@@ -263,23 +263,23 @@ public sealed class RabbitMQEventBus(
             activity?.SetTag("message", message);
 
             await ProcessEvent(message, eventType, handlerKey);
-            
+
             // Ack after successful processing
             if (sender is AsyncEventingBasicConsumer consumer && consumer.Channel is IChannel channel)
             {
-                 await channel.BasicAckAsync(eventArgs.DeliveryTag, multiple: false);
+                await channel.BasicAckAsync(eventArgs.DeliveryTag, multiple: false);
             }
         }
         catch (Exception ex)
         {
             logger.LogWarning(ex, "Error Processing message \"{Message}\"", message);
             activity.SetExceptionTags(ex);
-            
+
             // Nack or similar could be done here
             if (sender is AsyncEventingBasicConsumer consumer && consumer.Channel is IChannel channel)
             {
-                 // Requeue = true? or false/DLX?
-                 await channel.BasicNackAsync(eventArgs.DeliveryTag, false, true);
+                // Requeue = true? or false/DLX?
+                await channel.BasicNackAsync(eventArgs.DeliveryTag, false, true);
             }
         }
     }
@@ -292,7 +292,7 @@ public sealed class RabbitMQEventBus(
         }
 
         await using var scope = serviceProvider.CreateAsyncScope();
-        
+
         var integrationEvent = DeserializeMessage(message, eventType);
 
         if (integrationEvent != null)
@@ -344,7 +344,7 @@ public sealed class RabbitMQEventBus(
     {
         foreach (var channel in _consumerChannels.Values)
         {
-             await channel.CloseAsync(cancellationToken);
+            await channel.CloseAsync(cancellationToken);
         }
     }
 }

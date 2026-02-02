@@ -1,4 +1,5 @@
 ﻿using Mango.Core.Domain;
+using Mango.RestApis.Requests;
 using Mango.Web.Models;
 using Refit;
 
@@ -10,7 +11,7 @@ public interface ICartApi
     Task<ResultModel<CartDto>> GetCartByUserIdAsync(string userId);
 
     [Post("/api/carts")]
-    Task<ResultModel<CartDto>> AddToCartAsync([Body] CartDto cartDto);
+    Task<ResultModel<bool>> AddToCartAsync([Body] AddToCartRequestDto cartDto);
 
     [Put("/api/carts")]
     Task<ResultModel<CartDto>> UpdateCartAsync([Body] CartDto cartDto);
@@ -19,11 +20,11 @@ public interface ICartApi
     Task<ResultModel<bool>> RemoveFromCartAsync(Guid cartId);
 
     [Post("/api/carts/coupon")]
-    Task<ResultModel<bool>> ApplyCouponAsync([Body] CartDto cartDto);
+    Task<ResultModel<bool>> ApplyCouponAsync([Body] ApplyCouponRequestDto cartDto);
 
-    [Post("/api/carts/coupon")]
-    Task<ResultModel<bool>> RemoveCouponAsync([Body] string userId);
+    [Delete("/api/carts/coupon")]
+    Task<ResultModel<bool>> RemoveCouponAsync();
 
     [Post("/api/carts/checkout")]
-    Task<ResultModel<bool>> CheckoutAsync([Body] CartHeaderDto cartHeaderDto);
+    Task<ResultModel<bool>> CheckoutAsync([Body] CheckoutRequestDto checkoutRequestDto);
 }

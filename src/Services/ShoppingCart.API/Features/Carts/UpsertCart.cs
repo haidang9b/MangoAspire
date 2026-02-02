@@ -1,19 +1,19 @@
 ﻿using FluentValidation;
+using Mango.Core.Auth;
 using Mango.Core.Domain;
-using Mango.Core.Exceptions;
+using Mango.RestApis.Requests;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using ShoppingCart.API.Data;
-using ShoppingCart.API.Dtos;
 using ShoppingCart.API.Entities;
 
 namespace ShoppingCart.API.Features.Carts;
 
 public class UpsertCart
 {
-    public class Command : ICommand<CartDto>
+    public class Command : ICommand<bool>
     {
-        public required CartDto Cart { get; init; }
+        public required AddToCartRequestDto Cart { get; init; }
     }
 
     public class Validator : AbstractValidator<Command>
@@ -21,95 +21,66 @@ public class UpsertCart
         public Validator()
         {
             RuleFor(x => x.Cart).NotNull();
-            RuleFor(x => x.Cart.CartHeader).NotNull();
-            RuleFor(x => x.Cart.CartHeader.UserId).NotEmpty();
-            RuleFor(x => x.Cart.CartDetails).NotEmpty();
         }
     }
 
-    internal class Handler(ShoppingCartDbContext dbContext) : IRequestHandler<Command, ResultModel<CartDto>>
+    internal class Handler(ShoppingCartDbContext dbContext, ICurrentUserContext currentUser) : IRequestHandler<Command, ResultModel<bool>>
     {
-        public async Task<ResultModel<CartDto>> Handle(Command request, CancellationToken cancellationToken)
+        public async Task<ResultModel<bool>> Handle(Command request, CancellationToken cancellationToken)
         {
-            var cartDto = request.Cart;
-            var cartDetailsDto = cartDto.CartDetails.FirstOrDefault()
-                ?? throw new DataVerificationException("Cart details are required");
-
-            // 1. Ensure product exists in our local cache/table
-            var product = await dbContext.Products
-                .FirstOrDefaultAsync(p => p.Id == cartDetailsDto.ProductId, cancellationToken);
-
-            if (product == null)
-            {
-                product = new Product
-                {
-                    Id = cartDetailsDto.ProductId,
-                    Name = string.Empty,
-                    CategoryName    = string.Empty,
-                    Description = string.Empty,
-                    ImageUrl = string.Empty,
-                    Price = 0,
-                };
-
-                dbContext.Products.Add(product);
-                await dbContext.SaveChangesAsync(cancellationToken);
-            }
-
-            // 2. Check for existing CartHeader
             var cartHeader = await dbContext.CartHeaders
-                .FirstOrDefaultAsync(h => h.UserId == cartDto.CartHeader.UserId, cancellationToken);
+                .FirstOrDefaultAsync(h => h.UserId == currentUser.UserId, cancellationToken);
+
 
             if (cartHeader == null)
             {
-                // Create new header and details
                 cartHeader = new CartHeader
                 {
-                    UserId = cartDto.CartHeader.UserId,
-                    CouponCode = cartDto.CartHeader.CouponCode
+                    Id = Guid.NewGuid(),
+                    UserId = currentUser.UserId,
+                    CouponCode = request.Cart.CouponCode
                 };
-                dbContext.CartHeaders.Add(cartHeader);
-                await dbContext.SaveChangesAsync(cancellationToken);
+
+                await dbContext.CartHeaders.AddAsync(cartHeader, cancellationToken);
 
                 var newDetails = new CartDetails
                 {
                     CartHeaderId = cartHeader.Id,
-                    ProductId = product.Id,
-                    Count = cartDetailsDto.Count
+                    ProductId = request.Cart.ProductId,
+                    Count = request.Cart.Count
                 };
-                dbContext.CartDetails.Add(newDetails);
+                await dbContext.CartDetails.AddAsync(newDetails);
             }
             else
             {
-                // Update existing header if needed (e.g. coupon)
-                if (!string.IsNullOrEmpty(cartDto.CartHeader.CouponCode))
+                if (!string.IsNullOrEmpty(request.Cart.CouponCode))
                 {
-                    cartHeader.CouponCode = cartDto.CartHeader.CouponCode;
+                    cartHeader.CouponCode = request.Cart.CouponCode;
                 }
 
-                // Check if product already in cart
                 var existingDetails = await dbContext.CartDetails
-                    .FirstOrDefaultAsync(d => d.CartHeaderId == cartHeader.Id && d.ProductId == product.Id, cancellationToken);
+                    .FirstOrDefaultAsync(d => d.CartHeaderId == cartHeader.Id && d.ProductId == request.Cart.ProductId, cancellationToken);
 
                 if (existingDetails == null)
                 {
                     var newDetails = new CartDetails
                     {
                         CartHeaderId = cartHeader.Id,
-                        ProductId = product.Id,
-                        Count = cartDetailsDto.Count
+                        ProductId = request.Cart.ProductId,
+                        Count = request.Cart.Count
+
                     };
-                    dbContext.CartDetails.Add(newDetails);
+                    await dbContext.CartDetails.AddAsync(newDetails);
                 }
                 else
                 {
-                    existingDetails.Count += cartDetailsDto.Count;
-                    dbContext.CartDetails.Update(existingDetails);
+                    existingDetails.Count += request.Cart.Count;
                 }
             }
 
             await dbContext.SaveChangesAsync(cancellationToken);
 
-            return ResultModel<CartDto>.Create(cartDto);
+            return ResultModel<bool>.Create(true);
         }
     }
 }

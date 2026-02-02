@@ -21,8 +21,13 @@
     <ProjectReference Include="..\..\EventBus.ServiceBus\EventBus.ServiceBus.csproj" />
     <ProjectReference Include="..\..\EventBus\EventBus.csproj" />
     <ProjectReference Include="..\..\Shared\Mango.Core\Mango.Core.csproj" />
+    <ProjectReference Include="..\..\Shared\Mango.Events\Mango.Events.csproj" />
     <ProjectReference Include="..\..\Shared\Mango.Infrastructure\Mango.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Shared\Mango.ServiceDefaults\Mango.ServiceDefaults.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Intergrations\Events\" />
   </ItemGroup>
 
 </Project>

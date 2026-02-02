@@ -1,4 +1,5 @@
 ﻿using Mango.Core.Auth;
+using Mango.RestApis.Requests;
 using Mango.Web.Models;
 using Mango.Web.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -55,31 +56,15 @@ public class HomeController : Controller
     [Authorize]
     public async Task<IActionResult> DetailsPost(ProductDto productDto)
     {
-        CartDto cartDto = new()
+        var addToCartDto = new AddToCartRequestDto
         {
-            CartHeader = new CartHeaderDto()
-            {
-                UserId = _currentUserContext.UserId
-            }
-        };
-
-        CartDetailsDto cartDetails = new CartDetailsDto()
-        {
-            Count = productDto.Count,
             ProductId = productDto.Id,
+            Count = productDto.Count,
+            CouponCode = string.Empty,
         };
 
-        var productResult = await _productsApi.GetProductByIdAsync(productDto.Id);
-        if (productResult != null && !productResult.IsError)
-        {
-            cartDetails.Product = productResult.Data;
-        }
 
-        List<CartDetailsDto> cartDetailsDtos = new();
-        cartDetailsDtos.Add(cartDetails);
-        cartDto.CartDetails = cartDetailsDtos;
-
-        var addToCartResponse = await _cartApi.AddToCartAsync(cartDto);
+        var addToCartResponse = await _cartApi.AddToCartAsync(addToCartDto);
         if (addToCartResponse != null && !addToCartResponse.IsError)
         {
             return RedirectToAction(nameof(Index));

@@ -1,6 +1,7 @@
 ﻿using Mango.Core.Auth;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using System.Security.Claims;
 
 namespace Mango.Infrastructure.Middlewares;
 
@@ -12,7 +13,7 @@ public class CurrentUserContextMiddleware : IMiddleware
 
         if (context.User.Identity?.IsAuthenticated == true)
         {
-            currentUserContext.UserId = context.User.Identity.Name;
+            currentUserContext.UserId = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             currentUserContext.IsAuthenticated = true;
         }
         else

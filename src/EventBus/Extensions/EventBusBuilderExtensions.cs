@@ -26,7 +26,7 @@ public static class EventBusBuilderExtensions
         where TH : class, IIntegrationEventHandler<T>
     {
         var key = new SubscriptionInfo(topicName, subscriptionName);
-        eventBusBuilder.Services.AddKeyedTransient<IIntegrationEventHandler, TH>((topicName, subscriptionName).ToString());
+        eventBusBuilder.Services.AddKeyedTransient<IIntegrationEventHandler, TH>(new SubscriptionInfo(topicName, subscriptionName).ToString());
 
         eventBusBuilder.Services.Configure<EventBusSubscriptionInfo>(o =>
         {
@@ -43,7 +43,7 @@ public static class EventBusBuilderExtensions
         where TH : class, IIntegrationEventHandler<T>
     {
         var key = new ConsumerInfo(queueName);
-        eventBusBuilder.Services.AddKeyedTransient<IIntegrationEventHandler, TH>(queueName.ToString());
+        eventBusBuilder.Services.AddKeyedTransient<IIntegrationEventHandler, TH>(new ConsumerInfo(queueName).ToString());
 
         eventBusBuilder.Services.Configure<EventBusSubscriptionInfo>(o =>
         {

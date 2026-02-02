@@ -1,6 +1,6 @@
-﻿namespace ShoppingCart.API.Dtos;
+﻿namespace Mango.RestApis.Requests;
 
-public class CouponDto
+public class CouponResponseDto
 {
     public Guid Id { get; set; }
 

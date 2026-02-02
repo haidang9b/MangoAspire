@@ -1,6 +1,6 @@
 ﻿using EventBus.Events;
 
-namespace ShoppingCart.API.IntegrationEvents;
+namespace Mango.Events.Orders;
 
 public record CartCheckedOutEvent : IntegrationEvent
 {
@@ -43,14 +43,5 @@ public record CartCheckedOutEvent : IntegrationEvent
         public int Count { get; set; }
 
         public Guid ProductId { get; set; }
-    }
-
-    public class ProductDto
-    {
-        public Guid Id { get; set; }
-
-        public required string Name { get; set; }
-
-        public decimal Price { get; set; }
     }
 }

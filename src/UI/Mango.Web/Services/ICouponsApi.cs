@@ -1,11 +1,11 @@
 ﻿using Mango.Core.Domain;
-using Mango.Web.Models;
+using Mango.RestApis.Requests;
 using Refit;
 
 namespace Mango.Web.Services;
 
 public interface ICouponsApi
 {
-    [Get("/api/coupon/{couponCode}")]
-    Task<ResultModel<CouponDto>> GetCouponAsync(string couponCode);
+    [Get("/api/coupons/{couponCode}")]
+    Task<ResultModel<CouponResponseDto>> GetCouponAsync(string couponCode);
 }

@@ -1,10 +1,11 @@
 ﻿using EventBus.Extensions;
 using EventBus.ServiceBus;
+using Mango.Events.Orders;
 using Orders.API.Extensions;
-using Orders.API.Intergrations.Events;
 using Orders.API.Intergrations.Handlers;
 
 var builder = WebApplication.CreateBuilder(args);
+
 
 builder.AddApiDefaults();
 

@@ -1,8 +1,11 @@
 ﻿using Mango.Core.Behaviors;
+using Mango.Infrastructure.Auth;
 using Mango.Infrastructure.Behaviors;
 using Mango.Infrastructure.Extensions;
 using Mango.Infrastructure.Interceptors;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Refit;
 using ShoppingCart.API.Data;
 using ShoppingCart.API.ExceptionHandlers;
@@ -48,7 +51,31 @@ public static class IServiceCollectionExtensions
         services.AddDocumentApi("ShoppingCart API", "v1", "ShoppingCart API");
 
         services.AddRefitClient<ICouponsApi>();
+        services.AddCurrentUserContext();
 
+
+        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
+            {
+                options.Authority = "https://localhost:8080";
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateAudience = false
+                };
+            });
+
+        services.AddAuthorization(options =>
+        {
+            options.AddPolicy("ApiScope", policy =>
+            {
+                policy.RequireAuthenticatedUser();
+                policy.RequireClaim("scope", "mango");
+            });
+        });
+
+        services.AddRefitClient<ICouponsApi>()
+            .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://coupons-api"))
+            .AddAuthToken();
         return services;
     }
 }

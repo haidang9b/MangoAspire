@@ -1,6 +1,6 @@
 ﻿using EventBus.Events;
 
-namespace Orders.API.Intergrations.Events;
+namespace Mango.Events.Payments;
 
 public record CreatePaymentRequestCommand : IntegrationEvent
 {

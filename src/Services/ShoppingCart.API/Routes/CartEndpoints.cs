@@ -1,5 +1,7 @@
-﻿using MediatR;
+﻿using Mango.RestApis.Requests;
+using MediatR;
 using ShoppingCart.API.Features.Carts;
+using ShoppingCart.API.Features.Carts.Checkout.Checkout;
 using ShoppingCart.API.Features.Carts.GetCarts;
 
 namespace ShoppingCart.API.Routes;
@@ -17,9 +19,12 @@ public static class CartEndpoints
             return Results.Ok(result);
         });
 
-        group.MapPost("/", async (UpsertCart.Command command, ISender sender) =>
+        group.MapPost("/", async (AddToCartRequestDto addToCardDto, ISender sender) =>
         {
-            var result = await sender.Send(command);
+            var result = await sender.Send(new UpsertCart.Command
+            {
+                Cart = addToCardDto
+            });
             return Results.Ok(result);
         });
 
@@ -41,15 +46,18 @@ public static class CartEndpoints
             return Results.Ok(result);
         });
 
-        group.MapDelete("/coupon/{userId}", async (string userId, ISender sender) =>
+        group.MapDelete("/coupon", async (ISender sender) =>
         {
-            var result = await sender.Send(new RemoveCoupon.Command { UserId = userId });
+            var result = await sender.Send(new RemoveCoupon.Command());
             return Results.Ok(result);
         });
 
-        group.MapPost("/checkout", async (Checkout.Command command, ISender sender) =>
+        group.MapPost("/checkout", async (CheckoutRequestDto command, ISender sender) =>
         {
-            var result = await sender.Send(command);
+            var result = await sender.Send(new CheckoutDto
+            {
+                CheckoutRequestDto = command
+            });
             return Results.Ok(result);
         });
 

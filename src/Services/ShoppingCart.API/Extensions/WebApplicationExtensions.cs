@@ -1,4 +1,5 @@
-﻿using Mango.ServiceDefaults;
+﻿using Mango.Infrastructure.Extensions;
+using Mango.ServiceDefaults;
 using Microsoft.EntityFrameworkCore;
 using ShoppingCart.API.Data;
 using ShoppingCart.API.Routes;
@@ -20,6 +21,10 @@ public static class WebApplicationExtensions
         }
 
         app.UseHttpsRedirection();
+
+        app.UseAuthorization();
+        app.UseAuthorization();
+        app.UseCurrentUserContext();
 
         app.MapDefaultEndpoints();
         app.MapCartApi();

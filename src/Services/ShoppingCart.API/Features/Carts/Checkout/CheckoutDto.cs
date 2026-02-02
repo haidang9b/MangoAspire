@@ -1,0 +1,9 @@
+﻿using Mango.Core.Domain;
+using Mango.RestApis.Requests;
+
+namespace ShoppingCart.API.Features.Carts.Checkout.Checkout;
+
+public class CheckoutDto : ICommand<bool>
+{
+    public required CheckoutRequestDto CheckoutRequestDto { get; set; }
+}

@@ -7,8 +7,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddTransient<AuthenticationDelegatingHandler>();
 builder.Services.AddCurrentUserContext();
 builder.AddServiceDefaults();
 
@@ -44,15 +42,15 @@ void ConfigurationServices(IServiceCollection services)
 {
     services.AddRefitClient<IProductsApi>()
         .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://products-api"))
-        .AddHttpMessageHandler<AuthenticationDelegatingHandler>();
+        .AddAuthToken();
 
     services.AddRefitClient<ICartApi>()
         .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://shoppingcart-api"))
-        .AddHttpMessageHandler<AuthenticationDelegatingHandler>();
+        .AddAuthToken();
 
     services.AddRefitClient<ICouponsApi>()
         .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://coupons-api"))
-        .AddHttpMessageHandler<AuthenticationDelegatingHandler>();
+        .AddAuthToken();
 
     services.AddAuthentication(options =>
     {

@@ -30,7 +30,7 @@ var products = builder.AddProject<Projects.Products_API>("products-api")
     .WaitFor(productdb)
     .WithReference(productdb);
 
-builder.AddProject<Projects.Coupons_API>("coupons-api")
+var coupon = builder.AddProject<Projects.Coupons_API>("coupons-api")
     .WaitFor(coupondb)
     .WithReference(coupondb);
 
@@ -38,7 +38,9 @@ var shoppingcart = builder.AddProject<Projects.ShoppingCart_API>("shoppingcart-a
     .WaitFor(shoppingcartdb)
     .WaitFor(serviceBus)
     .WithReference(shoppingcartdb)
-    .WithReference(serviceBus);
+    .WithReference(serviceBus)
+    .WithReference(identity)
+    .WithReference(coupon);
 
 var orders = builder.AddProject<Projects.Orders_API>("orders-api")
     .WaitFor(orderdb)
@@ -50,6 +52,7 @@ builder.AddProject<Projects.Mango_Web>("mango-web")
     .WithReference(identity)
     .WithReference(products)
     .WithReference(shoppingcart)
-    .WithReference(orders);
+    .WithReference(orders)
+    .WithReference(coupon);
 
 builder.Build().Run();

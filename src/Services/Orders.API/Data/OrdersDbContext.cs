@@ -16,6 +16,8 @@ public class OrdersDbContext : AppDbContextBase
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
         base.OnModelCreating(modelBuilder);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(OrdersDbContext).Assembly);
     }

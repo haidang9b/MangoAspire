@@ -79,7 +79,7 @@ public sealed class ServiceBusEventBus(
         _disposed = true;
     }
 
-    public async Task PublishAsync(IntegrationEvent @event)
+    public async Task PublishAsync<TEvent>(TEvent @event) where TEvent : class
     {
         await _pipeline.Execute(async () =>
         {

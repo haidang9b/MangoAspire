@@ -1,7 +1,7 @@
 ﻿using EventBus.Abstractions;
+using Mango.Events.Orders;
 using MediatR;
 using Orders.API.Features.Orders;
-using Orders.API.Intergrations.Events;
 
 namespace Orders.API.Intergrations.Handlers;
 

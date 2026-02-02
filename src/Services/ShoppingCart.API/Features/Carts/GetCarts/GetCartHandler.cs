@@ -31,8 +31,12 @@ public class GetCartHandler
                     UserId = u.UserId,
                     CouponCode = u.CouponCode
                 })
-                .FirstOrDefaultAsync(cancellationToken)
-                ?? throw new DataVerificationException("Cart not found");
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (cartHeaderDto == null)
+            {
+                return ResultModel<GetCardResponse>.Create(null);
+            }
 
             var cartDetailsDto = await dbContext.CartDetails
                .AsNoTracking()
