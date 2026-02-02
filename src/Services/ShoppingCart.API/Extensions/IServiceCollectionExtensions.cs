@@ -1,5 +1,4 @@
 ﻿using Mango.Core.Behaviors;
-using Mango.Infrastructure.Auth;
 using Mango.Infrastructure.Behaviors;
 using Mango.Infrastructure.Extensions;
 using Mango.Infrastructure.Interceptors;
@@ -15,67 +14,71 @@ namespace ShoppingCart.API.Extensions;
 
 public static class IServiceCollectionExtensions
 {
-    public static IServiceCollection AddServices(this IServiceCollection services, IConfiguration configuration)
+    extension(IServiceCollection services)
     {
-        // Add services to the container.
-        // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-        services.AddOpenApi();
-
-        services.AddPostgresDbContext<ShoppingCartDbContext>(
-            configuration.GetConnectionString("shoppingcartdb")
-                ?? throw new ArgumentNullException("shoppingcartdb"),
-            doMoreDbContextOptionsConfigure: (sp, options) =>
-            {
-                options.AddInterceptors(
-                    sp.GetRequiredService<PerformanceInterceptor>());
-            });
-
-        services.AddScoped<PerformanceInterceptor>();
-
-        services.AddMediatR(cfg =>
+        public IServiceCollection AddServices(IConfiguration configuration)
         {
-            cfg.RegisterServicesFromAssembly(typeof(Program).Assembly);
-            cfg.AddOpenBehavior(typeof(LoggingBehavior<,>));
-            cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
-            cfg.AddOpenBehavior(typeof(TxBehavior<,>));
+            // Add services to the container.
+            // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+            services.AddOpenApi();
 
-        });
-
-        services.AddValidatorsFromAssembly(typeof(Program).Assembly);
-
-        services.AddEndpointsApiExplorer();
-
-        services.AddExceptionHandler<GlobalExceptionHandler>();
-        services.AddProblemDetails();
-
-        services.AddDocumentApi("ShoppingCart API", "v1", "ShoppingCart API");
-
-        services.AddRefitClient<ICouponsApi>();
-        services.AddCurrentUserContext();
-
-
-        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
-            {
-                options.Authority = "https://localhost:8080";
-                options.TokenValidationParameters = new TokenValidationParameters
+            services.AddPostgresDbContext<ShoppingCartDbContext>(
+                configuration.GetConnectionString("shoppingcartdb")
+                    ?? throw new ArgumentNullException("shoppingcartdb"),
+                doMoreDbContextOptionsConfigure: (sp, options) =>
                 {
-                    ValidateAudience = false
-                };
-            });
+                    options.AddInterceptors(
+                        sp.GetRequiredService<PerformanceInterceptor>());
+                });
 
-        services.AddAuthorization(options =>
-        {
-            options.AddPolicy("ApiScope", policy =>
+            services.AddScoped<PerformanceInterceptor>();
+
+            services.AddMediatR(cfg =>
             {
-                policy.RequireAuthenticatedUser();
-                policy.RequireClaim("scope", "mango");
-            });
-        });
+                cfg.RegisterServicesFromAssembly(typeof(Program).Assembly);
+                cfg.AddOpenBehavior(typeof(LoggingBehavior<,>));
+                cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
+                cfg.AddOpenBehavior(typeof(TxBehavior<,>));
 
-        services.AddRefitClient<ICouponsApi>()
-            .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://coupons-api"))
-            .AddAuthToken();
-        return services;
+            });
+
+            services.AddValidatorsFromAssembly(typeof(Program).Assembly);
+
+            services.AddEndpointsApiExplorer();
+
+            services.AddExceptionHandler<GlobalExceptionHandler>();
+            services.AddProblemDetails();
+
+            services.AddDocumentApi("ShoppingCart API", "v1", "ShoppingCart API");
+
+            services.AddRefitClient<ICouponsApi>();
+            services.AddCurrentUserContext();
+
+
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
+                {
+                    options.Authority = "https://localhost:8080";
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateAudience = false
+                    };
+                });
+
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy("ApiScope", policy =>
+                {
+                    policy.RequireAuthenticatedUser();
+                    policy.RequireClaim("scope", "mango");
+                });
+            });
+
+            services.AddRefitClient<ICouponsApi>()
+                .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://coupons-api"))
+                .AddAuthToken();
+            return services;
+        }
     }
+
 }

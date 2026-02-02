@@ -5,18 +5,21 @@ namespace Coupons.API.Routes;
 
 public static class CouponEndponts
 {
-    public static WebApplication MapCouponEndpoints(this WebApplication app)
+    extension(WebApplication app)
     {
-        var routeGroupBuilder = app.MapGroup("/api/coupons");
-
-        routeGroupBuilder.MapGet("/{code}", async (string code, ISender sender) =>
+        public WebApplication MapCouponEndpoints()
         {
-            return await sender.Send(new GetCoupon.Query
-            {
-                Code = code
-            });
-        });
+            var routeGroupBuilder = app.MapGroup("/api/coupons");
 
-        return app;
+            routeGroupBuilder.MapGet("/{code}", async (string code, ISender sender) =>
+            {
+                return await sender.Send(new GetCoupon.Query
+                {
+                    Code = code
+                });
+            });
+
+            return app;
+        }
     }
 }

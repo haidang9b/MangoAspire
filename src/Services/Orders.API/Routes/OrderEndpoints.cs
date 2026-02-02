@@ -2,19 +2,22 @@
 
 public static class OrderEndpoints
 {
-    public static RouteGroupBuilder MapOrdersApi(this WebApplication routeGroupBuilder)
+    extension(WebApplication routeGroupBuilder)
     {
-        var group = routeGroupBuilder.MapGroup("/api/orders")
-            .WithTags("Orders");
+        public RouteGroupBuilder MapOrdersApi()
+        {
+            var group = routeGroupBuilder.MapGroup("/api/orders")
+                .WithTags("Orders");
 
-        // Add additional routes here as needed
-        // For example:
-        // group.MapGet("/{id:guid}", async (Guid id, ISender sender) =>
-        // {
-        //     var result = await sender.Send(new GetOrderById.Query { OrderId = id });
-        //     return Results.Ok(result);
-        // });
+            // Add additional routes here as needed
+            // For example:
+            // group.MapGet("/{id:guid}", async (Guid id, ISender sender) =>
+            // {
+            //     var result = await sender.Send(new GetOrderById.Query { OrderId = id });
+            //     return Results.Ok(result);
+            // });
 
-        return group;
+            return group;
+        }
     }
 }

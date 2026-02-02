@@ -8,71 +8,71 @@ namespace EventBus.Extensions;
 
 public static class EventBusBuilderExtensions
 {
-    public static IEventBusBuilder ConfigureJsonOptions(this IEventBusBuilder eventBusBuilder, Action<JsonSerializerOptions> configure)
+    extension(IEventBusBuilder eventBusBuilder)
     {
-        eventBusBuilder.Services.Configure<EventBusSubscriptionInfo>(o =>
+        public IEventBusBuilder ConfigureJsonOptions(Action<JsonSerializerOptions> configure)
         {
-            configure(o.JsonSerializerOptions);
-        });
+            eventBusBuilder.Services.Configure<EventBusSubscriptionInfo>(o =>
+            {
+                configure(o.JsonSerializerOptions);
+            });
 
-        return eventBusBuilder;
-    }
+            return eventBusBuilder;
+        }
 
-    public static IEventBusBuilder AddSubscription<T, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TH>(
-        this IEventBusBuilder eventBusBuilder,
-        string topicName,
-        string subscriptionName
-    ) where T : IntegrationEvent
-        where TH : class, IIntegrationEventHandler<T>
-    {
-        var key = new SubscriptionInfo(topicName, subscriptionName);
-        eventBusBuilder.Services.AddKeyedTransient<IIntegrationEventHandler, TH>(new SubscriptionInfo(topicName, subscriptionName).ToString());
-
-        eventBusBuilder.Services.Configure<EventBusSubscriptionInfo>(o =>
+        public IEventBusBuilder AddSubscription<T, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TH>(
+            string topicName,
+            string subscriptionName
+        ) where T : IntegrationEvent
+            where TH : class, IIntegrationEventHandler<T>
         {
-            o.SubscriptionTypes[key] = typeof(T);
-        });
+            var key = new SubscriptionInfo(topicName, subscriptionName);
+            eventBusBuilder.Services.AddKeyedTransient<IIntegrationEventHandler, TH>(new SubscriptionInfo(topicName, subscriptionName).ToString());
 
-        return eventBusBuilder;
-    }
+            eventBusBuilder.Services.Configure<EventBusSubscriptionInfo>(o =>
+            {
+                o.SubscriptionTypes[key] = typeof(T);
+            });
 
-    public static IEventBusBuilder AddConsumer<T, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TH>(
-        this IEventBusBuilder eventBusBuilder,
-        string queueName
-    ) where T : IntegrationEvent
-        where TH : class, IIntegrationEventHandler<T>
-    {
-        var key = new ConsumerInfo(queueName);
-        eventBusBuilder.Services.AddKeyedTransient<IIntegrationEventHandler, TH>(new ConsumerInfo(queueName).ToString());
+            return eventBusBuilder;
+        }
 
-        eventBusBuilder.Services.Configure<EventBusSubscriptionInfo>(o =>
+        public IEventBusBuilder AddConsumer<T, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TH>(
+            string queueName
+        ) where T : IntegrationEvent
+            where TH : class, IIntegrationEventHandler<T>
         {
-            o.ConsumerTypes[queueName] = typeof(T);
-        });
+            var key = new ConsumerInfo(queueName);
+            eventBusBuilder.Services.AddKeyedTransient<IIntegrationEventHandler, TH>(new ConsumerInfo(queueName).ToString());
 
-        return eventBusBuilder;
-    }
+            eventBusBuilder.Services.Configure<EventBusSubscriptionInfo>(o =>
+            {
+                o.ConsumerTypes[queueName] = typeof(T);
+            });
 
-    public static IEventBusBuilder AddQueue<T>(this IEventBusBuilder eventBusBuilder, string queueName) where T : IntegrationEvent
-    {
-        eventBusBuilder.Services.Configure<EventBusSubscriptionInfo>(o =>
+            return eventBusBuilder;
+        }
+
+        public IEventBusBuilder AddQueue<T>(string queueName) where T : IntegrationEvent
         {
-            o.QueueTypes[queueName] = typeof(T);
-        });
+            eventBusBuilder.Services.Configure<EventBusSubscriptionInfo>(o =>
+            {
+                o.QueueTypes[queueName] = typeof(T);
+            });
 
-        return eventBusBuilder;
-    }
+            return eventBusBuilder;
+        }
 
-    public static IEventBusBuilder AddTopic<T>(
-        this IEventBusBuilder eventBusBuilder,
-        string topicName
-    ) where T : IntegrationEvent
-    {
-        eventBusBuilder.Services.Configure<EventBusSubscriptionInfo>(o =>
+        public IEventBusBuilder AddTopic<T>(
+            string topicName
+        ) where T : IntegrationEvent
         {
-            o.TopicTypes[topicName] = typeof(T);
-        });
+            eventBusBuilder.Services.Configure<EventBusSubscriptionInfo>(o =>
+            {
+                o.TopicTypes[topicName] = typeof(T);
+            });
 
-        return eventBusBuilder;
+            return eventBusBuilder;
+        }
     }
 }

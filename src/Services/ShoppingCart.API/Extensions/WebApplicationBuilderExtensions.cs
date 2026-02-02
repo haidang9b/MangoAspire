@@ -5,20 +5,23 @@ namespace ShoppingCart.API.Extensions;
 
 public static class WebApplicationBuilderExtensions
 {
-    public static WebApplicationBuilder AddApiDefaults(this WebApplicationBuilder builder)
+    extension(WebApplicationBuilder builder)
     {
-        builder.AddServiceDefaults();
+        public WebApplicationBuilder AddApiDefaults()
+        {
+            builder.AddServiceDefaults();
 
-        builder.AddNpgsqlDataSource(connectionName: "shoppingcartdb");
+            builder.AddNpgsqlDataSource(connectionName: "shoppingcartdb");
 
-        builder.Services.AddServices(builder.Configuration);
+            builder.Services.AddServices(builder.Configuration);
 
-        builder.EnrichNpgsqlDbContext<ShoppingCartDbContext>();
+            builder.EnrichNpgsqlDbContext<ShoppingCartDbContext>();
 
-        builder.Services.AddEndpointsApiExplorer();
+            builder.Services.AddEndpointsApiExplorer();
 
-        builder.Services.AddSwaggerGen();
+            builder.Services.AddSwaggerGen();
 
-        return builder;
+            return builder;
+        }
     }
 }

@@ -11,7 +11,7 @@ public static class RabbitMQDependencyInjectionExtensions
     public static IEventBusBuilder AddRabbitMQEventBus(this IHostApplicationBuilder builder, string connectionName)
     {
         ArgumentNullException.ThrowIfNull(builder, nameof(builder));
-        
+
         // Add RabbitMQ Client (Aspire)
         builder.AddRabbitMQClient(connectionName);
 
