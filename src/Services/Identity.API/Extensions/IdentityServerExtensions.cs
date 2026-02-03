@@ -25,6 +25,7 @@ public static class IdentityServerExtensions
         .AddInMemoryApiScopes(SD.ApiScopes)
         .AddInMemoryClients(SD.Clients)
         .AddAspNetIdentity<ApplicationUser>()
+        .AddProfileService<ProfileService>()
         .AddDeveloperSigningCredential();
 
         return services;
