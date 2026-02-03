@@ -10,7 +10,6 @@ public static class ServiceBusDependencyInjectionExtensions
 
     extension(IHostApplicationBuilder builder)
     {
-
         public IEventBusBuilder AddServiceBusEventBus(string connectionName)
         {
             ArgumentNullException.ThrowIfNull(builder, nameof(builder));

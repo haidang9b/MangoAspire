@@ -20,7 +20,15 @@ var checkedOutEventTopic = serviceBus
     .AddServiceBusSubscription("checked-out-events-ordersapi");
 
 var createPaymentRequestQueue = serviceBus
-    .AddServiceBusQueue("create-payment-request");
+    .AddServiceBusQueue("create-payment-command");
+
+var orderPaymentFailedEventTopic = serviceBus
+    .AddServiceBusTopic("order-payment-failed-events")
+    .AddServiceBusSubscription("order-payment-failed-events-paymentsapi");
+
+var orderPaymentSucceededEventTopic = serviceBus
+    .AddServiceBusTopic("order-payment-succeeded-events")
+    .AddServiceBusSubscription("order-payment-succeeded-events-ordersapi");
 
 var identity = builder.AddProject<Projects.Identity_API>("identity-app")
     .WaitFor(identitydb)
@@ -48,11 +56,17 @@ var orders = builder.AddProject<Projects.Orders_API>("orders-api")
     .WithReference(orderdb)
     .WithReference(serviceBus);
 
+var payments = builder.AddProject<Projects.Payments_API>("payments-api")
+    .WaitFor(serviceBus)
+    .WithReference(serviceBus);
+
+
 builder.AddProject<Projects.Mango_Web>("mango-web")
     .WithReference(identity)
     .WithReference(products)
     .WithReference(shoppingcart)
     .WithReference(orders)
     .WithReference(coupon);
+
 
 builder.Build().Run();

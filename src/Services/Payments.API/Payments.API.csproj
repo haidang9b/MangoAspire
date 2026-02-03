@@ -7,14 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.Azure.Messaging.ServiceBus" />
-    <PackageReference Include="Aspire.Npgsql" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
   </ItemGroup>
 
   <ItemGroup>
@@ -23,7 +16,6 @@
     <ProjectReference Include="..\..\Shared\Mango.Core\Mango.Core.csproj" />
     <ProjectReference Include="..\..\Shared\Mango.Events\Mango.Events.csproj" />
     <ProjectReference Include="..\..\Shared\Mango.Infrastructure\Mango.Infrastructure.csproj" />
-    <ProjectReference Include="..\..\Shared\Mango.ServiceDefaults\Mango.ServiceDefaults.csproj" />
-  </ItemGroup>
+    <ProjectReference Include="..\..\Shared\Mango.ServiceDefaults\Mango.ServiceDefaults.csproj" />  </ItemGroup>
 
 </Project>
