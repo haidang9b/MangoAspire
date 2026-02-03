@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+﻿using Mango.Core.Auth;
 using Mango.Core.Domain;
 using Mango.Core.Exceptions;
 using MediatR;
@@ -11,23 +11,14 @@ public class RemoveCoupon
 {
     public class Command : ICommand<bool>
     {
-        public required string UserId { get; init; }
     }
 
-    public class Validator : AbstractValidator<Command>
-    {
-        public Validator()
-        {
-            RuleFor(x => x.UserId).NotEmpty();
-        }
-    }
-
-    internal class Handler(ShoppingCartDbContext dbContext) : IRequestHandler<Command, ResultModel<bool>>
+    internal class Handler(ShoppingCartDbContext dbContext, ICurrentUserContext currentUser) : IRequestHandler<Command, ResultModel<bool>>
     {
         public async Task<ResultModel<bool>> Handle(Command request, CancellationToken cancellationToken)
         {
             var cartHeader = await dbContext.CartHeaders
-                .FirstOrDefaultAsync(h => h.UserId == request.UserId, cancellationToken)
+                .FirstOrDefaultAsync(h => h.UserId == currentUser.UserId, cancellationToken)
                 ?? throw new DataVerificationException("Cart not found");
 
             cartHeader.CouponCode = "";

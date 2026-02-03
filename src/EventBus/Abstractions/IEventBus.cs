@@ -1,8 +1,6 @@
-﻿using EventBus.Events;
-
-namespace EventBus.Abstractions;
+﻿namespace EventBus.Abstractions;
 
 public interface IEventBus
 {
-    Task PublishAsync(IntegrationEvent @event);
+    Task PublishAsync<TEvent>(TEvent @event) where TEvent : class;
 }

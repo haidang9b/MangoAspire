@@ -1,4 +1,5 @@
-﻿using Mango.ServiceDefaults;
+﻿using Mango.Infrastructure.Extensions;
+using Mango.ServiceDefaults;
 using Microsoft.EntityFrameworkCore;
 using ShoppingCart.API.Data;
 using ShoppingCart.API.Routes;
@@ -7,32 +8,39 @@ namespace ShoppingCart.API.Extensions;
 
 public static class WebApplicationExtensions
 {
-    public static WebApplication UseApiPipeline(this WebApplication app)
+    extension(WebApplication app)
     {
-        if (app.Environment.IsDevelopment())
+        public WebApplication UseApiPipeline()
         {
-            app.UseSwagger();
-            app.UseSwaggerUI(options =>
+            if (app.Environment.IsDevelopment())
             {
-                options.SwaggerEndpoint("/swagger/v1/swagger.json", "Shopping Cart API");
-                options.RoutePrefix = "swagger";
-            });
+                app.UseSwagger();
+                app.UseSwaggerUI(options =>
+                {
+                    options.SwaggerEndpoint("/swagger/v1/swagger.json", "Shopping Cart API");
+                    options.RoutePrefix = "swagger";
+                });
+            }
+
+            app.UseHttpsRedirection();
+
+            app.UseAuthorization();
+            app.UseAuthorization();
+            app.UseCurrentUserContext();
+
+            app.MapDefaultEndpoints();
+            app.MapCartApi();
+
+            return app;
         }
 
-        app.UseHttpsRedirection();
+        public async Task<WebApplication> MigrateDatabaseAsync()
+        {
+            using var scope = app.Services.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<ShoppingCartDbContext>();
+            await dbContext.Database.MigrateAsync();
 
-        app.MapDefaultEndpoints();
-        app.MapCartApi();
-
-        return app;
-    }
-
-    public static async Task<WebApplication> MigrateDatabaseAsync(this WebApplication app)
-    {
-        using var scope = app.Services.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<ShoppingCartDbContext>();
-        await dbContext.Database.MigrateAsync();
-
-        return app;
+            return app;
+        }
     }
 }

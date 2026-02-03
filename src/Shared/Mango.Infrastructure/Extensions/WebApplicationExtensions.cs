@@ -1,25 +1,35 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using Mango.Infrastructure.Middlewares;
+using Microsoft.AspNetCore.Builder;
 using System.Reflection;
 
 namespace Mango.Infrastructure.Extensions;
 
 public static class WebApplicationExtensions
 {
-    public static WebApplication MapAllEndpoints(this WebApplication app)
+    extension(WebApplication app)
     {
-        var endpointTypes = Assembly.GetExecutingAssembly()
-            .GetTypes()
-            .Where(t =>
-                typeof(IEndpoints).IsAssignableFrom(t) &&
-                !t.IsInterface &&
-                !t.IsAbstract);
-
-        foreach (var type in endpointTypes)
+        public WebApplication MapAllEndpoints()
         {
-            var endpoint = (IEndpoints)Activator.CreateInstance(type)!;
-            endpoint.MapEndpoints(app);
+            var endpointTypes = Assembly.GetExecutingAssembly()
+                .GetTypes()
+                .Where(t =>
+                    typeof(IEndpoints).IsAssignableFrom(t) &&
+                    !t.IsInterface &&
+                    !t.IsAbstract);
+
+            foreach (var type in endpointTypes)
+            {
+                var endpoint = (IEndpoints)Activator.CreateInstance(type)!;
+                endpoint.MapEndpoints(app);
+            }
+
+            return app;
         }
 
-        return app;
+        public WebApplication UseCurrentUserContext()
+        {
+            app.UseMiddleware<CurrentUserContextMiddleware>();
+            return app;
+        }
     }
 }

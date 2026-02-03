@@ -25,8 +25,7 @@ public sealed class ServiceBusEventBus(
     IOptions<EventBusSubscriptionInfo> subscriptionOptions,
     ServiceBusTelemetry serviceBusTelemetry,
     ServiceBusClient serviceBusClient
-    )
-    : IEventBus, IDisposable, IAsyncDisposable, IHostedService
+) : IEventBus, IAsyncDisposable, IHostedService
 {
     private readonly EventBusSubscriptionInfo _eventBusSubscriptionInfo = subscriptionOptions.Value;
     private readonly ActivitySource _activitySource = serviceBusTelemetry.ActivitySource;
@@ -38,7 +37,6 @@ public sealed class ServiceBusEventBus(
 
     public void Dispose()
     {
-        Dispose(disposing: true);
         GC.SuppressFinalize(this);
     }
 
@@ -64,22 +62,7 @@ public sealed class ServiceBusEventBus(
         _senders.Clear();
     }
 
-    private void Dispose(bool disposing)
-    {
-        if (_disposed)
-        {
-            return;
-        }
-
-        if (disposing)
-        {
-            DisposeAsync().AsTask().GetAwaiter().GetResult();
-        }
-
-        _disposed = true;
-    }
-
-    public async Task PublishAsync(IntegrationEvent @event)
+    public async Task PublishAsync<TEvent>(TEvent @event) where TEvent : class
     {
         await _pipeline.Execute(async () =>
         {

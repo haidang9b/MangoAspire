@@ -1,8 +1,11 @@
-﻿using ShoppingCart.API.Dtos;
+﻿using Mango.Core.Domain;
+using Refit;
+using ShoppingCart.API.Dtos;
 
 namespace ShoppingCart.API.Services;
 
 public interface ICouponsApi
 {
-    Task<CouponDto> GetCouponAsync(string couponCode);
+    [Get("/api/coupons/{couponCode}")]
+    Task<ResultModel<CouponDto>> GetCouponAsync(string couponCode);
 }

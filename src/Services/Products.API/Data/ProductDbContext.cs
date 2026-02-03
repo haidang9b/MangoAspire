@@ -16,6 +16,5 @@ public class ProductDbContext : AppDbContextBase
     {
         base.OnModelCreating(modelBuilder);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ProductDbContext).Assembly);
-
     }
 }

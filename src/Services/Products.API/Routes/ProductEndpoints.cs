@@ -5,41 +5,46 @@ namespace Products.API.Routes;
 
 public static class ProductEndpoints
 {
-    public static RouteGroupBuilder MapProductsApi(this WebApplication routeGroupBuilder)
+    extension(WebApplication routeGroupBuilder)
     {
-        var group = routeGroupBuilder.MapGroup("/api/products")
-            .WithTags("Products");
-
-        group.MapGet("/", async (ISender sender) =>
+        public RouteGroupBuilder MapProductsApi()
         {
-            var result = await sender.Send(new GetProducts.Query());
-            return Results.Ok(result);
-        });
+            var group = routeGroupBuilder.MapGroup("/api/products")
+                .WithTags("Products");
 
-        group.MapGet("/{id:guid}", async (Guid id, ISender sender) =>
-        {
-            var result = await sender.Send(new GetProductById.Query { ProductId = id });
-            return Results.Ok(result);
-        });
+            group.MapGet("/", async (ISender sender) =>
+            {
+                var result = await sender.Send(new GetProducts.Query());
+                return Results.Ok(result);
+            });
 
-        group.MapPost("/", async (CreateProduct.Command command, ISender sender) =>
-        {
-            var result = await sender.Send(command);
-            return Results.Created($"/api/products/{result.Data}", result);
-        });
+            group.MapGet("/{id:guid}", async (Guid id, ISender sender) =>
+            {
+                var result = await sender.Send(new GetProductById.Query { ProductId = id });
+                return Results.Ok(result);
+            });
 
-        group.MapPut("/", async (UpdateProduct.Command command, ISender sender) =>
-        {
-            var result = await sender.Send(command);
-            return Results.Ok(result);
-        });
+            group.MapPost("/", async (CreateProduct.Command command, ISender sender) =>
+            {
+                var result = await sender.Send(command);
+                return Results.Created($"/api/products/{result.Data}", result);
+            });
 
-        group.MapDelete("/{id:guid}", async (Guid id, ISender sender) =>
-        {
-            var result = await sender.Send(new DeleteProduct.Command { Id = id });
-            return Results.Ok(result);
-        });
+            group.MapPut("/", async (UpdateProduct.Command command, ISender sender) =>
+            {
+                var result = await sender.Send(command);
+                return Results.Ok(result);
+            });
 
-        return group;
+            group.MapDelete("/{id:guid}", async (Guid id, ISender sender) =>
+            {
+                var result = await sender.Send(new DeleteProduct.Command { Id = id });
+                return Results.Ok(result);
+            });
+
+            return group;
+        }
     }
 }
+
+

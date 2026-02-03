@@ -8,25 +8,29 @@ public static class ServiceBusDependencyInjectionExtensions
 {
     private const string SectionName = "EventBus";
 
-    public static IEventBusBuilder AddServiceBusEventBus(this IHostApplicationBuilder builder, string connectionName)
+    extension(IHostApplicationBuilder builder)
     {
-        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
-        builder.AddAzureServiceBusClient(connectionName);
 
-        builder.Services.AddOpenTelemetry()
-           .WithTracing(tracing =>
-           {
-               tracing.AddSource(ServiceBusTelemetry.ActivitySourceName);
-           });
+        public IEventBusBuilder AddServiceBusEventBus(string connectionName)
+        {
+            ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+            builder.AddAzureServiceBusClient(connectionName);
 
-        builder.Services.Configure<EventBusOptions>(builder.Configuration.GetSection(SectionName));
+            builder.Services.AddOpenTelemetry()
+               .WithTracing(tracing =>
+               {
+                   tracing.AddSource(ServiceBusTelemetry.ActivitySourceName);
+               });
 
-        builder.Services.AddSingleton<ServiceBusTelemetry>();
-        builder.Services.AddSingleton<IEventBus, ServiceBusEventBus>();
+            builder.Services.Configure<EventBusOptions>(builder.Configuration.GetSection(SectionName));
 
-        builder.Services.AddSingleton<IHostedService>(sp => (ServiceBusEventBus)sp.GetRequiredService<IEventBus>());
+            builder.Services.AddSingleton<ServiceBusTelemetry>();
+            builder.Services.AddSingleton<IEventBus, ServiceBusEventBus>();
 
-        return new ServiceBusEventBusBuilder(builder.Services);
+            builder.Services.AddSingleton<IHostedService>(sp => (ServiceBusEventBus)sp.GetRequiredService<IEventBus>());
+
+            return new ServiceBusEventBusBuilder(builder.Services);
+        }
     }
 
     private class ServiceBusEventBusBuilder(IServiceCollection services) : IEventBusBuilder

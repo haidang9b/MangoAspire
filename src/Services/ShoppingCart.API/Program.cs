@@ -1,7 +1,7 @@
 ﻿using EventBus.Extensions;
 using EventBus.ServiceBus;
+using Mango.Events.Orders;
 using ShoppingCart.API.Extensions;
-using ShoppingCart.API.IntegrationEvents;
 
 var builder = WebApplication.CreateBuilder(args);
 

@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" />
+    <PackageReference Include="Microsoft.IdentityModel.Protocols.OpenIdConnect" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Shared\Mango.Core\Mango.Core.csproj" />
+    <ProjectReference Include="..\..\Shared\Mango.Infrastructure\Mango.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Shared\Mango.RestApis\Mango.RestApis.csproj" />
+    <ProjectReference Include="..\..\Shared\Mango.ServiceDefaults\Mango.ServiceDefaults.csproj" />
+  </ItemGroup>
+
+</Project>
