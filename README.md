@@ -37,15 +37,20 @@ The project follows a microservices architecture, leveraging .NET Aspire to simp
 MangoAspire/
 ├── src/
 │   ├── Mango.AppHost/           # .NET Aspire Orchestrator
-│   ├── Mango.ServiceDefaults/  # Common service configurations (Resilience, OTEL, etc.)
-│   ├── Services/               # Microservices
-│   │   ├── Identity.API        # Identity and Access Management
-│   │   ├── Products.API        # Product Catalog Service
-│   │   └── Coupons.API         # Promotions and Discount Service
-│   ├── Shared/                 # Shared libraries (Mango.Core, Mango.Infrastructure)
-│   └── EventBus/               # Message Bus abstraction and implementations
-├── docs/                       # Project documentation
-└── Directory.Packages.props    # Centralized NuGet versioning
+│   ├── Mango.ServiceDefaults/   # Common service configurations (Resilience, OTEL, etc.)
+│   ├── Services/                # Microservices
+│   │   ├── Identity.API         # Identity and Access Management (OpenIddict)
+│   │   ├── Products.API         # Product Catalog Service
+│   │   ├── Coupons.API          # Promotions and Discount Service
+│   │   ├── Orders.API           # Order Management Service
+│   │   └── ShoppingCart.API     # Shopping Cart Service
+│   ├── Shared/                  # Shared libraries (Mango.Core, Mango.Infrastructure)
+│   ├── EventBus/                # Message Bus abstraction
+│   ├── EventBus.RabbitMQ/       # RabbitMQ implementation
+│   ├── EventBus.ServiceBus/     # Azure Service Bus implementation
+│   └── UI/                      # Frontend applications
+├── docs/                        # Project documentation
+└── Directory.Packages.props     # Centralized NuGet versioning
 ```
 
 ---
@@ -82,3 +87,11 @@ MangoAspire/
 
 For detailed information on project-specific setups:
 - [NuGet Package Management Guide](docs/PACKAGE_MANAGEMENT.md)
+- [API Project Structure & Architecture](.agent/API_PROJECT_STRUCTURE.md)
+- [Coding Conventions & Standards](.agent/CODING_CONVENTIONS.md)
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
