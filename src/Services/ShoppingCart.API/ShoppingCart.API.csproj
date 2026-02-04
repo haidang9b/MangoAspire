@@ -19,7 +19,8 @@
   </ItemGroup>
   
   <ItemGroup>
-    <ProjectReference Include="..\..\EventBus.ServiceBus\EventBus.ServiceBus.csproj" />
+    <ProjectReference Include="..\..\EventBus.RabbitMQ\EventBus.RabbitMQ.csproj" />
+    <!--<ProjectReference Include="..\..\EventBus.ServiceBus\EventBus.ServiceBus.csproj" />-->
     <ProjectReference Include="..\..\EventBus\EventBus.csproj" />
     <ProjectReference Include="..\..\Shared\Mango.Core\Mango.Core.csproj" />
     <ProjectReference Include="..\..\Shared\Mango.Events\Mango.Events.csproj" />

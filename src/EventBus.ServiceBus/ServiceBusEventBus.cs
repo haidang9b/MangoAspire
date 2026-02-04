@@ -23,6 +23,7 @@ public sealed class ServiceBusEventBus(
     IServiceProvider serviceProvider,
     IOptions<EventBusOptions> options,
     IOptions<EventBusSubscriptionInfo> subscriptionOptions,
+    IOptions<ServiceBusInfo> serviceBusInfoOptions,
     ServiceBusTelemetry serviceBusTelemetry,
     ServiceBusClient serviceBusClient
 ) : IEventBus, IAsyncDisposable, IHostedService
@@ -31,6 +32,7 @@ public sealed class ServiceBusEventBus(
     private readonly ActivitySource _activitySource = serviceBusTelemetry.ActivitySource;
     private readonly ResiliencePipeline _pipeline = CreateResiliencePipeline(options.Value.RetryCount);
     private readonly TextMapPropagator _propagator = serviceBusTelemetry.Propagator;
+    private readonly ServiceBusInfo _serviceBusInfo = serviceBusInfoOptions.Value;
     private readonly List<ServiceBusProcessor> _processors = [];
     private readonly ConcurrentDictionary<string, ServiceBusSender> _senders = new();
     private bool _disposed;
@@ -81,10 +83,10 @@ public sealed class ServiceBusEventBus(
                 contextToInject = Activity.Current.Context;
             }
 
-            var senderNames = _eventBusSubscriptionInfo.TopicTypes
+            var senderNames = _serviceBusInfo.TopicTypes
                 .Where(x => x.Value == eventType)
                 .Select(x => x.Key)
-                .Concat(_eventBusSubscriptionInfo.QueueTypes
+                .Concat(_serviceBusInfo.QueueTypes
                     .Where(x => x.Value == eventType)
                     .Select(x => x.Key))
                 .Distinct()
@@ -129,7 +131,7 @@ public sealed class ServiceBusEventBus(
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        foreach (var subscription in _eventBusSubscriptionInfo.SubscriptionTypes)
+        foreach (var subscription in _serviceBusInfo.SubscriptionTypes)
         {
             var processor = serviceBusClient.CreateProcessor(
                 subscription.Key.TopicName,
@@ -154,7 +156,7 @@ public sealed class ServiceBusEventBus(
             await processor.StartProcessingAsync(cancellationToken);
         }
 
-        foreach (var queue in _eventBusSubscriptionInfo.ConsumerTypes)
+        foreach (var queue in _serviceBusInfo.ConsumerTypes)
         {
             var processor = serviceBusClient.CreateProcessor(
             queue.Key,

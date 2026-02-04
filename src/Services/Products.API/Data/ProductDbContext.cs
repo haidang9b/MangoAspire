@@ -12,6 +12,10 @@ public class ProductDbContext : AppDbContextBase
 
     public DbSet<Product> Products { get; set; }
 
+    public DbSet<CatalogBrand> CatalogBrands { get; set; }
+
+    public DbSet<CatalogType> CatalogTypes { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

@@ -12,23 +12,33 @@ var coupondb = postgres.AddDatabase("coupondb");
 var identitydb = postgres.AddDatabase("identitydb");
 var shoppingcartdb = postgres.AddDatabase("shoppingcartdb");
 
-var serviceBus = builder.AddAzureServiceBus("mango")
-    .RunAsEmulator();
+//var debezium = builder.AddContainer("debezium", "debezium/server", "2.7.3.Final")
+//    .WithHttpEndpoint(port: 8083, targetPort: 8083, name: "api")
+//    .WithBindMount("./application.properties", "/debezium/conf/application.properties")
+//    .WithVolume("debezium-data", "/debezium/data")
+//    .WithLifetime(ContainerLifetime.Persistent)
+//    .WaitFor(productdb);
 
-var checkedOutEventTopic = serviceBus
-    .AddServiceBusTopic("checked-out-events")
-    .AddServiceBusSubscription("checked-out-events-ordersapi");
+//var serviceBus = builder.AddAzureServiceBus("mango")
+//    .RunAsEmulator();
 
-var createPaymentRequestQueue = serviceBus
-    .AddServiceBusQueue("create-payment-command");
+//var checkedOutEventTopic = serviceBus
+//    .AddServiceBusTopic("checked-out-events")
+//    .AddServiceBusSubscription("checked-out-events-ordersapi");
 
-var orderPaymentFailedEventTopic = serviceBus
-    .AddServiceBusTopic("order-payment-failed-events")
-    .AddServiceBusSubscription("order-payment-failed-events-paymentsapi");
+//var createPaymentRequestQueue = serviceBus
+//    .AddServiceBusQueue("create-payment-command");
 
-var orderPaymentSucceededEventTopic = serviceBus
-    .AddServiceBusTopic("order-payment-succeeded-events")
-    .AddServiceBusSubscription("order-payment-succeeded-events-ordersapi");
+//var orderPaymentFailedEventTopic = serviceBus
+//    .AddServiceBusTopic("order-payment-failed-events")
+//    .AddServiceBusSubscription("order-payment-failed-events-paymentsapi");
+
+//var orderPaymentSucceededEventTopic = serviceBus
+//    .AddServiceBusTopic("order-payment-succeeded-events")
+//    .AddServiceBusSubscription("order-payment-succeeded-events-ordersapi");
+
+var rabbitMq = builder.AddRabbitMQ("eventbus")
+    .WithLifetime(ContainerLifetime.Persistent);
 
 var identity = builder.AddProject<Projects.Identity_API>("identity-app")
     .WaitFor(identitydb)
@@ -43,23 +53,27 @@ var coupon = builder.AddProject<Projects.Coupons_API>("coupons-api")
     .WithReference(coupondb);
 
 var shoppingcart = builder.AddProject<Projects.ShoppingCart_API>("shoppingcart-api")
+    .WaitFor(rabbitMq).WithReference(rabbitMq)
     .WaitFor(shoppingcartdb)
-    .WaitFor(serviceBus)
+    //.WaitFor(serviceBus)
     .WithReference(shoppingcartdb)
-    .WithReference(serviceBus)
+    //.WithReference(serviceBus)
     .WithReference(identity)
     .WithReference(coupon);
 
 var orders = builder.AddProject<Projects.Orders_API>("orders-api")
     .WaitFor(orderdb)
-    .WaitFor(serviceBus)
+    .WaitFor(rabbitMq)
+    //.WaitFor(serviceBus)
     .WithReference(orderdb)
-    .WithReference(serviceBus);
+    .WithReference(rabbitMq);
+//.WithReference(serviceBus);
 
 var payments = builder.AddProject<Projects.Payments_API>("payments-api")
-    .WaitFor(serviceBus)
-    .WithReference(serviceBus);
-
+    .WaitFor(rabbitMq)
+    .WithReference(rabbitMq);
+//.WaitFor(serviceBus)
+//.WithReference(serviceBus);
 
 builder.AddProject<Projects.Mango_Web>("mango-web")
     .WithReference(identity)
@@ -67,6 +81,5 @@ builder.AddProject<Projects.Mango_Web>("mango-web")
     .WithReference(shoppingcart)
     .WithReference(orders)
     .WithReference(coupon);
-
 
 builder.Build().Run();

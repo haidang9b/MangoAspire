@@ -1,6 +1,8 @@
 ﻿using EventBus.Abstractions;
+using EventBus.Events;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using System.Diagnostics.CodeAnalysis;
 
 namespace EventBus.RabbitMQ;
 
@@ -34,5 +36,28 @@ public static class RabbitMQDependencyInjectionExtensions
     private class RabbitMQEventBusBuilder(IServiceCollection services) : IEventBusBuilder
     {
         public IServiceCollection Services => services;
+    }
+
+    public static IEventBusBuilder AddSubscription<T, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TH>(
+        this IEventBusBuilder eventBusBuilder,
+        string fromExchangeName
+    ) where T : IntegrationEvent
+        where TH : class, IIntegrationEventHandler<T>
+    {
+        // Use keyed services to register multiple handlers for the same event type
+        // the consumer can use IKeyedServiceProvider.GetKeyedService<IIntegrationEventHandler>(typeof(T)) to get all
+        // handlers for the event type.
+        eventBusBuilder.Services.AddKeyedTransient<IIntegrationEventHandler, TH>(typeof(T));
+
+        eventBusBuilder.Services.Configure<RabbitMQInfo>(o =>
+        {
+            // Keep track of all registered event types and their name mapping. We send these event types over the message bus
+            // and we don't want to do Type.GetType, so we keep track of the name mapping here.
+
+            // This list will also be used to subscribe to events from the underlying message broker implementation.
+            o.EventTypes[fromExchangeName] = typeof(T);
+        });
+
+        return eventBusBuilder;
     }
 }
