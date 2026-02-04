@@ -1,13 +1,16 @@
-﻿using EventBus.Extensions;
-using EventBus.ServiceBus;
-using Mango.Events.Orders;
+﻿using EventBus.RabbitMQ;
 using ShoppingCart.API.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddApiDefaults();
-builder.AddServiceBusEventBus("mango")
-    .AddTopic<CartCheckedOutEvent>("checked-out-events");
+
+// for ServiceBus
+
+//builder.AddServiceBusEventBus("mango")
+//    .AddTopic<CartCheckedOutEvent>("checked-out-events");
+
+builder.AddRabbitMQEventBus("eventbus");
 
 var app = builder.Build();
 

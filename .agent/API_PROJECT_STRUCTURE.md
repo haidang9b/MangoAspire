@@ -20,6 +20,9 @@ Service.API/
 │   └── [FeatureName]/  # Feature folder (e.g., Products, Carts)
 │       ├── Feature1.cs # Command/Query + Handler + Validator
 │       └── Feature2.cs
+├── IntegrationEvents/  # Integration Events and Handlers
+│   ├── Events/         # Event definitions (records)
+│   └── Handlers/       # Event Handlers implementation
 ├── Routes/             # Minimal API route definitions
 └── Program.cs          # Entry point (ultra-clean)
 ```
@@ -225,3 +228,33 @@ The following behaviors are registered in order:
 1. **LoggingBehavior** - Logs request/response for observability
 2. **ValidationBehavior** - Validates requests using FluentValidation
 3. **TxBehavior** - Wraps commands in database transactions
+
+## Event-Driven Architecture
+
+The solution uses an abstracted Event Bus (RabbitMQ / Azure Service Bus) for asynchronous service-to-service communication.
+
+### 1. Publishing Events
+Inject `IEventBus` into your MediatR handlers to publish integration events.
+
+```csharp
+internal class CreateOrderHandler(IEventBus eventBus, MyDbContext db) : IRequestHandler<Command, Result>
+{
+    public async Task<Result> Handle(Command request, CancellationToken ct)
+    {
+        // ... save order ...
+        await eventBus.PublishAsync(new OrderCreatedEvent(order.Id));
+        return Result.Success();
+    }
+}
+```
+
+### 2. Handling Events
+Event subscriptions are configured in `Program.cs` and handlers are implemented in the `IntegrationEvents/Handlers` folder.
+
+```csharp
+// Program.cs
+builder.AddRabbitMQEventBus("eventbus")
+    .AddSubscription<OrderCreatedEvent, OrderCreatedHandler>("orders.events");
+```
+
+See [Event Bus Documentation](../docs/EVENT_BUS.md) for detailed configuration and switching instructions.
