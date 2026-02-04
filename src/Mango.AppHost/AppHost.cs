@@ -75,11 +75,13 @@ var payments = builder.AddProject<Projects.Payments_API>("payments-api")
 //.WaitFor(serviceBus)
 //.WithReference(serviceBus);
 
+
 builder.AddProject<Projects.Mango_Web>("mango-web")
     .WithReference(identity)
     .WithReference(products)
     .WithReference(shoppingcart)
     .WithReference(orders)
     .WithReference(coupon);
+
 
 builder.Build().Run();
