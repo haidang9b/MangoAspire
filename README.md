@@ -13,7 +13,7 @@
 The project follows a microservices architecture, leveraging .NET Aspire to simplify service discovery, configuration, and orchestration.
 
 - **Orchestration**: .NET Aspire AppHost manages service lifecycles and dependencies.
-- **Communication**: Internal service-to-service communication via REST and EventBus.
+- **Communication**: Synchronous REST APIs and Asynchronous EventBus (RabbitMQ / Azure Service Bus).
 - **Data Persistence**: Dedicated PostgreSQL databases for each microservice to ensure loose coupling.
 - **Security**: Centralized identity management using Duende IdentityServer.
 
@@ -89,6 +89,7 @@ For detailed information on project-specific setups:
 - [NuGet Package Management Guide](docs/PACKAGE_MANAGEMENT.md)
 - [API Project Structure & Architecture](.agent/API_PROJECT_STRUCTURE.md)
 - [Coding Conventions & Standards](.agent/CODING_CONVENTIONS.md)
+- [Event Bus Usage & Switching](docs/EVENT_BUS.md)
 
 ---
 
