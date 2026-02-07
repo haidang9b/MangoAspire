@@ -1,10 +1,4 @@
-﻿using FluentValidation;
-using Mango.Core.Domain;
-using MediatR;
-using Products.API.Data;
-using Products.API.Entities;
-
-namespace Products.API.Features.Products;
+﻿namespace Products.API.Features.Products;
 
 public class CreateProduct
 {

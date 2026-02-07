@@ -1,5 +1,4 @@
 ﻿using Mango.ServiceDefaults;
-using ShoppingCart.API.Data;
 
 namespace ShoppingCart.API.Extensions;
 

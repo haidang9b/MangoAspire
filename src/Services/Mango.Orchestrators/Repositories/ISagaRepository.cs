@@ -1,6 +1,4 @@
-using Mango.SagaOrchestrators.Entities;
-
-namespace Mango.SagaOrchestrators.Repositories;
+﻿namespace Mango.SagaOrchestrators.Repositories;
 
 public interface ISagaRepository
 {

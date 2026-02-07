@@ -3,7 +3,6 @@ using Mango.Infrastructure.Behaviors;
 using Mango.Infrastructure.Extensions;
 using Mango.Infrastructure.Interceptors;
 using Microsoft.EntityFrameworkCore;
-using Orders.API.Data;
 using Orders.API.ExceptionHandlers;
 
 namespace Orders.API.Extensions;

@@ -1,9 +1,4 @@
-﻿using FluentValidation;
-using Mango.Core.Domain;
-using MediatR;
-using Microsoft.EntityFrameworkCore;
-using Orders.API.Data;
-using Orders.API.Enums;
+﻿using Microsoft.EntityFrameworkCore;
 
 namespace Orders.API.Features.Orders;
 

@@ -1,5 +1,4 @@
-﻿using Coupons.API.Data;
-using Coupons.API.ExceptionHandlers;
+﻿using Coupons.API.ExceptionHandlers;
 using Mango.Core.Behaviors;
 using Mango.Infrastructure.Behaviors;
 using Mango.Infrastructure.Extensions;

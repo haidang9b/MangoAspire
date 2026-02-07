@@ -1,5 +1,4 @@
-﻿using Mango.Core.Domain;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ShoppingCart.API.Entities;
 

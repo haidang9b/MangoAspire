@@ -1,6 +1,4 @@
-using Mango.Events.Orders;
-
-namespace Mango.SagaOrchestrators.Sagas;
+﻿namespace Mango.SagaOrchestrators.Sagas;
 
 /// <summary>
 /// Interface for the Checkout Saga Orchestrator.

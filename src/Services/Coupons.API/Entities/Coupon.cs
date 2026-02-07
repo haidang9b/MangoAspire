@@ -1,6 +1,4 @@
-﻿using Mango.Core.Domain;
-
-namespace Coupons.API.Entities;
+﻿namespace Coupons.API.Entities;
 
 public class Coupon : EntityBase<Guid>
 {

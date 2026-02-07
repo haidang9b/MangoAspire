@@ -1,5 +1,4 @@
 ﻿using EventBus.RabbitMQ;
-using Mango.Events.Orders;
 using Orders.API.Extensions;
 using Orders.API.Intergrations.Handlers;
 

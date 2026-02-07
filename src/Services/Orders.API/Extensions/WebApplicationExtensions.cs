@@ -1,6 +1,5 @@
-using Mango.ServiceDefaults;
+﻿using Mango.ServiceDefaults;
 using Microsoft.EntityFrameworkCore;
-using Orders.API.Data;
 using Orders.API.Routes;
 
 namespace Orders.API.Extensions;

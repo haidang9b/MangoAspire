@@ -1,5 +1,4 @@
-﻿using MediatR;
-using Products.API.Features.Products;
+﻿using Products.API.Features.Products;
 
 namespace Products.API.Routes;
 

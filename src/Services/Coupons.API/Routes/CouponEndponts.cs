@@ -1,5 +1,4 @@
 ﻿using Coupons.API.Features.Coupons;
-using MediatR;
 
 namespace Coupons.API.Routes;
 

@@ -1,7 +1,6 @@
 ﻿using Mango.Infrastructure.Extensions;
 using Mango.ServiceDefaults;
 using Microsoft.EntityFrameworkCore;
-using ShoppingCart.API.Data;
 using ShoppingCart.API.Routes;
 
 namespace ShoppingCart.API.Extensions;

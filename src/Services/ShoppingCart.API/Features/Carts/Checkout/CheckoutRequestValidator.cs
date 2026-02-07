@@ -1,5 +1,4 @@
-﻿using FluentValidation;
-using ShoppingCart.API.Features.Carts.Checkout.Checkout;
+﻿using ShoppingCart.API.Features.Carts.Checkout.Checkout;
 
 namespace ShoppingCart.API.Features.Carts.Checkout;
 

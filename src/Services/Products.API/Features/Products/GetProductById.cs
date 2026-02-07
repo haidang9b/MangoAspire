@@ -1,8 +1,5 @@
-﻿using Mango.Core.Domain;
-using Mango.Core.Exceptions;
-using MediatR;
+﻿using Mango.Core.Exceptions;
 using Microsoft.EntityFrameworkCore;
-using Products.API.Data;
 using Products.API.Dtos;
 
 namespace Products.API.Features.Products;

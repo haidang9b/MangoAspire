@@ -1,7 +1,4 @@
-﻿using EventBus.Abstractions;
-using Mango.Events.Orders;
-using MediatR;
-using Payments.API.Features;
+﻿using Payments.API.Features;
 
 namespace Payments.API.IntegrationHandlers;
 

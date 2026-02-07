@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Products.API.Entities;
 
 namespace Products.API.Data.EntityTypeConfigurations;
 

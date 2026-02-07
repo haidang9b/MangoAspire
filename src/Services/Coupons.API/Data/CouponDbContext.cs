@@ -1,5 +1,4 @@
-﻿using Coupons.API.Entities;
-using Mango.Infrastructure;
+﻿using Mango.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
 namespace Coupons.API.Data;

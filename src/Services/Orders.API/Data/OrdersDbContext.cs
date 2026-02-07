@@ -1,6 +1,5 @@
 ﻿using Mango.Infrastructure;
 using Microsoft.EntityFrameworkCore;
-using Orders.API.Entities;
 
 namespace Orders.API.Data;
 

@@ -1,5 +1,4 @@
-﻿using Mango.Core.Domain;
-using Mango.RestApis.Requests;
+﻿using Mango.RestApis.Requests;
 
 namespace ShoppingCart.API.Features.Carts.Checkout.Checkout;
 

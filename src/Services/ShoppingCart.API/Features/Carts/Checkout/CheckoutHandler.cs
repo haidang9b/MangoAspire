@@ -1,11 +1,7 @@
-﻿using EventBus.Abstractions;
-using Mango.Core.Auth;
-using Mango.Core.Domain;
+﻿using Mango.Core.Auth;
 using Mango.Core.Exceptions;
 using Mango.Events.Orders;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
-using ShoppingCart.API.Data;
 using ShoppingCart.API.Features.Carts.Checkout.Checkout;
 using ShoppingCart.API.Services;
 

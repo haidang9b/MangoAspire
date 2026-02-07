@@ -1,6 +1,4 @@
-using EventBus.Abstractions;
-using Mango.Events.Orders;
-using MediatR;
+﻿using Mango.Events.Orders;
 using Products.API.Features.Products;
 
 namespace Products.API.IntegrationHandlers;

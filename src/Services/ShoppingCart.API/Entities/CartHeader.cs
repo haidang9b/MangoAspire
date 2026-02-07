@@ -1,6 +1,4 @@
-﻿using Mango.Core.Domain;
-
-namespace ShoppingCart.API.Entities;
+﻿namespace ShoppingCart.API.Entities;
 
 public class CartHeader : EntityBase<Guid>
 {

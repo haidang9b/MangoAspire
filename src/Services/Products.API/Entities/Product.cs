@@ -1,6 +1,4 @@
-﻿using Mango.Core.Domain;
-
-namespace Products.API.Entities;
+﻿namespace Products.API.Entities;
 
 public class Product : EntityBase<Guid>
 {

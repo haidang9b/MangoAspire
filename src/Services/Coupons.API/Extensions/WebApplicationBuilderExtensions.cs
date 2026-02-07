@@ -1,5 +1,4 @@
-﻿using Coupons.API.Data;
-using Mango.ServiceDefaults;
+﻿using Mango.ServiceDefaults;
 
 namespace Coupons.API.Extensions;
 

@@ -1,8 +1,4 @@
-﻿using Coupons.API.Data;
-using Coupons.API.Dtos;
-using FluentValidation;
-using Mango.Core.Domain;
-using MediatR;
+﻿using Coupons.API.Dtos;
 using Microsoft.EntityFrameworkCore;
 
 namespace Coupons.API.Features.Coupons;
