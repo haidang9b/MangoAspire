@@ -1,5 +1,4 @@
 ﻿using Mango.RestApis.Requests;
-using MediatR;
 using ShoppingCart.API.Features.Carts;
 using ShoppingCart.API.Features.Carts.Checkout.Checkout;
 using ShoppingCart.API.Features.Carts.GetCarts;

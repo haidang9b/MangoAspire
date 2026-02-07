@@ -1,7 +1,4 @@
-﻿using Mango.Core.Domain;
-using Orders.API.Enums;
-
-namespace Orders.API.Entities;
+﻿namespace Orders.API.Entities;
 
 public class OrderHeader : EntityBase<Guid>
 {

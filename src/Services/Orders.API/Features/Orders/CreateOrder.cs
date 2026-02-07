@@ -1,12 +1,4 @@
-﻿using EventBus.Abstractions;
-using FluentValidation;
-using Mango.Core.Domain;
-using Mango.Events.Orders;
-using MediatR;
-using Orders.API.Data;
-using Orders.API.Entities;
-
-namespace Orders.API.Features.Orders;
+﻿namespace Orders.API.Features.Orders;
 
 public class CreateOrder
 {

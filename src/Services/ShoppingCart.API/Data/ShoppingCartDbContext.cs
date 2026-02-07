@@ -1,6 +1,5 @@
 ﻿using Mango.Infrastructure;
 using Microsoft.EntityFrameworkCore;
-using ShoppingCart.API.Entities;
 
 namespace ShoppingCart.API.Data;
 

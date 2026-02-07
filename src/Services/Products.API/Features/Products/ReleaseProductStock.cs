@@ -1,8 +1,4 @@
-﻿using FluentValidation;
-using Mango.Core.Domain;
-using MediatR;
-using Microsoft.EntityFrameworkCore;
-using Products.API.Data;
+﻿using Microsoft.EntityFrameworkCore;
 
 namespace Products.API.Features.Products;
 

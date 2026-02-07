@@ -1,5 +1,4 @@
 ﻿using Mango.SagaOrchestrators.Data;
-using Mango.SagaOrchestrators.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Mango.SagaOrchestrators.Repositories;

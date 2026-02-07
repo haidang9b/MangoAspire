@@ -1,8 +1,4 @@
-﻿using EventBus.Abstractions;
-using Mango.Events.Orders;
-using Mango.SagaOrchestrators.Sagas;
-
-namespace Mango.SagaOrchestrators.IntegrationHandlers;
+﻿namespace Mango.SagaOrchestrators.IntegrationHandlers;
 
 public class StockReservationFailedEventHandler(
     ICheckoutSagaOrchestrator orchestrator,

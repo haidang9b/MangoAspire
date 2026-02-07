@@ -1,5 +1,4 @@
 ﻿using Mango.ServiceDefaults;
-using Orders.API.Data;
 
 namespace Orders.API.Extensions;
 

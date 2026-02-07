@@ -1,6 +1,4 @@
-﻿using FluentValidation;
-using Mango.Core.Domain;
-using Mango.Core.Exceptions;
+﻿using Mango.Core.Exceptions;
 using Mango.Core.Extensions;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;

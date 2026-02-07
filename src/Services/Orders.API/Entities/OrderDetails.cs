@@ -1,6 +1,4 @@
-﻿using Mango.Core.Domain;
-
-namespace Orders.API.Entities;
+﻿namespace Orders.API.Entities;
 
 public class OrderDetails : EntityBase<Guid>
 {

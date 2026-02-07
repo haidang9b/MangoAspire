@@ -1,7 +1,4 @@
-﻿using Mango.Core.Domain;
-using Mango.Core.Exceptions;
-using MediatR;
-using Products.API.Data;
+﻿using Mango.Core.Exceptions;
 
 namespace Products.API.Features.Products;
 

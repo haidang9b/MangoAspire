@@ -1,5 +1,4 @@
-﻿using Mango.Core.Domain;
-using Refit;
+﻿using Refit;
 using ShoppingCart.API.Dtos;
 
 namespace ShoppingCart.API.Services;

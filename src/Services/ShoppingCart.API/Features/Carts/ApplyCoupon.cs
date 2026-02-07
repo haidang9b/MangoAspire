@@ -1,10 +1,6 @@
-﻿using FluentValidation;
-using Mango.Core.Auth;
-using Mango.Core.Domain;
+﻿using Mango.Core.Auth;
 using Mango.Core.Exceptions;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
-using ShoppingCart.API.Data;
 
 namespace ShoppingCart.API.Features.Carts;
 

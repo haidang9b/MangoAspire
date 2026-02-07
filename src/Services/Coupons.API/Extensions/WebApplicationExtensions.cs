@@ -1,5 +1,4 @@
-﻿using Coupons.API.Data;
-using Coupons.API.Routes;
+﻿using Coupons.API.Routes;
 using Mango.ServiceDefaults;
 using Microsoft.EntityFrameworkCore;
 

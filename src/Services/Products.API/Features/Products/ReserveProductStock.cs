@@ -1,10 +1,5 @@
-﻿using EventBus.Abstractions;
-using FluentValidation;
-using Mango.Core.Domain;
-using Mango.Events.Orders;
-using MediatR;
+﻿using Mango.Events.Orders;
 using Microsoft.EntityFrameworkCore;
-using Products.API.Data;
 
 namespace Products.API.Features.Products;
 

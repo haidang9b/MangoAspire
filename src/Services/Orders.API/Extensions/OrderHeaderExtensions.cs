@@ -1,6 +1,4 @@
-﻿using Orders.API.Entities;
-
-namespace Orders.API.Extensions;
+﻿namespace Orders.API.Extensions;
 
 public static class OrderHeaderExtensions
 {

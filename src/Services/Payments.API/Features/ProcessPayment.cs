@@ -1,9 +1,4 @@
-using EventBus.Abstractions;
-using FluentValidation;
-using Mango.Core.Domain;
-using Mango.Events.Orders;
-using MediatR;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using Payments.API.Configurations;
 
 namespace Payments.API.Features;

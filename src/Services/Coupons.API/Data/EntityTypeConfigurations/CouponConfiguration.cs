@@ -1,5 +1,4 @@
-﻿using Coupons.API.Entities;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Coupons.API.Data.EntityTypeConfigurations;

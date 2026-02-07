@@ -1,5 +1,4 @@
 ﻿using EventBus.RabbitMQ;
-using Mango.Events.Orders;
 using Payments.API.Extensions;
 using Payments.API.IntegrationHandlers;
 

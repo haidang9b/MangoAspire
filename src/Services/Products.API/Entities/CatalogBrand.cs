@@ -1,6 +1,4 @@
-﻿using Mango.Core.Domain;
-
-namespace Products.API.Entities;
+﻿namespace Products.API.Entities;
 
 public class CatalogBrand : EntityBase<int>
 {

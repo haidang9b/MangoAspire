@@ -1,5 +1,4 @@
 ﻿using Mango.Core.Domain;
-using Mango.SagaOrchestrators.Enums;
 
 namespace Mango.SagaOrchestrators.Entities;
 

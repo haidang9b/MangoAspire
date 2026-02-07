@@ -1,9 +1,6 @@
 ﻿using EventBus.RabbitMQ;
-using Mango.Events.Orders;
 using Mango.SagaOrchestrators.Extensions;
 using Mango.SagaOrchestrators.IntegrationHandlers;
-using Mango.SagaOrchestrators.Repositories;
-using Mango.SagaOrchestrators.Sagas;
 
 var builder = WebApplication.CreateBuilder(args);
 
