@@ -11,12 +11,13 @@ public static class ProductEndpoints
             var group = routeGroupBuilder.MapGroup("/api/products")
                 .WithTags("Products");
 
-            group.MapGet("/", async (int pageIndex, int pageSize, ISender sender) =>
+            group.MapGet("/", async (int pageIndex, int pageSize, int? catalogTypeId, ISender sender) =>
             {
-                var result = await sender.Send(new GetProducts.Query 
-                { 
-                    PageIndex = pageIndex, 
-                    PageSize = pageSize 
+                var result = await sender.Send(new GetProducts.Query
+                {
+                    PageIndex = pageIndex,
+                    PageSize = pageSize,
+                    CatalogTypeId = catalogTypeId
                 });
                 return Results.Ok(result);
             });

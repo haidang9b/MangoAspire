@@ -22,6 +22,7 @@ public static class WebApplicationExtensions
 
         app.MapDefaultEndpoints();
         app.MapProductsApi();
+        app.MapCatalogTypesApi();
 
         return app;
     }

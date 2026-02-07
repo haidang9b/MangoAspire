@@ -12,6 +12,8 @@ public class CreateProduct
 
         public required string CategoryName { get; set; }
 
+        public int? CatalogTypeId { get; set; }
+
         public required string ImageUrl { get; set; }
 
         public int Stock { get; set; }
@@ -38,6 +40,7 @@ public class CreateProduct
                     Price = request.Price,
                     Description = request.Description,
                     CategoryName = request.CategoryName,
+                    CatalogTypeId = request.CatalogTypeId,
                     ImageUrl = request.ImageUrl,
                     AvailableStock = request.Stock
                 };

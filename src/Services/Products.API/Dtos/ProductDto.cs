@@ -12,6 +12,8 @@ public record ProductDto
 
     public required string CategoryName { get; set; }
 
+    public int? CatalogTypeId { get; set; }
+
     public required string ImageUrl { get; set; }
 
     public int Stock { get; set; }

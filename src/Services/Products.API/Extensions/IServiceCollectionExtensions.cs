@@ -15,6 +15,8 @@ public static class IServiceCollectionExtensions
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         services.AddOpenApi();
 
+        services.AddMemoryCache();
+
         services.AddPostgresDbContext<ProductDbContext>(
             configuration.GetConnectionString("productdb")
                 ?? throw new ArgumentNullException("productdb"),

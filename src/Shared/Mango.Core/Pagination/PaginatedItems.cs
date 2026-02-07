@@ -1,6 +1,6 @@
-namespace Mango.Core.Pagination;
+﻿namespace Mango.Core.Pagination;
 
-public class PaginatedItems<TEntity>(int pageIndex, int pageSize, long count, IEnumerable<TEntity> data) 
+public class PaginatedItems<TEntity>(int pageIndex, int pageSize, long count, IEnumerable<TEntity> data)
     where TEntity : class
 {
     public int PageIndex { get; } = pageIndex;

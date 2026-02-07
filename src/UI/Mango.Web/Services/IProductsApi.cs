@@ -7,7 +7,7 @@ namespace Mango.Web.Services;
 public interface IProductsApi
 {
     [Get("/api/products")]
-    Task<ResultModel<PaginatedItemsDto<ProductDto>>> GetProductsAsync(int pageIndex = 0, int pageSize = 10);
+    Task<ResultModel<PaginatedItemsDto<ProductDto>>> GetProductsAsync(int pageIndex = 1, int pageSize = 10, int? catalogTypeId = null);
 
     [Get("/api/products/{id}")]
     Task<ResultModel<ProductDto>> GetProductByIdAsync(Guid id);
@@ -20,4 +20,7 @@ public interface IProductsApi
 
     [Delete("/api/products/{id}")]
     Task<ResultModel<bool>> DeleteProductAsync(Guid id);
+
+    [Get("/api/catalog-types")]
+    Task<ResultModel<List<CatalogTypeDto>>> GetCatalogTypesAsync();
 }

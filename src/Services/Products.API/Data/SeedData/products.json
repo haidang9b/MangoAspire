@@ -1,0 +1,342 @@
+[
+    {
+        "Id": "970afb7e-5616-46c4-b3fa-f9abb62928db",
+        "Name": "Samosa",
+        "Price": 8.99,
+        "Description": "Crispy golden triangular pastries filled with spiced potatoes and peas. A beloved Indian street food appetizer served with mint and tamarind chutneys.",
+        "ImageUrl": "https://phanhaidang.blob.core.windows.net/mango/14.jpg",
+        "CategoryName": "Appetizer",
+        "CatalogTypeId": 1,
+        "AvailableStock": 30
+    },
+    {
+        "Id": "348cc1a0-707b-4e1b-9700-de40d54acd31",
+        "Name": "Paneer Tikka",
+        "Price": 13.99,
+        "Description": "Cubes of fresh cottage cheese marinated in yogurt and aromatic spices, grilled to perfection in a tandoor oven. Served with fresh salad and mint chutney.",
+        "ImageUrl": "https://phanhaidang.blob.core.windows.net/mango/12.jpg",
+        "CategoryName": "Appetizer",
+        "CatalogTypeId": 1,
+        "AvailableStock": 30
+    },
+    {
+        "Id": "bc047267-5eb9-4681-b489-4473ccd00a87",
+        "Name": "Sweet Pie",
+        "Price": 10.99,
+        "Description": "A delightful homemade pie with a buttery crust filled with seasonal fruits and topped with a golden lattice. Served warm with vanilla ice cream.",
+        "ImageUrl": "https://phanhaidang.blob.core.windows.net/mango/11.jpg",
+        "CategoryName": "Dessert",
+        "CatalogTypeId": 3,
+        "AvailableStock": 30
+    },
+    {
+        "Id": "7e51b0af-8c5f-4721-99bb-4aaf8fc4822e",
+        "Name": "Pav Bhaji",
+        "Price": 15.00,
+        "Description": "A spicy mashed vegetable curry served with buttery toasted bread rolls. This popular Mumbai street food is garnished with fresh onions, cilantro, and a squeeze of lemon.",
+        "ImageUrl": "https://phanhaidang.blob.core.windows.net/mango/13.jpg",
+        "CategoryName": "Entree",
+        "CatalogTypeId": 2,
+        "AvailableStock": 30
+    },
+    {
+        "Id": "a1b2c3d4-e5f6-4789-abcd-123456789001",
+        "Name": "Butter Chicken",
+        "Price": 18.99,
+        "Description": "Tender pieces of tandoori chicken simmered in a rich, creamy tomato sauce with aromatic spices. A classic North Indian dish served with basmati rice.",
+        "ImageUrl": "https://phanhaidang.blob.core.windows.net/mango/14.jpg",
+        "CategoryName": "Entree",
+        "CatalogTypeId": 2,
+        "AvailableStock": 30
+    },
+    {
+        "Id": "a1b2c3d4-e5f6-4789-abcd-123456789002",
+        "Name": "Chicken Biryani",
+        "Price": 19.99,
+        "Description": "Fragrant basmati rice layered with spiced chicken, caramelized onions, and saffron. Slow-cooked to perfection and served with cooling raita.",
+        "ImageUrl": "https://phanhaidang.blob.core.windows.net/mango/12.jpg",
+        "CategoryName": "Entree",
+        "CatalogTypeId": 2,
+        "AvailableStock": 30
+    },
+    {
+        "Id": "a1b2c3d4-e5f6-4789-abcd-123456789003",
+        "Name": "Garlic Naan",
+        "Price": 4.99,
+        "Description": "Soft, pillowy flatbread brushed with garlic butter and fresh herbs. Baked in our traditional clay tandoor oven until perfectly golden.",
+        "ImageUrl": "https://phanhaidang.blob.core.windows.net/mango/11.jpg",
+        "CategoryName": "Bread",
+        "CatalogTypeId": 4,
+        "AvailableStock": 30
+    },
+    {
+        "Id": "a1b2c3d4-e5f6-4789-abcd-123456789004",
+        "Name": "Tandoori Chicken",
+        "Price": 17.99,
+        "Description": "Half chicken marinated overnight in yogurt and traditional spices, then roasted in a clay tandoor. Served sizzling with grilled vegetables.",
+        "ImageUrl": "https://phanhaidang.blob.core.windows.net/mango/13.jpg",
+        "CategoryName": "Entree",
+        "CatalogTypeId": 2,
+        "AvailableStock": 30
+    },
+    {
+        "Id": "a1b2c3d4-e5f6-4789-abcd-123456789005",
+        "Name": "Lamb Rogan Josh",
+        "Price": 22.99,
+        "Description": "Tender lamb pieces braised in a rich Kashmiri sauce with whole spices and aromatic herbs. A traditional recipe passed down through generations.",
+        "ImageUrl": "https://phanhaidang.blob.core.windows.net/mango/14.jpg",
+        "CategoryName": "Entree",
+        "CatalogTypeId": 2,
+        "AvailableStock": 30
+    },
+    {
+        "Id": "a1b2c3d4-e5f6-4789-abcd-123456789006",
+        "Name": "Palak Paneer",
+        "Price": 15.99,
+        "Description": "Fresh cottage cheese cubes in a vibrant spinach puree flavored with garlic and ginger. A nutritious vegetarian favorite.",
+        "ImageUrl": "https://phanhaidang.blob.core.windows.net/mango/12.jpg",
+        "CategoryName": "Entree",
+        "CatalogTypeId": 2,
+        "AvailableStock": 30
+    },
+    {
+        "Id": "a1b2c3d4-e5f6-4789-abcd-123456789007",
+        "Name": "Mango Lassi",
+        "Price": 5.99,
+        "Description": "A refreshing yogurt-based drink blended with ripe Alphonso mangoes and a hint of cardamom. The perfect complement to any spicy meal.",
+        "ImageUrl": "https://phanhaidang.blob.core.windows.net/mango/11.jpg",
+        "CategoryName": "Beverage",
+        "CatalogTypeId": 5,
+        "AvailableStock": 30
+    },
+    {
+        "Id": "a1b2c3d4-e5f6-4789-abcd-123456789008",
+        "Name": "Gulab Jamun",
+        "Price": 7.99,
+        "Description": "Soft milk dumplings deep-fried to golden perfection and soaked in rose-scented sugar syrup. Served warm with a drizzle of cream.",
+        "ImageUrl": "https://phanhaidang.blob.core.windows.net/mango/13.jpg",
+        "CategoryName": "Dessert",
+        "CatalogTypeId": 3,
+        "AvailableStock": 30
+    },
+    {
+        "Id": "a1b2c3d4-e5f6-4789-abcd-123456789009",
+        "Name": "Chicken Tikka Masala",
+        "Price": 18.49,
+        "Description": "Grilled chicken pieces in a luscious, creamy tomato-based curry sauce. Britain's favorite Indian dish, rich with warming spices.",
+        "ImageUrl": "https://phanhaidang.blob.core.windows.net/mango/14.jpg",
+        "CategoryName": "Entree",
+        "CatalogTypeId": 2,
+        "AvailableStock": 30
+    },
+    {
+        "Id": "a1b2c3d4-e5f6-4789-abcd-123456789010",
+        "Name": "Vegetable Korma",
+        "Price": 14.99,
+        "Description": "Mixed seasonal vegetables simmered in a mild, creamy cashew and coconut sauce. A gentle introduction to Indian cuisine.",
+        "ImageUrl": "https://phanhaidang.blob.core.windows.net/mango/12.jpg",
+        "CategoryName": "Entree",
+        "CatalogTypeId": 2,
+        "AvailableStock": 30
+    },
+    {
+        "Id": "a1b2c3d4-e5f6-4789-abcd-123456789011",
+        "Name": "Onion Bhaji",
+        "Price": 6.99,
+        "Description": "Crispy deep-fried fritters made with sliced onions and gram flour, seasoned with cumin and coriander. Perfect as a starter or snack.",
+        "ImageUrl": "https://phanhaidang.blob.core.windows.net/mango/11.jpg",
+        "CategoryName": "Appetizer",
+        "CatalogTypeId": 1,
+        "AvailableStock": 30
+    },
+    {
+        "Id": "a1b2c3d4-e5f6-4789-abcd-123456789012",
+        "Name": "Fish Curry",
+        "Price": 20.99,
+        "Description": "Fresh catch of the day cooked in a tangy tamarind and coconut curry from the coastal regions of South India. Served with steamed rice.",
+        "ImageUrl": "https://phanhaidang.blob.core.windows.net/mango/13.jpg",
+        "CategoryName": "Entree",
+        "CatalogTypeId": 2,
+        "AvailableStock": 30
+    },
+    {
+        "Id": "a1b2c3d4-e5f6-4789-abcd-123456789013",
+        "Name": "Dal Makhani",
+        "Price": 13.99,
+        "Description": "Black lentils slow-cooked overnight with butter and cream, creating a rich and hearty vegetarian dish. A Punjabi specialty.",
+        "ImageUrl": "https://phanhaidang.blob.core.windows.net/mango/14.jpg",
+        "CategoryName": "Entree",
+        "CatalogTypeId": 2,
+        "AvailableStock": 30
+    },
+    {
+        "Id": "a1b2c3d4-e5f6-4789-abcd-123456789014",
+        "Name": "Chicken Seekh Kebab",
+        "Price": 14.99,
+        "Description": "Minced chicken mixed with fresh herbs and spices, molded onto skewers and grilled in tandoor. Served with mint chutney and onion rings.",
+        "ImageUrl": "https://phanhaidang.blob.core.windows.net/mango/12.jpg",
+        "CategoryName": "Appetizer",
+        "CatalogTypeId": 1,
+        "AvailableStock": 30
+    },
+    {
+        "Id": "a1b2c3d4-e5f6-4789-abcd-123456789015",
+        "Name": "Raita",
+        "Price": 3.99,
+        "Description": "Cool and refreshing yogurt-based condiment with cucumber, tomatoes, and aromatic spices. Essential for balancing spicy dishes.",
+        "ImageUrl": "https://phanhaidang.blob.core.windows.net/mango/11.jpg",
+        "CategoryName": "Side",
+        "CatalogTypeId": 6,
+        "AvailableStock": 30
+    },
+    {
+        "Id": "a1b2c3d4-e5f6-4789-abcd-123456789016",
+        "Name": "Aloo Gobi",
+        "Price": 12.99,
+        "Description": "Cauliflower and potatoes stir-fried with turmeric, cumin, and fresh ginger. A comforting dry vegetable dish from North India.",
+        "ImageUrl": "https://phanhaidang.blob.core.windows.net/mango/13.jpg",
+        "CategoryName": "Entree",
+        "CatalogTypeId": 2,
+        "AvailableStock": 30
+    },
+    {
+        "Id": "a1b2c3d4-e5f6-4789-abcd-123456789017",
+        "Name": "Prawn Masala",
+        "Price": 23.99,
+        "Description": "Succulent tiger prawns cooked in a spicy masala sauce with onions, tomatoes, and aromatic coastal spices.",
+        "ImageUrl": "https://phanhaidang.blob.core.windows.net/mango/14.jpg",
+        "CategoryName": "Entree",
+        "CatalogTypeId": 2,
+        "AvailableStock": 30
+    },
+    {
+        "Id": "a1b2c3d4-e5f6-4789-abcd-123456789018",
+        "Name": "Cheese Naan",
+        "Price": 5.99,
+        "Description": "Fluffy naan bread stuffed with melted mozzarella and cheddar cheese. Baked until golden and served hot from the tandoor.",
+        "ImageUrl": "https://phanhaidang.blob.core.windows.net/mango/12.jpg",
+        "CategoryName": "Bread",
+        "CatalogTypeId": 4,
+        "AvailableStock": 30
+    },
+    {
+        "Id": "a1b2c3d4-e5f6-4789-abcd-123456789019",
+        "Name": "Rasmalai",
+        "Price": 8.99,
+        "Description": "Soft cheese patties soaked in sweetened, thickened milk flavored with cardamom and saffron. Garnished with pistachios.",
+        "ImageUrl": "https://phanhaidang.blob.core.windows.net/mango/11.jpg",
+        "CategoryName": "Dessert",
+        "CatalogTypeId": 3,
+        "AvailableStock": 30
+    },
+    {
+        "Id": "a1b2c3d4-e5f6-4789-abcd-123456789020",
+        "Name": "Masala Chai",
+        "Price": 3.99,
+        "Description": "Traditional Indian spiced tea brewed with cinnamon, cardamom, ginger, and cloves. Served with warm milk.",
+        "ImageUrl": "https://phanhaidang.blob.core.windows.net/mango/13.jpg",
+        "CategoryName": "Beverage",
+        "CatalogTypeId": 5,
+        "AvailableStock": 30
+    },
+    {
+        "Id": "a1b2c3d4-e5f6-4789-abcd-123456789021",
+        "Name": "Lamb Keema",
+        "Price": 19.99,
+        "Description": "Spiced minced lamb cooked with peas, onions, and tomatoes. A hearty dish perfect with naan or rice.",
+        "ImageUrl": "https://phanhaidang.blob.core.windows.net/mango/14.jpg",
+        "CategoryName": "Entree",
+        "CatalogTypeId": 2,
+        "AvailableStock": 30
+    },
+    {
+        "Id": "a1b2c3d4-e5f6-4789-abcd-123456789022",
+        "Name": "Chana Masala",
+        "Price": 12.99,
+        "Description": "Chickpeas simmered in a tangy tomato-based sauce with traditional North Indian spices. A protein-rich vegetarian favorite.",
+        "ImageUrl": "https://phanhaidang.blob.core.windows.net/mango/12.jpg",
+        "CategoryName": "Entree",
+        "CatalogTypeId": 2,
+        "AvailableStock": 30
+    },
+    {
+        "Id": "a1b2c3d4-e5f6-4789-abcd-123456789023",
+        "Name": "Pappadum",
+        "Price": 2.99,
+        "Description": "Crispy thin lentil wafers served with an assortment of chutneys. A traditional accompaniment to any Indian meal.",
+        "ImageUrl": "https://phanhaidang.blob.core.windows.net/mango/11.jpg",
+        "CategoryName": "Appetizer",
+        "CatalogTypeId": 1,
+        "AvailableStock": 30
+    },
+    {
+        "Id": "a1b2c3d4-e5f6-4789-abcd-123456789024",
+        "Name": "Mutton Curry",
+        "Price": 24.99,
+        "Description": "Slow-cooked goat meat in a rich, aromatic gravy with whole spices. A traditional recipe that melts in your mouth.",
+        "ImageUrl": "https://phanhaidang.blob.core.windows.net/mango/13.jpg",
+        "CategoryName": "Entree",
+        "CatalogTypeId": 2,
+        "AvailableStock": 30
+    },
+    {
+        "Id": "a1b2c3d4-e5f6-4789-abcd-123456789025",
+        "Name": "Kulfi",
+        "Price": 6.99,
+        "Description": "Traditional Indian ice cream made with reduced milk, flavored with cardamom and pistachios. Denser and creamier than regular ice cream.",
+        "ImageUrl": "https://phanhaidang.blob.core.windows.net/mango/14.jpg",
+        "CategoryName": "Dessert",
+        "CatalogTypeId": 3,
+        "AvailableStock": 30
+    },
+    {
+        "Id": "a1b2c3d4-e5f6-4789-abcd-123456789026",
+        "Name": "Saag Chicken",
+        "Price": 17.99,
+        "Description": "Tender chicken pieces cooked in a flavorful spinach and mustard green sauce with garlic and ginger.",
+        "ImageUrl": "https://phanhaidang.blob.core.windows.net/mango/12.jpg",
+        "CategoryName": "Entree",
+        "CatalogTypeId": 2,
+        "AvailableStock": 30
+    },
+    {
+        "Id": "a1b2c3d4-e5f6-4789-abcd-123456789027",
+        "Name": "Vegetable Biryani",
+        "Price": 15.99,
+        "Description": "Fragrant basmati rice layered with mixed vegetables, fried onions, and aromatic spices. A vegetarian feast in every bite.",
+        "ImageUrl": "https://phanhaidang.blob.core.windows.net/mango/11.jpg",
+        "CategoryName": "Entree",
+        "CatalogTypeId": 2,
+        "AvailableStock": 30
+    },
+    {
+        "Id": "a1b2c3d4-e5f6-4789-abcd-123456789028",
+        "Name": "Lamb Vindaloo",
+        "Price": 21.99,
+        "Description": "Fiery Goan curry with tender lamb pieces in a tangy, spicy sauce made with vinegar and chili. For those who love heat!",
+        "ImageUrl": "https://phanhaidang.blob.core.windows.net/mango/13.jpg",
+        "CategoryName": "Entree",
+        "CatalogTypeId": 2,
+        "AvailableStock": 30
+    },
+    {
+        "Id": "a1b2c3d4-e5f6-4789-abcd-123456789029",
+        "Name": "Mango Chutney",
+        "Price": 2.49,
+        "Description": "Sweet and tangy condiment made from ripe mangoes, sugar, and spices. The perfect accompaniment to any curry dish.",
+        "ImageUrl": "https://phanhaidang.blob.core.windows.net/mango/14.jpg",
+        "CategoryName": "Side",
+        "CatalogTypeId": 6,
+        "AvailableStock": 30
+    },
+    {
+        "Id": "a1b2c3d4-e5f6-4789-abcd-123456789030",
+        "Name": "Kheer",
+        "Price": 6.99,
+        "Description": "Creamy Indian rice pudding slow-cooked with milk, sugar, and cardamom. Garnished with almonds, pistachios, and saffron strands.",
+        "ImageUrl": "https://phanhaidang.blob.core.windows.net/mango/12.jpg",
+        "CategoryName": "Dessert",
+        "CatalogTypeId": 3,
+        "AvailableStock": 30
+    }
+]

@@ -1,0 +1,26 @@
+[
+    {
+        "Id": 1,
+        "Type": "Appetizer"
+    },
+    {
+        "Id": 2,
+        "Type": "Entree"
+    },
+    {
+        "Id": 3,
+        "Type": "Dessert"
+    },
+    {
+        "Id": 4,
+        "Type": "Bread"
+    },
+    {
+        "Id": 5,
+        "Type": "Beverage"
+    },
+    {
+        "Id": 6,
+        "Type": "Side"
+    }
+]

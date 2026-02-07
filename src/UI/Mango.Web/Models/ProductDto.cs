@@ -18,6 +18,9 @@ public class ProductDto
 
     public string CategoryName { get; set; } = string.Empty;
 
+    [Display(Name = "Catalog Type")]
+    public int? CatalogTypeId { get; set; }
+
     public string ImageUrl { get; set; } = string.Empty;
 
     [Range(0, int.MaxValue)]
@@ -26,5 +29,11 @@ public class ProductDto
 
     [Range(1, 100)]
     public int Count { get; set; }
+}
+
+public class CatalogTypeDto
+{
+    public int Id { get; set; }
+    public string Type { get; set; } = string.Empty;
 }
 

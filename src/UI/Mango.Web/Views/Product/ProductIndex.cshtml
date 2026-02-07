@@ -1,5 +1,10 @@
 ﻿@model Mango.Web.Models.PaginatedItemsDto<ProductDto>
 
+@{
+    var catalogTypes = ViewBag.CatalogTypes as Microsoft.AspNetCore.Mvc.Rendering.SelectList;
+    var currentCatalogTypeId = Context.Request.Query["catalogTypeId"].FirstOrDefault();
+}
+
 <br/>
 <br/>
 <div class="container p-4 border">
@@ -12,79 +17,100 @@
                 <i class="fas fa-plus"></i> Create new Product
             </a>
         </div>
-
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Category name</th>
-                    <th>Price</th>
-                    <th>Stock</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (Model != null && Model.Data.Any())
-                {
-                    @foreach(var item in Model.Data)
-                    {
-                        <tr>
-                            <td>@item.Name</td>
-                            <td>@item.CategoryName</td>
-                            <td>@item.Price.ToString("c")</td>
-                            <td>
-                                @if (item.Stock > 0)
-                                {
-                                    <span class="badge bg-success">@item.Stock</span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-danger">Out of Stock</span>
-                                }
-                            </td>
-                            <td>
-                                <a asp-action="ProductEdit" class="btn btn-success" asp-route-productId="@item.Id">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <a asp-action="ProductDelete" class="btn btn-danger" asp-route-productId="@item.Id">
-                                    <i class="fas fa-trash"></i>
-                                </a>
-                            </td>
-                        </tr>
-                    }
-                }
-            </tbody>
-        </table>
-
-        @if (Model != null && Model.Data.Any())
-        {
-            @* Pagination *@
-            <nav aria-label="Product pagination" class="mt-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <span class="text-muted">
-                        Showing @(((Model.PageIndex - 1) * Model.PageSize) + 1) - @Math.Min(Model.PageIndex * Model.PageSize, Model.Count) of @Model.Count products
-                    </span>
-                    <ul class="pagination mb-0">
-                        <li class="page-item @(!Model.HasPreviousPage ? "disabled" : "")">
-                            <a class="page-link" asp-action="ProductIndex" asp-route-pageIndex="@(Model.PageIndex - 1)" asp-route-pageSize="@Model.PageSize">
-                                <i class="fas fa-chevron-left"></i> Previous
-                            </a>
-                        </li>
-                        @for (int i = 1; i <= Model.TotalPages; i++)
-                        {
-                            <li class="page-item @(i == Model.PageIndex ? "active" : "")">
-                                <a class="page-link" asp-action="ProductIndex" asp-route-pageIndex="@i" asp-route-pageSize="@Model.PageSize">@i</a>
-                            </li>
-                        }
-                        <li class="page-item @(!Model.HasNextPage ? "disabled" : "")">
-                            <a class="page-link" asp-action="ProductIndex" asp-route-pageIndex="@(Model.PageIndex + 1)" asp-route-pageSize="@Model.PageSize">
-                                Next <i class="fas fa-chevron-right"></i>
-                            </a>
-                        </li>
-                    </ul>
-
-                </div>
-            </nav>
-        }
     </div>
+
+    @* Filter by Catalog Type *@
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <form method="get" asp-action="ProductIndex">
+                <div class="input-group">
+                    <select name="catalogTypeId" class="form-select" onchange="this.form.submit()">
+                        <option value="">All Categories</option>
+                        @if (catalogTypes != null)
+                        {
+                            @foreach (var item in catalogTypes)
+                            {
+                                <option value="@item.Value" selected="@(item.Value == currentCatalogTypeId)">@item.Text</option>
+                            }
+                        }
+                    </select>
+                    <input type="hidden" name="pageIndex" value="1" />
+                    <input type="hidden" name="pageSize" value="@Model.PageSize" />
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model != null && Model.Data.Any())
+            {
+                @foreach(var item in Model.Data)
+                {
+                    <tr>
+                        <td>@item.Name</td>
+                        <td>@item.CategoryName</td>
+                        <td>@item.Price.ToString("c")</td>
+                        <td>
+                            @if (item.Stock > 0)
+                            {
+                                <span class="badge bg-success">@item.Stock</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">Out of Stock</span>
+                            }
+                        </td>
+                        <td>
+                            <a asp-action="ProductEdit" class="btn btn-success" asp-route-productId="@item.Id">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a asp-action="ProductDelete" class="btn btn-danger" asp-route-productId="@item.Id">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+
+    @if (Model != null && Model.Data.Any())
+    {
+        @* Pagination *@
+        <nav aria-label="Product pagination" class="mt-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="text-muted">
+                    Showing @(((Model.PageIndex - 1) * Model.PageSize) + 1) - @Math.Min(Model.PageIndex * Model.PageSize, Model.Count) of @Model.Count products
+                </span>
+                <ul class="pagination mb-0">
+                    <li class="page-item @(!Model.HasPreviousPage ? "disabled" : "")">
+                        <a class="page-link" asp-action="ProductIndex" asp-route-pageIndex="@(Model.PageIndex - 1)" asp-route-pageSize="@Model.PageSize" asp-route-catalogTypeId="@currentCatalogTypeId">
+                            <i class="fas fa-chevron-left"></i> Previous
+                        </a>
+                    </li>
+                    @for (int i = 1; i <= Model.TotalPages; i++)
+                    {
+                        <li class="page-item @(i == Model.PageIndex ? "active" : "")">
+                            <a class="page-link" asp-action="ProductIndex" asp-route-pageIndex="@i" asp-route-pageSize="@Model.PageSize" asp-route-catalogTypeId="@currentCatalogTypeId">@i</a>
+                        </li>
+                    }
+                    <li class="page-item @(!Model.HasNextPage ? "disabled" : "")">
+                        <a class="page-link" asp-action="ProductIndex" asp-route-pageIndex="@(Model.PageIndex + 1)" asp-route-pageSize="@Model.PageSize" asp-route-catalogTypeId="@currentCatalogTypeId">
+                            Next <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    }
 </div>

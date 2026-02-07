@@ -20,8 +20,8 @@ public static class OrderEndpoints
                 [FromServices] ICurrentUserContext userContext
             ) =>
             {
-                var result = await sender.Send(new GetUserOrders.Query 
-                { 
+                var result = await sender.Send(new GetUserOrders.Query
+                {
                     UserId = userContext.UserId ?? string.Empty,
                     PageIndex = pageIndex,
                     PageSize = pageSize
@@ -33,13 +33,13 @@ public static class OrderEndpoints
 
 
             group.MapGet("/{id:guid}", async (
-                Guid id, 
-                [FromServices] ISender sender, 
+                Guid id,
+                [FromServices] ISender sender,
                 [FromServices] ICurrentUserContext userContext
             ) =>
             {
-                var result = await sender.Send(new GetOrderById.Query 
-                { 
+                var result = await sender.Send(new GetOrderById.Query
+                {
                     OrderId = id,
                     UserId = userContext.UserId ?? string.Empty
                 });

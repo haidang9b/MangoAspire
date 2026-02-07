@@ -16,6 +16,8 @@ public class UpdateProduct
 
         public required string CategoryName { get; set; }
 
+        public int? CatalogTypeId { get; set; }
+
         public required string ImageUrl { get; set; }
 
         public int Stock { get; set; }
@@ -45,6 +47,7 @@ public class UpdateProduct
                 product.Price = request.Price;
                 product.Description = request.Description;
                 product.CategoryName = request.CategoryName;
+                product.CatalogTypeId = request.CatalogTypeId;
                 product.ImageUrl = request.ImageUrl;
                 product.AvailableStock = request.Stock;
 

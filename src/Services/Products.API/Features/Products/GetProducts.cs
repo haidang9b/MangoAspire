@@ -10,6 +10,7 @@ public class GetProducts
     {
         public int PageIndex { get; set; } = 1;
         public int PageSize { get; set; } = 10;
+        public int? CatalogTypeId { get; set; }
 
         internal class Handler(ProductDbContext dbContext) : IRequestHandler<Query, ResultModel<PaginatedItems<ProductDto>>>
         {
@@ -17,7 +18,15 @@ public class GetProducts
             {
                 var query = dbContext.Products
                     .AsNoTracking()
-                    .OrderBy(x => x.Name);
+                    .AsQueryable();
+
+                // Filter by CatalogTypeId if provided
+                if (request.CatalogTypeId.HasValue)
+                {
+                    query = query.Where(x => x.CatalogTypeId == request.CatalogTypeId.Value);
+                }
+
+                query = query.OrderBy(x => x.Name);
 
                 var totalCount = await query.CountAsync(cancellationToken);
 
@@ -29,6 +38,7 @@ public class GetProducts
                         Name = x.Name,
                         Price = x.Price,
                         CategoryName = x.CategoryName,
+                        CatalogTypeId = x.CatalogTypeId,
                         Description = x.Description,
                         ImageUrl = x.ImageUrl,
                         Stock = x.AvailableStock

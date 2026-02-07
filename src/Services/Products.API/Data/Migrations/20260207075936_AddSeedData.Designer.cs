@@ -2,18 +2,21 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Products.API.Data;
 
 #nullable disable
 
-namespace Mango.Services.Products.Data.Migrations
+namespace Products.API.Data.Migrations
 {
     [DbContext(typeof(ProductDbContext))]
-    partial class ProductDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260207075936_AddSeedData")]
+    partial class AddSeedData
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -152,7 +155,7 @@ namespace Mango.Services.Products.Data.Migrations
                         new
                         {
                             Id = new Guid("970afb7e-5616-46c4-b3fa-f9abb62928db"),
-                            AvailableStock = 30,
+                            AvailableStock = 0,
                             CatalogTypeId = 1,
                             CategoryName = "Appetizer",
                             Description = "Crispy golden triangular pastries filled with spiced potatoes and peas. A beloved Indian street food appetizer served with mint and tamarind chutneys.",
@@ -163,7 +166,7 @@ namespace Mango.Services.Products.Data.Migrations
                         new
                         {
                             Id = new Guid("348cc1a0-707b-4e1b-9700-de40d54acd31"),
-                            AvailableStock = 30,
+                            AvailableStock = 0,
                             CatalogTypeId = 1,
                             CategoryName = "Appetizer",
                             Description = "Cubes of fresh cottage cheese marinated in yogurt and aromatic spices, grilled to perfection in a tandoor oven. Served with fresh salad and mint chutney.",
@@ -174,7 +177,7 @@ namespace Mango.Services.Products.Data.Migrations
                         new
                         {
                             Id = new Guid("bc047267-5eb9-4681-b489-4473ccd00a87"),
-                            AvailableStock = 30,
+                            AvailableStock = 0,
                             CatalogTypeId = 3,
                             CategoryName = "Dessert",
                             Description = "A delightful homemade pie with a buttery crust filled with seasonal fruits and topped with a golden lattice. Served warm with vanilla ice cream.",
@@ -185,7 +188,7 @@ namespace Mango.Services.Products.Data.Migrations
                         new
                         {
                             Id = new Guid("7e51b0af-8c5f-4721-99bb-4aaf8fc4822e"),
-                            AvailableStock = 30,
+                            AvailableStock = 0,
                             CatalogTypeId = 2,
                             CategoryName = "Entree",
                             Description = "A spicy mashed vegetable curry served with buttery toasted bread rolls. This popular Mumbai street food is garnished with fresh onions, cilantro, and a squeeze of lemon.",
@@ -196,7 +199,7 @@ namespace Mango.Services.Products.Data.Migrations
                         new
                         {
                             Id = new Guid("a1b2c3d4-e5f6-4789-abcd-123456789001"),
-                            AvailableStock = 30,
+                            AvailableStock = 0,
                             CatalogTypeId = 2,
                             CategoryName = "Entree",
                             Description = "Tender pieces of tandoori chicken simmered in a rich, creamy tomato sauce with aromatic spices. A classic North Indian dish served with basmati rice.",
@@ -207,7 +210,7 @@ namespace Mango.Services.Products.Data.Migrations
                         new
                         {
                             Id = new Guid("a1b2c3d4-e5f6-4789-abcd-123456789002"),
-                            AvailableStock = 30,
+                            AvailableStock = 0,
                             CatalogTypeId = 2,
                             CategoryName = "Entree",
                             Description = "Fragrant basmati rice layered with spiced chicken, caramelized onions, and saffron. Slow-cooked to perfection and served with cooling raita.",
@@ -218,7 +221,7 @@ namespace Mango.Services.Products.Data.Migrations
                         new
                         {
                             Id = new Guid("a1b2c3d4-e5f6-4789-abcd-123456789003"),
-                            AvailableStock = 30,
+                            AvailableStock = 0,
                             CatalogTypeId = 4,
                             CategoryName = "Bread",
                             Description = "Soft, pillowy flatbread brushed with garlic butter and fresh herbs. Baked in our traditional clay tandoor oven until perfectly golden.",
@@ -229,7 +232,7 @@ namespace Mango.Services.Products.Data.Migrations
                         new
                         {
                             Id = new Guid("a1b2c3d4-e5f6-4789-abcd-123456789004"),
-                            AvailableStock = 30,
+                            AvailableStock = 0,
                             CatalogTypeId = 2,
                             CategoryName = "Entree",
                             Description = "Half chicken marinated overnight in yogurt and traditional spices, then roasted in a clay tandoor. Served sizzling with grilled vegetables.",
@@ -240,7 +243,7 @@ namespace Mango.Services.Products.Data.Migrations
                         new
                         {
                             Id = new Guid("a1b2c3d4-e5f6-4789-abcd-123456789005"),
-                            AvailableStock = 30,
+                            AvailableStock = 0,
                             CatalogTypeId = 2,
                             CategoryName = "Entree",
                             Description = "Tender lamb pieces braised in a rich Kashmiri sauce with whole spices and aromatic herbs. A traditional recipe passed down through generations.",
@@ -251,7 +254,7 @@ namespace Mango.Services.Products.Data.Migrations
                         new
                         {
                             Id = new Guid("a1b2c3d4-e5f6-4789-abcd-123456789006"),
-                            AvailableStock = 30,
+                            AvailableStock = 0,
                             CatalogTypeId = 2,
                             CategoryName = "Entree",
                             Description = "Fresh cottage cheese cubes in a vibrant spinach puree flavored with garlic and ginger. A nutritious vegetarian favorite.",
@@ -262,7 +265,7 @@ namespace Mango.Services.Products.Data.Migrations
                         new
                         {
                             Id = new Guid("a1b2c3d4-e5f6-4789-abcd-123456789007"),
-                            AvailableStock = 30,
+                            AvailableStock = 0,
                             CatalogTypeId = 5,
                             CategoryName = "Beverage",
                             Description = "A refreshing yogurt-based drink blended with ripe Alphonso mangoes and a hint of cardamom. The perfect complement to any spicy meal.",
@@ -273,7 +276,7 @@ namespace Mango.Services.Products.Data.Migrations
                         new
                         {
                             Id = new Guid("a1b2c3d4-e5f6-4789-abcd-123456789008"),
-                            AvailableStock = 30,
+                            AvailableStock = 0,
                             CatalogTypeId = 3,
                             CategoryName = "Dessert",
                             Description = "Soft milk dumplings deep-fried to golden perfection and soaked in rose-scented sugar syrup. Served warm with a drizzle of cream.",
@@ -284,7 +287,7 @@ namespace Mango.Services.Products.Data.Migrations
                         new
                         {
                             Id = new Guid("a1b2c3d4-e5f6-4789-abcd-123456789009"),
-                            AvailableStock = 30,
+                            AvailableStock = 0,
                             CatalogTypeId = 2,
                             CategoryName = "Entree",
                             Description = "Grilled chicken pieces in a luscious, creamy tomato-based curry sauce. Britain's favorite Indian dish, rich with warming spices.",
@@ -295,7 +298,7 @@ namespace Mango.Services.Products.Data.Migrations
                         new
                         {
                             Id = new Guid("a1b2c3d4-e5f6-4789-abcd-123456789010"),
-                            AvailableStock = 30,
+                            AvailableStock = 0,
                             CatalogTypeId = 2,
                             CategoryName = "Entree",
                             Description = "Mixed seasonal vegetables simmered in a mild, creamy cashew and coconut sauce. A gentle introduction to Indian cuisine.",
@@ -306,7 +309,7 @@ namespace Mango.Services.Products.Data.Migrations
                         new
                         {
                             Id = new Guid("a1b2c3d4-e5f6-4789-abcd-123456789011"),
-                            AvailableStock = 30,
+                            AvailableStock = 0,
                             CatalogTypeId = 1,
                             CategoryName = "Appetizer",
                             Description = "Crispy deep-fried fritters made with sliced onions and gram flour, seasoned with cumin and coriander. Perfect as a starter or snack.",
@@ -317,7 +320,7 @@ namespace Mango.Services.Products.Data.Migrations
                         new
                         {
                             Id = new Guid("a1b2c3d4-e5f6-4789-abcd-123456789012"),
-                            AvailableStock = 30,
+                            AvailableStock = 0,
                             CatalogTypeId = 2,
                             CategoryName = "Entree",
                             Description = "Fresh catch of the day cooked in a tangy tamarind and coconut curry from the coastal regions of South India. Served with steamed rice.",
@@ -328,7 +331,7 @@ namespace Mango.Services.Products.Data.Migrations
                         new
                         {
                             Id = new Guid("a1b2c3d4-e5f6-4789-abcd-123456789013"),
-                            AvailableStock = 30,
+                            AvailableStock = 0,
                             CatalogTypeId = 2,
                             CategoryName = "Entree",
                             Description = "Black lentils slow-cooked overnight with butter and cream, creating a rich and hearty vegetarian dish. A Punjabi specialty.",
@@ -339,7 +342,7 @@ namespace Mango.Services.Products.Data.Migrations
                         new
                         {
                             Id = new Guid("a1b2c3d4-e5f6-4789-abcd-123456789014"),
-                            AvailableStock = 30,
+                            AvailableStock = 0,
                             CatalogTypeId = 1,
                             CategoryName = "Appetizer",
                             Description = "Minced chicken mixed with fresh herbs and spices, molded onto skewers and grilled in tandoor. Served with mint chutney and onion rings.",
@@ -350,7 +353,7 @@ namespace Mango.Services.Products.Data.Migrations
                         new
                         {
                             Id = new Guid("a1b2c3d4-e5f6-4789-abcd-123456789015"),
-                            AvailableStock = 30,
+                            AvailableStock = 0,
                             CatalogTypeId = 6,
                             CategoryName = "Side",
                             Description = "Cool and refreshing yogurt-based condiment with cucumber, tomatoes, and aromatic spices. Essential for balancing spicy dishes.",
@@ -361,7 +364,7 @@ namespace Mango.Services.Products.Data.Migrations
                         new
                         {
                             Id = new Guid("a1b2c3d4-e5f6-4789-abcd-123456789016"),
-                            AvailableStock = 30,
+                            AvailableStock = 0,
                             CatalogTypeId = 2,
                             CategoryName = "Entree",
                             Description = "Cauliflower and potatoes stir-fried with turmeric, cumin, and fresh ginger. A comforting dry vegetable dish from North India.",
@@ -372,7 +375,7 @@ namespace Mango.Services.Products.Data.Migrations
                         new
                         {
                             Id = new Guid("a1b2c3d4-e5f6-4789-abcd-123456789017"),
-                            AvailableStock = 30,
+                            AvailableStock = 0,
                             CatalogTypeId = 2,
                             CategoryName = "Entree",
                             Description = "Succulent tiger prawns cooked in a spicy masala sauce with onions, tomatoes, and aromatic coastal spices.",
@@ -383,7 +386,7 @@ namespace Mango.Services.Products.Data.Migrations
                         new
                         {
                             Id = new Guid("a1b2c3d4-e5f6-4789-abcd-123456789018"),
-                            AvailableStock = 30,
+                            AvailableStock = 0,
                             CatalogTypeId = 4,
                             CategoryName = "Bread",
                             Description = "Fluffy naan bread stuffed with melted mozzarella and cheddar cheese. Baked until golden and served hot from the tandoor.",
@@ -394,7 +397,7 @@ namespace Mango.Services.Products.Data.Migrations
                         new
                         {
                             Id = new Guid("a1b2c3d4-e5f6-4789-abcd-123456789019"),
-                            AvailableStock = 30,
+                            AvailableStock = 0,
                             CatalogTypeId = 3,
                             CategoryName = "Dessert",
                             Description = "Soft cheese patties soaked in sweetened, thickened milk flavored with cardamom and saffron. Garnished with pistachios.",
@@ -405,7 +408,7 @@ namespace Mango.Services.Products.Data.Migrations
                         new
                         {
                             Id = new Guid("a1b2c3d4-e5f6-4789-abcd-123456789020"),
-                            AvailableStock = 30,
+                            AvailableStock = 0,
                             CatalogTypeId = 5,
                             CategoryName = "Beverage",
                             Description = "Traditional Indian spiced tea brewed with cinnamon, cardamom, ginger, and cloves. Served with warm milk.",
@@ -416,7 +419,7 @@ namespace Mango.Services.Products.Data.Migrations
                         new
                         {
                             Id = new Guid("a1b2c3d4-e5f6-4789-abcd-123456789021"),
-                            AvailableStock = 30,
+                            AvailableStock = 0,
                             CatalogTypeId = 2,
                             CategoryName = "Entree",
                             Description = "Spiced minced lamb cooked with peas, onions, and tomatoes. A hearty dish perfect with naan or rice.",
@@ -427,7 +430,7 @@ namespace Mango.Services.Products.Data.Migrations
                         new
                         {
                             Id = new Guid("a1b2c3d4-e5f6-4789-abcd-123456789022"),
-                            AvailableStock = 30,
+                            AvailableStock = 0,
                             CatalogTypeId = 2,
                             CategoryName = "Entree",
                             Description = "Chickpeas simmered in a tangy tomato-based sauce with traditional North Indian spices. A protein-rich vegetarian favorite.",
@@ -438,7 +441,7 @@ namespace Mango.Services.Products.Data.Migrations
                         new
                         {
                             Id = new Guid("a1b2c3d4-e5f6-4789-abcd-123456789023"),
-                            AvailableStock = 30,
+                            AvailableStock = 0,
                             CatalogTypeId = 1,
                             CategoryName = "Appetizer",
                             Description = "Crispy thin lentil wafers served with an assortment of chutneys. A traditional accompaniment to any Indian meal.",
@@ -449,7 +452,7 @@ namespace Mango.Services.Products.Data.Migrations
                         new
                         {
                             Id = new Guid("a1b2c3d4-e5f6-4789-abcd-123456789024"),
-                            AvailableStock = 30,
+                            AvailableStock = 0,
                             CatalogTypeId = 2,
                             CategoryName = "Entree",
                             Description = "Slow-cooked goat meat in a rich, aromatic gravy with whole spices. A traditional recipe that melts in your mouth.",
@@ -460,7 +463,7 @@ namespace Mango.Services.Products.Data.Migrations
                         new
                         {
                             Id = new Guid("a1b2c3d4-e5f6-4789-abcd-123456789025"),
-                            AvailableStock = 30,
+                            AvailableStock = 0,
                             CatalogTypeId = 3,
                             CategoryName = "Dessert",
                             Description = "Traditional Indian ice cream made with reduced milk, flavored with cardamom and pistachios. Denser and creamier than regular ice cream.",
@@ -471,7 +474,7 @@ namespace Mango.Services.Products.Data.Migrations
                         new
                         {
                             Id = new Guid("a1b2c3d4-e5f6-4789-abcd-123456789026"),
-                            AvailableStock = 30,
+                            AvailableStock = 0,
                             CatalogTypeId = 2,
                             CategoryName = "Entree",
                             Description = "Tender chicken pieces cooked in a flavorful spinach and mustard green sauce with garlic and ginger.",
@@ -482,7 +485,7 @@ namespace Mango.Services.Products.Data.Migrations
                         new
                         {
                             Id = new Guid("a1b2c3d4-e5f6-4789-abcd-123456789027"),
-                            AvailableStock = 30,
+                            AvailableStock = 0,
                             CatalogTypeId = 2,
                             CategoryName = "Entree",
                             Description = "Fragrant basmati rice layered with mixed vegetables, fried onions, and aromatic spices. A vegetarian feast in every bite.",
@@ -493,7 +496,7 @@ namespace Mango.Services.Products.Data.Migrations
                         new
                         {
                             Id = new Guid("a1b2c3d4-e5f6-4789-abcd-123456789028"),
-                            AvailableStock = 30,
+                            AvailableStock = 0,
                             CatalogTypeId = 2,
                             CategoryName = "Entree",
                             Description = "Fiery Goan curry with tender lamb pieces in a tangy, spicy sauce made with vinegar and chili. For those who love heat!",
@@ -504,7 +507,7 @@ namespace Mango.Services.Products.Data.Migrations
                         new
                         {
                             Id = new Guid("a1b2c3d4-e5f6-4789-abcd-123456789029"),
-                            AvailableStock = 30,
+                            AvailableStock = 0,
                             CatalogTypeId = 6,
                             CategoryName = "Side",
                             Description = "Sweet and tangy condiment made from ripe mangoes, sugar, and spices. The perfect accompaniment to any curry dish.",
@@ -515,7 +518,7 @@ namespace Mango.Services.Products.Data.Migrations
                         new
                         {
                             Id = new Guid("a1b2c3d4-e5f6-4789-abcd-123456789030"),
-                            AvailableStock = 30,
+                            AvailableStock = 0,
                             CatalogTypeId = 3,
                             CategoryName = "Dessert",
                             Description = "Creamy Indian rice pudding slow-cooked with milk, sugar, and cardamom. Garnished with almonds, pistachios, and saffron strands.",
