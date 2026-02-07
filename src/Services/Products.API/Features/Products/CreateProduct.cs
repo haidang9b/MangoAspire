@@ -14,15 +14,18 @@ public class CreateProduct
 
         public required string ImageUrl { get; set; }
 
+        public int Stock { get; set; }
+
         public class Validator : AbstractValidator<Command>
         {
             public Validator()
             {
                 RuleFor(x => x.Name).NotEmpty();
-                RuleFor(x => x.Price).NotEmpty();
+                RuleFor(x => x.Price).GreaterThan(0);
                 RuleFor(x => x.Description).NotEmpty();
                 RuleFor(x => x.CategoryName).NotEmpty();
                 RuleFor(x => x.ImageUrl).NotEmpty();
+                RuleFor(x => x.Stock).GreaterThanOrEqualTo(0);
             }
         }
         internal class Handler(ProductDbContext dbContext) : IRequestHandler<Command, ResultModel<Guid>>
@@ -35,7 +38,8 @@ public class CreateProduct
                     Price = request.Price,
                     Description = request.Description,
                     CategoryName = request.CategoryName,
-                    ImageUrl = request.ImageUrl
+                    ImageUrl = request.ImageUrl,
+                    AvailableStock = request.Stock
                 };
 
                 dbContext.Products.Add(product);

@@ -23,10 +23,19 @@
 
                                 <div class="col-12">
                                     <span class="badge badge-primary text-success p-3 border">@Model.CategoryName</span>
+                                    @if (Model.Stock > 0)
+                                    {
+                                        <span class="badge bg-success text-white p-3 border ms-2">In Stock: @Model.Stock</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger text-white p-3 border ms-2">Out of Stock</span>
+                                    }
                                     <h3 class="text-success"></h3>
 
                                     <p class="text-secondary">@Html.Raw(Model.Description) </p>
                                 </div>
+
                             </div>
                             <div class="row px-4">
                                 <input asp-for=Count class="form-control" />

@@ -20,6 +20,11 @@ public class ProductDto
 
     public string ImageUrl { get; set; } = string.Empty;
 
+    [Range(0, int.MaxValue)]
+    [Display(Name = "Stock")]
+    public int Stock { get; set; }
+
     [Range(1, 100)]
     public int Count { get; set; }
 }
+

@@ -24,8 +24,10 @@ public class GetProductById
                         Price = x.Price,
                         CategoryName = x.CategoryName,
                         Description = x.Description,
-                        ImageUrl = x.ImageUrl
+                        ImageUrl = x.ImageUrl,
+                        Stock = x.AvailableStock
                     }).FirstOrDefaultAsync()
+
                     ?? throw new DataVerificationException("Product not found");
 
                 return ResultModel<ProductDto>.Create(product);
