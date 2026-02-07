@@ -2,11 +2,9 @@
 using FluentValidation;
 using Mango.Core.Domain;
 using Mango.Events.Orders;
-using Mango.Events.Payments;
 using MediatR;
 using Orders.API.Data;
 using Orders.API.Entities;
-using Orders.API.Extensions;
 
 namespace Orders.API.Features.Orders;
 
@@ -14,6 +12,8 @@ public class CreateOrder
 {
     public class Command : ICommand<Guid>
     {
+        public required Guid CorrelationId { get; init; }
+
         public required CartCheckedOutEvent Event { get; init; }
     }
 
@@ -36,7 +36,7 @@ public class CreateOrder
         {
             var @event = request.Event;
 
-            OrderHeader orderHeader = new()
+            var orderHeader = new OrderHeader
             {
                 Id = Guid.NewGuid(),
                 CartTotalItems = @event.CartTotalItems,
@@ -55,34 +55,22 @@ public class CreateOrder
                 PaymentStatus = false,
                 Phone = @event.Phone,
                 PickupDate = @event.PickupDate,
+                Status = Enums.OrderStatus.Processing
             };
 
-            foreach (var detailList in @event.CartDetails)
+            foreach (var detail in @event.CartDetails)
             {
-                OrderDetails orderDetails = new OrderDetails
+                orderHeader.OrderDetails.Add(new OrderDetails
                 {
-                    ProductId = detailList.Id,
-                    Count = detailList.Count,
-                };
-                orderHeader.CartTotalItems += detailList.Count;
-                orderHeader.OrderDetails.Add(orderDetails);
+                    ProductId = detail.ProductId,
+                    Count = detail.Count,
+                });
             }
 
             dbContext.OrderHeaders.Add(orderHeader);
             await dbContext.SaveChangesAsync(cancellationToken);
 
-            var paymentRequest = new CreatePaymentRequestCommand
-            {
-                Name = orderHeader.FullName,
-                CardNumber = orderHeader.CardNumber,
-                CVV = @event.CVV,
-                ExpiryMonthYear = orderHeader.ExpiryMonthYear,
-                OrderId = orderHeader.Id,
-                OrderTotal = orderHeader.OrderTotal,
-                Email = orderHeader.Email,
-            };
-
-            await eventBus.PublishAsync(paymentRequest);
+            await eventBus.PublishAsync(new OrderCreatedEvent(request.CorrelationId, orderHeader.Id));
 
             return ResultModel<Guid>.Create(orderHeader.Id);
         }

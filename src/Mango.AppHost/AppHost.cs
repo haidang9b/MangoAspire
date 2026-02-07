@@ -11,6 +11,7 @@ var orderdb = postgres.AddDatabase("orderdb");
 var coupondb = postgres.AddDatabase("coupondb");
 var identitydb = postgres.AddDatabase("identitydb");
 var shoppingcartdb = postgres.AddDatabase("shoppingcartdb");
+var sagaorchestratorsdb = postgres.AddDatabase("sagaorchestratorsdb");
 
 //var debezium = builder.AddContainer("debezium", "debezium/server", "2.7.3.Final")
 //    .WithHttpEndpoint(port: 8083, targetPort: 8083, name: "api")
@@ -38,15 +39,16 @@ var shoppingcartdb = postgres.AddDatabase("shoppingcartdb");
 //    .AddServiceBusSubscription("order-payment-succeeded-events-ordersapi");
 
 var rabbitMq = builder.AddRabbitMQ("eventbus")
-    .WithLifetime(ContainerLifetime.Persistent);
+    .WithLifetime(ContainerLifetime.Persistent)
+    .WithManagementPlugin();
 
 var identity = builder.AddProject<Projects.Identity_API>("identity-app")
     .WaitFor(identitydb)
     .WithReference(identitydb);
 
 var products = builder.AddProject<Projects.Products_API>("products-api")
-    .WaitFor(productdb)
-    .WithReference(productdb);
+    .WaitFor(productdb).WithReference(productdb)
+    .WaitFor(rabbitMq).WithReference(rabbitMq);
 
 var coupon = builder.AddProject<Projects.Coupons_API>("coupons-api")
     .WaitFor(coupondb)
@@ -82,6 +84,10 @@ builder.AddProject<Projects.Mango_Web>("mango-web")
     .WithReference(shoppingcart)
     .WithReference(orders)
     .WithReference(coupon);
+
+builder.AddProject<Projects.Mango_SagaOrchestrators>("mango-saga-orchestrators")
+    .WaitFor(rabbitMq).WithReference(rabbitMq)
+    .WaitFor(sagaorchestratorsdb).WithReference(sagaorchestratorsdb);
 
 
 builder.Build().Run();

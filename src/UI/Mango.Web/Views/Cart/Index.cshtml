@@ -1,5 +1,5 @@
 ﻿@model CartDto
-@if (Model.CartHeader != null && Model.CartDetails.Any())
+@if (Model != null && Model.CartHeader != null && Model.CartDetails.Any())
 {
     <form method="post">
         <br />

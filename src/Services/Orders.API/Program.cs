@@ -12,7 +12,9 @@ builder.AddApiDefaults();
 //    .AddQueue<CreatePaymentRequestCommand>("create-payment-command");
 
 builder.AddRabbitMQEventBus("eventbus")
-    .AddSubscription<CartCheckedOutEvent, CartCheckedOutHandler>("carts.events");
+    .AddSubscription<CancelOrderCommand, CancelOrderCommandHandler>("orders-domain.events")
+    .AddSubscription<CompleteOrderCommand, CompleteOrderCommandHandler>("orders-domain.events")
+    .AddSubscription<CreateOrderCommand, CreateOrderCommandHandler>("orders-domain.events");
 
 var app = builder.Build();
 

@@ -22,7 +22,7 @@ public static class IServiceCollectionExtensions
             cfg.RegisterServicesFromAssembly(typeof(Program).Assembly);
             cfg.AddOpenBehavior(typeof(LoggingBehavior<,>));
             cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
-            cfg.AddOpenBehavior(typeof(TxBehavior<,>));
+            //cfg.AddOpenBehavior(typeof(TxBehavior<,>));
 
         });
 

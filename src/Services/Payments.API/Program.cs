@@ -1,11 +1,12 @@
 ﻿using EventBus.RabbitMQ;
-using Mango.Events.Payments;
+using Mango.Events.Orders;
 using Payments.API.Extensions;
 using Payments.API.IntegrationHandlers;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddApiDefaults();
+
 // For service bus
 //builder.AddServiceBusEventBus("mango")
 //    .AddConsumer<CreatePaymentRequestCommand, CreatePaymentRequestCommandHandler>("create-payment-command")
@@ -13,7 +14,7 @@ builder.AddApiDefaults();
 //    .AddTopic<OrderPaymentFailedEvent>("order-payment-failed-events");
 
 builder.AddRabbitMQEventBus("eventbus")
-    .AddSubscription<CreatePaymentRequestCommand, CreatePaymentRequestCommandHandler>("orders.events");
+    .AddSubscription<CreatePaymentCommand, CreatePaymentCommandHandler>("orders-domain.events");
 
 var app = builder.Build();
 
