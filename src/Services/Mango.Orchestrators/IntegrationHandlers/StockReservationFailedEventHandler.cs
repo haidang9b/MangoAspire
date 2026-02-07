@@ -1,4 +1,4 @@
-using EventBus.Abstractions;
+﻿using EventBus.Abstractions;
 using Mango.Events.Orders;
 using Mango.SagaOrchestrators.Sagas;
 
@@ -11,7 +11,7 @@ public class StockReservationFailedEventHandler(
 {
     public async Task HandleAsync(StockReservationFailedEvent @event)
     {
-        logger.LogInformation("Handling StockReservationFailedEvent: {CorrelationId}, Reason: {Reason}", 
+        logger.LogInformation("Handling StockReservationFailedEvent: {CorrelationId}, Reason: {Reason}",
             @event.CorrelationId, @event.Reason);
         await orchestrator.OnStockFailedAsync(@event);
     }

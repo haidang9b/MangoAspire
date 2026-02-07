@@ -1,4 +1,4 @@
-using EventBus.Abstractions;
+﻿using EventBus.Abstractions;
 using Mango.Events.Orders;
 using Mango.SagaOrchestrators.Sagas;
 
@@ -11,7 +11,7 @@ public class PaymentFailedEventHandler(
 {
     public async Task HandleAsync(PaymentFailedEvent @event)
     {
-        logger.LogInformation("Handling PaymentFailedEvent: {CorrelationId}, Reason: {Reason}", 
+        logger.LogInformation("Handling PaymentFailedEvent: {CorrelationId}, Reason: {Reason}",
             @event.CorrelationId, @event.Reason);
         await orchestrator.OnPaymentFailedAsync(@event);
     }

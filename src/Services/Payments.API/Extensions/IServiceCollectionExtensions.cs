@@ -1,5 +1,4 @@
 ﻿using Mango.Core.Behaviors;
-using Mango.Infrastructure.Behaviors;
 using Mango.Infrastructure.Extensions;
 using Mango.Infrastructure.Interceptors;
 using Payments.API.Configurations;
@@ -34,7 +33,7 @@ public static class IServiceCollectionExtensions
         services.AddProblemDetails();
 
         services.AddOptions<PaymentOptions>()
-            .BindConfiguration(nameof(PaymentOptions));
+            .BindConfiguration(PaymentOptions.SectionName);
         return services;
     }
 }

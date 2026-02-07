@@ -50,9 +50,9 @@ app.Run();
 void ConfigurationServices(IServiceCollection services, IConfiguration configuration)
 {
     // Get options from configuration
-    var serviceUrls = configuration.GetSection(ServiceUrlsOptions.SectionName).Get<ServiceUrlsOptions>() 
+    var serviceUrls = configuration.GetSection(ServiceUrlsOptions.SectionName).Get<ServiceUrlsOptions>()
         ?? new ServiceUrlsOptions();
-    var oidcOptions = configuration.GetSection(OpenIdConnectOptions.SectionName).Get<OpenIdConnectOptions>() 
+    var oidcOptions = configuration.GetSection(OpenIdConnectOptions.SectionName).Get<OpenIdConnectOptions>()
         ?? new OpenIdConnectOptions();
 
     services.AddRefitClient<IProductsApi>()
