@@ -14,7 +14,8 @@ public class CancelOrderCommandHandler(
         await mediator.Send(new CancelOrder.Command
         {
             CorrelationId = @event.CorrelationId,
-            OrderId = @event.OrderId
+            OrderId = @event.OrderId,
+            CancelReason = @event.Reason
         });
     }
 }

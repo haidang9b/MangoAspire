@@ -17,7 +17,7 @@ public record StockReservationFailedEvent(Guid CorrelationId, Guid OrderId, stri
 
 public record CreateOrderCommand(Guid CorrelationId, Guid CartId, CartCheckedOutEvent Event) : IntegrationEvent;
 
-public record CancelOrderCommand(Guid CorrelationId, Guid OrderId) : IntegrationEvent;
+public record CancelOrderCommand(Guid CorrelationId, Guid OrderId, string Reason) : IntegrationEvent;
 
 public record CompleteOrderCommand(Guid CorrelationId, Guid OrderId) : IntegrationEvent;
 

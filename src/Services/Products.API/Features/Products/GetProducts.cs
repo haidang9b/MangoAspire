@@ -1,18 +1,28 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Mango.Core.Pagination;
+using Microsoft.EntityFrameworkCore;
 using Products.API.Dtos;
 
 namespace Products.API.Features.Products;
 
 public class GetProducts
 {
-    public class Query : IQuery<IEnumerable<ProductDto>>
+    public class Query : IQuery<PaginatedItems<ProductDto>>
     {
-        internal class Handler(ProductDbContext dbContext) : IRequestHandler<Query, ResultModel<IEnumerable<ProductDto>>>
+        public int PageIndex { get; set; } = 1;
+        public int PageSize { get; set; } = 10;
+
+        internal class Handler(ProductDbContext dbContext) : IRequestHandler<Query, ResultModel<PaginatedItems<ProductDto>>>
         {
-            public async Task<ResultModel<IEnumerable<ProductDto>>> Handle(Query request, CancellationToken cancellationToken)
+            public async Task<ResultModel<PaginatedItems<ProductDto>>> Handle(Query request, CancellationToken cancellationToken)
             {
-                var data = await dbContext.Products
+                var query = dbContext.Products
                     .AsNoTracking()
+                    .OrderBy(x => x.Name);
+
+                var totalCount = await query.CountAsync(cancellationToken);
+
+                var data = await query
+                    .Paginate(request.PageIndex, request.PageSize)
                     .Select(x => new ProductDto
                     {
                         Id = x.Id,
@@ -20,11 +30,19 @@ public class GetProducts
                         Price = x.Price,
                         CategoryName = x.CategoryName,
                         Description = x.Description,
-                        ImageUrl = x.ImageUrl
-                    }).ToListAsync();
+                        ImageUrl = x.ImageUrl,
+                        Stock = x.AvailableStock
+                    }).ToListAsync(cancellationToken);
 
-                return ResultModel<IEnumerable<ProductDto>>.Create(data);
+                var result = new PaginatedItems<ProductDto>(
+                    request.PageIndex,
+                    request.PageSize,
+                    totalCount,
+                    data);
+
+                return ResultModel<PaginatedItems<ProductDto>>.Create(result);
             }
         }
     }
 }
+

@@ -28,14 +28,14 @@ public class HomeController : Controller
         _currentUserContext = currentUserContext;
     }
 
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(int pageIndex = 1, int pageSize = 9)
     {
-        var result = await _productsApi.GetProductsAsync();
-        if (result != null && !result.IsError)
+        var result = await _productsApi.GetProductsAsync(pageIndex, pageSize);
+        if (result != null && !result.IsError && result.Data != null)
         {
             return View(result.Data);
         }
-        return View(new List<ProductDto>());
+        return View(new PaginatedItemsDto<ProductDto>());
     }
 
     [HttpGet]

@@ -35,4 +35,6 @@ public class OrderHeader : EntityBase<Guid>
     public bool PaymentStatus { get; set; }
 
     public OrderStatus Status { get; set; }
+
+    public string? CancelReason { get; set; }
 }

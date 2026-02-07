@@ -1,8 +1,11 @@
 ﻿using Mango.Core.Behaviors;
+using Mango.Core.Options;
 using Mango.Infrastructure.Behaviors;
 using Mango.Infrastructure.Extensions;
 using Mango.Infrastructure.Interceptors;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Orders.API.ExceptionHandlers;
 
 namespace Orders.API.Extensions;
@@ -41,6 +44,31 @@ public static class IServiceCollectionExtensions
         services.AddProblemDetails();
 
         services.AddDocumentApi("Orders API", "v1", "Orders API");
+
+        services.AddCurrentUserContext();
+
+        // Configure ServiceUrls options
+        var serviceUrls = configuration.GetSection(ServiceUrlsOptions.SectionName).Get<ServiceUrlsOptions>()
+            ?? new ServiceUrlsOptions();
+
+        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
+            {
+                options.Authority = serviceUrls.IdentityApp;
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateAudience = false
+                };
+            });
+
+        services.AddAuthorization(options =>
+        {
+            options.AddPolicy("ApiScope", policy =>
+            {
+                policy.RequireAuthenticatedUser();
+                policy.RequireClaim("scope", "mango");
+            });
+        });
 
         return services;
     }

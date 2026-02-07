@@ -1,4 +1,8 @@
-﻿namespace Orders.API.Routes;
+﻿using Mango.Core.Auth;
+using Microsoft.AspNetCore.Mvc;
+using Orders.API.Features.Orders;
+
+namespace Orders.API.Routes;
 
 public static class OrderEndpoints
 {
@@ -9,13 +13,40 @@ public static class OrderEndpoints
             var group = routeGroupBuilder.MapGroup("/api/orders")
                 .WithTags("Orders");
 
-            // Add additional routes here as needed
-            // For example:
-            // group.MapGet("/{id:guid}", async (Guid id, ISender sender) =>
-            // {
-            //     var result = await sender.Send(new GetOrderById.Query { OrderId = id });
-            //     return Results.Ok(result);
-            // });
+            group.MapGet("/", async (
+                int pageIndex,
+                int pageSize,
+                [FromServices] ISender sender,
+                [FromServices] ICurrentUserContext userContext
+            ) =>
+            {
+                var result = await sender.Send(new GetUserOrders.Query 
+                { 
+                    UserId = userContext.UserId ?? string.Empty,
+                    PageIndex = pageIndex,
+                    PageSize = pageSize
+                });
+                return Results.Ok(result);
+            })
+            .WithName("GetUserOrders")
+            .RequireAuthorization();
+
+
+            group.MapGet("/{id:guid}", async (
+                Guid id, 
+                [FromServices] ISender sender, 
+                [FromServices] ICurrentUserContext userContext
+            ) =>
+            {
+                var result = await sender.Send(new GetOrderById.Query 
+                { 
+                    OrderId = id,
+                    UserId = userContext.UserId ?? string.Empty
+                });
+                return Results.Ok(result);
+            })
+            .WithName("GetOrderById")
+            .RequireAuthorization();
 
             return group;
         }

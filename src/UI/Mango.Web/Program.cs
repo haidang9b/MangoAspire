@@ -67,6 +67,10 @@ void ConfigurationServices(IServiceCollection services, IConfiguration configura
         .ConfigureHttpClient(c => c.BaseAddress = new Uri(serviceUrls.CouponsApi))
         .AddAuthToken();
 
+    services.AddRefitClient<IOrdersApi>()
+        .ConfigureHttpClient(c => c.BaseAddress = new Uri(serviceUrls.OrdersApi))
+        .AddAuthToken();
+
     services.AddAuthentication(options =>
     {
         options.DefaultScheme = "Cookies";
