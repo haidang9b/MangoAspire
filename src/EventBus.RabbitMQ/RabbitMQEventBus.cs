@@ -219,15 +219,15 @@ public sealed class RabbitMQEventBus(
                     autoAck: false,
                     consumer: consumer);
 
-                foreach (var item in _rabbitMQInfo.EventTypes)
+                foreach (var (exchangeName, eventType) in _rabbitMQInfo.EventTypes)
                 {
                     // Make sure the exchange is created
-                    await _consumerChannel.ExchangeDeclareAsync(exchange: item.Key, type: ExchangeType.Direct);
+                    await _consumerChannel.ExchangeDeclareAsync(exchange: exchangeName, type: ExchangeType.Direct);
 
                     await _consumerChannel.QueueBindAsync(
                         queue: _queueName,
-                        exchange: item.Key,
-                        routingKey: item.Value.Name);
+                        exchange: exchangeName,
+                        routingKey: eventType.Name);
                 }
             }
             catch (Exception ex)
@@ -301,7 +301,7 @@ public sealed class RabbitMQEventBus(
         }
 
         await using var scope = serviceProvider.CreateAsyncScope();
-        var eventType = _rabbitMQInfo.EventTypes.FirstOrDefault(x => x.Value.Name == eventName).Value;
+        var eventType = _rabbitMQInfo.EventTypes.FirstOrDefault(x => x.EventType.Name == eventName).EventType;
         if (eventType == null)
         {
             logger.LogWarning("Unable to resolve event type for event name {EventName}", eventName);

@@ -126,6 +126,10 @@ namespace Orders.API.Data.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("pickup_date");
 
+                    b.Property<int>("Status")
+                        .HasColumnType("integer")
+                        .HasColumnName("status");
+
                     b.Property<string>("UserId")
                         .IsRequired()
                         .HasColumnType("text")

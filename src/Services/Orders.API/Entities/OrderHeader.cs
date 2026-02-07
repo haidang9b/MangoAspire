@@ -1,4 +1,5 @@
 ﻿using Mango.Core.Domain;
+using Orders.API.Enums;
 
 namespace Orders.API.Entities;
 
@@ -35,4 +36,6 @@ public class OrderHeader : EntityBase<Guid>
     public virtual ICollection<OrderDetails> OrderDetails { get; set; } = [];
 
     public bool PaymentStatus { get; set; }
+
+    public OrderStatus Status { get; set; }
 }

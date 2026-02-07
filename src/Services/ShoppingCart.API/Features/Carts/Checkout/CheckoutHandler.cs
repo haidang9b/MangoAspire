@@ -55,7 +55,7 @@ public class CheckoutHandler(
             ExpiryMonthYear = checkOutHeader.ExpiryMonthYear,
             OrderTotal = checkOutHeader.OrderTotal,
             PickupDate = checkOutHeader.PickupDate,
-            CartTotalItems = checkOutHeader.CartTotalItems,
+            CartTotalItems = cartHeader.CartDetails.Sum(x => x.Count),
             CartDetails = cartHeader.CartDetails.Select(d => new CartCheckedOutEvent.CartDetailsDto
             {
                 Id = d.Id,

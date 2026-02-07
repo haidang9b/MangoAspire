@@ -1,4 +1,5 @@
 ﻿using Mango.Core.Behaviors;
+using Mango.Core.Options;
 using Mango.Infrastructure.Behaviors;
 using Mango.Infrastructure.Extensions;
 using Mango.Infrastructure.Interceptors;
@@ -54,11 +55,18 @@ public static class IServiceCollectionExtensions
             services.AddRefitClient<ICouponsApi>();
             services.AddCurrentUserContext();
 
+            // Configure ServiceUrls options
+            services.Configure<ServiceUrlsOptions>(
+                configuration.GetSection(ServiceUrlsOptions.SectionName));
+
+            // Get service URLs from configuration
+            var serviceUrls = configuration.GetSection(ServiceUrlsOptions.SectionName).Get<ServiceUrlsOptions>()
+                ?? new ServiceUrlsOptions();
 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
                 {
-                    options.Authority = "https://localhost:8080";
+                    options.Authority = serviceUrls.IdentityApp;
                     options.TokenValidationParameters = new TokenValidationParameters
                     {
                         ValidateAudience = false
@@ -75,7 +83,7 @@ public static class IServiceCollectionExtensions
             });
 
             services.AddRefitClient<ICouponsApi>()
-                .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://coupons-api"))
+                .ConfigureHttpClient(c => c.BaseAddress = new Uri(serviceUrls.CouponsApi))
                 .AddAuthToken();
             return services;
         }

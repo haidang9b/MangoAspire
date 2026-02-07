@@ -51,11 +51,9 @@ public static class RabbitMQDependencyInjectionExtensions
 
         eventBusBuilder.Services.Configure<RabbitMQInfo>(o =>
         {
-            // Keep track of all registered event types and their name mapping. We send these event types over the message bus
-            // and we don't want to do Type.GetType, so we keep track of the name mapping here.
-
-            // This list will also be used to subscribe to events from the underlying message broker implementation.
-            o.EventTypes[fromExchangeName] = typeof(T);
+            // Keep track of all registered event types and their exchange mapping.
+            // This list is used to subscribe to events from the underlying message broker.
+            o.EventTypes.Add((fromExchangeName, typeof(T)));
         });
 
         return eventBusBuilder;

@@ -89,6 +89,7 @@ For detailed information on project-specific setups:
 - [NuGet Package Management Guide](docs/PACKAGE_MANAGEMENT.md)
 - [API Project Structure & Architecture](.agent/API_PROJECT_STRUCTURE.md)
 - [Coding Conventions & Standards](.agent/CODING_CONVENTIONS.md)
+- [Checkout Saga Workflow](docs/CHECKOUT_SAGA.md)
 - [Event Bus Usage & Switching](docs/EVENT_BUS.md)
 
 ---

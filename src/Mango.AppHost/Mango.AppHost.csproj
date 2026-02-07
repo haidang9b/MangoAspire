@@ -20,6 +20,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Services\Coupons.API\Coupons.API.csproj" />
     <ProjectReference Include="..\Services\Identity.API\Identity.API.csproj" />
+    <ProjectReference Include="..\Services\Mango.Orchestrators\Mango.SagaOrchestrators.csproj" />
     <ProjectReference Include="..\Services\Orders.API\Orders.API.csproj" />
     <ProjectReference Include="..\Services\Payments.API\Payments.API.csproj" />
     <ProjectReference Include="..\Services\Products.API\Products.API.csproj" />
