@@ -73,8 +73,11 @@ var orders = builder.AddProject<Projects.Orders_API>("orders-api")
     .WaitFor(rabbitMq)
     //.WaitFor(serviceBus)
     .WithReference(orderdb)
-    .WithReference(rabbitMq);
+    .WithReference(rabbitMq)
+    .WithReference(identity)
+    .WithEnvironment("ServiceUrls__IdentityApp", identityEndpoint);
 //.WithReference(serviceBus);
+
 
 var payments = builder.AddProject<Projects.Payments_API>("payments-api")
     .WaitFor(rabbitMq)

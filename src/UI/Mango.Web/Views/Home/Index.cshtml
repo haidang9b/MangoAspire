@@ -1,30 +1,73 @@
-﻿@model IEnumerable<ProductDto>
+﻿@model Mango.Web.Models.PaginatedItemsDto<ProductDto>
 
 <form>
-    <div class="container row">
-        @foreach(var product in Model)
-        {
-            <div class="col-4 ">
-                <div class="p-0 my-3 border">
-                    <div class="card">
-                        <img src="@product.ImageUrl" class="card-img-top">
-                        <div class="card-body">
-                            <h3 class="card-title text-success">@product.Name</h3>
-                            <span class="badge badge-light mb-2 ">@product.CategoryName</span>
-                            <p class="card-text">@Html.Raw(product.Description)</p>
-                            <div class="row">
-                                <div class="col pt-1">
-                                    <span style="font-size:23px;">@string.Format("{0:c}", product.Price)</span>
-                                </div>
-                                <div class="col">
-                                    <a asp-action="Details" asp-route-productId="@product.Id" class="btn btn-success form-control">Details</a>
+    <div class="container">
+        <div class="row">
+            @if (Model != null && Model.Data.Any())
+            {
+                @foreach(var product in Model.Data)
+                {
+                    <div class="col-4">
+                        <div class="p-0 my-3 border">
+                            <div class="card">
+                                <img src="@product.ImageUrl" class="card-img-top">
+                                <div class="card-body">
+                                    <h3 class="card-title text-success">@product.Name</h3>
+                                    <span class="badge badge-light mb-2">@product.CategoryName</span>
+                                    <p class="card-text">@Html.Raw(product.Description)</p>
+                                    <div class="row">
+                                        <div class="col pt-1">
+                                            <span style="font-size:23px;">@string.Format("{0:c}", product.Price)</span>
+                                        </div>
+                                        <div class="col">
+                                            <a asp-action="Details" asp-route-productId="@product.Id" class="btn btn-success form-control">Details</a>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+                }
+            }
+            else
+            {
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> No products available.
+                    </div>
                 </div>
-            </div>
+            }
+        </div>
+
+        @if (Model != null && Model.Data.Any())
+        {
+            @* Pagination *@
+            <nav aria-label="Product pagination" class="mt-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="text-muted">
+                        Showing @(((Model.PageIndex - 1) * Model.PageSize) + 1) - @Math.Min(Model.PageIndex * Model.PageSize, Model.Count) of @Model.Count products
+                    </span>
+                    <ul class="pagination mb-0">
+                        <li class="page-item @(!Model.HasPreviousPage ? "disabled" : "")">
+                            <a class="page-link" asp-action="Index" asp-route-pageIndex="@(Model.PageIndex - 1)" asp-route-pageSize="@Model.PageSize">
+                                <i class="fas fa-chevron-left"></i> Previous
+                            </a>
+                        </li>
+                        @for (int i = 1; i <= Model.TotalPages; i++)
+                        {
+                            <li class="page-item @(i == Model.PageIndex ? "active" : "")">
+                                <a class="page-link" asp-action="Index" asp-route-pageIndex="@i" asp-route-pageSize="@Model.PageSize">@i</a>
+                            </li>
+                        }
+                        <li class="page-item @(!Model.HasNextPage ? "disabled" : "")">
+                            <a class="page-link" asp-action="Index" asp-route-pageIndex="@(Model.PageIndex + 1)" asp-route-pageSize="@Model.PageSize">
+                                Next <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </li>
+                    </ul>
+
+                </div>
+            </nav>
         }
-        
     </div>
 </form>

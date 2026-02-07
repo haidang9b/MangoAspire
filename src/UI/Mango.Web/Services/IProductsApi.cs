@@ -7,7 +7,7 @@ namespace Mango.Web.Services;
 public interface IProductsApi
 {
     [Get("/api/products")]
-    Task<ResultModel<IEnumerable<ProductDto>>> GetProductsAsync();
+    Task<ResultModel<PaginatedItemsDto<ProductDto>>> GetProductsAsync(int pageIndex = 0, int pageSize = 10);
 
     [Get("/api/products/{id}")]
     Task<ResultModel<ProductDto>> GetProductByIdAsync(Guid id);

@@ -15,15 +15,16 @@ public class ProductController : Controller
     }
 
     [Authorize]
-    public async Task<IActionResult> ProductIndex()
+    public async Task<IActionResult> ProductIndex(int pageIndex = 1, int pageSize = 10)
     {
-        var result = await _productsApi.GetProductsAsync();
-        if (result != null && !result.IsError)
+        var result = await _productsApi.GetProductsAsync(pageIndex, pageSize);
+        if (result != null && !result.IsError && result.Data != null)
         {
             return View(result.Data);
         }
-        return View(new List<ProductDto>());
+        return View(new PaginatedItemsDto<ProductDto>());
     }
+
 
     public async Task<IActionResult> ProductCreate()
     {

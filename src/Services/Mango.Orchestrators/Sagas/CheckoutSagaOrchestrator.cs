@@ -121,7 +121,7 @@ public class CheckoutSagaOrchestrator(
         await sagaRepository.SaveAsync(saga);
 
         logger.LogInformation("Saga {SagaId}: Publishing CancelOrderCommand", saga.Id);
-        await eventBus.PublishAsync(new CancelOrderCommand(saga.Id, saga.OrderId.GetValueOrDefault()));
+        await eventBus.PublishAsync(new CancelOrderCommand(saga.Id, saga.OrderId.GetValueOrDefault(), @event.Reason));
     }
 
     public async Task OnPaymentFailedAsync(PaymentFailedEvent @event)
@@ -148,7 +148,7 @@ public class CheckoutSagaOrchestrator(
 
         // Compensate: Cancel order
         logger.LogInformation("Saga {SagaId}: Publishing CancelOrderCommand", saga.Id);
-        await eventBus.PublishAsync(new CancelOrderCommand(saga.Id, saga.OrderId.GetValueOrDefault()));
+        await eventBus.PublishAsync(new CancelOrderCommand(saga.Id, saga.OrderId.GetValueOrDefault(), @event.Reason));
 
         saga.StatusId = OrderStatus.Failed;
         await sagaRepository.SaveAsync(saga);

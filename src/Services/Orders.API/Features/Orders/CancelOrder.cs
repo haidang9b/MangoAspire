@@ -7,7 +7,10 @@ public class CancelOrder
     public class Command : ICommand<bool>
     {
         public required Guid CorrelationId { get; init; }
+
         public required Guid OrderId { get; init; }
+
+        public string? CancelReason { get; init; }
     }
 
     public class Validator : AbstractValidator<Command>
@@ -35,6 +38,7 @@ public class CancelOrder
 
             order.PaymentStatus = false;
             order.Status = OrderStatus.Cancelled;
+            order.CancelReason = request.CancelReason;
             await dbContext.SaveChangesAsync(cancellationToken);
 
             await eventBus.PublishAsync(new OrderCancelledEvent(request.CorrelationId, request.OrderId));

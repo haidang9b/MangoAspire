@@ -1,0 +1,155 @@
+@model Mango.Web.Models.OrderDetailDto
+
+@{
+    ViewData["Title"] = "Order Details";
+}
+
+<div class="container pt-4">
+    <div class="row">
+        <div class="col-12">
+            <a asp-action="Index" class="btn btn-outline-secondary mb-3">
+                <i class="bi bi-arrow-left"></i> Back to Orders
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0"><i class="bi bi-receipt"></i> Order Details</h4>
+            <div>
+                @switch (Model.Status)
+                {
+                    case "Processing":
+                        <span class="badge bg-warning text-dark fs-6">
+                            <i class="bi bi-hourglass-split"></i> Processing
+                        </span>
+                        break;
+                    case "Completed":
+                        <span class="badge bg-success fs-6">
+                            <i class="bi bi-check-circle"></i> Completed
+                        </span>
+                        break;
+                    case "Cancelled":
+                        <span class="badge bg-danger fs-6">
+                            <i class="bi bi-x-circle"></i> Cancelled
+                        </span>
+                        break;
+                    default:
+                        <span class="badge bg-secondary fs-6">@Model.Status</span>
+                        break;
+                }
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h5 class="text-muted">Order Information</h5>
+                    <table class="table table-sm">
+                        <tr>
+                            <th>Order ID:</th>
+                            <td>@Model.Id</td>
+                        </tr>
+                        <tr>
+                            <th>Order Date:</th>
+                            <td>@Model.OrderTime.ToString("MMMM dd, yyyy HH:mm")</td>
+                        </tr>
+                        <tr>
+                            <th>Pickup Date:</th>
+                            <td>@Model.PickupDate.ToString("MMMM dd, yyyy")</td>
+                        </tr>
+                        <tr>
+                            <th>Payment Status:</th>
+                            <td>
+                                @if (Model.PaymentStatus)
+                                {
+                                    <span class="badge bg-success">Paid</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning text-dark">Pending</span>
+                                }
+                            </td>
+                        </tr>
+                        @if (!string.IsNullOrEmpty(Model.CouponCode))
+                        {
+                            <tr>
+                                <th>Coupon:</th>
+                                <td><span class="badge bg-info">@Model.CouponCode</span></td>
+                            </tr>
+                        }
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <h5 class="text-muted">Customer Information</h5>
+                    <table class="table table-sm">
+                        <tr>
+                            <th>Name:</th>
+                            <td>@Model.FirstName @Model.LastName</td>
+                        </tr>
+                        <tr>
+                            <th>Email:</th>
+                            <td>@Model.Email</td>
+                        </tr>
+                        <tr>
+                            <th>Phone:</th>
+                            <td>@(Model.Phone ?? "N/A")</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            @if (Model.Status == "Cancelled" && !string.IsNullOrEmpty(Model.CancelReason))
+            {
+                <div class="alert alert-danger mb-4">
+                    <h6 class="alert-heading"><i class="fas fa-exclamation-triangle"></i> Cancellation Reason</h6>
+                    <p class="mb-0">@Model.CancelReason</p>
+                </div>
+            }
+
+
+            <h5 class="text-muted mb-3">Order Items</h5>
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead class="table-secondary">
+                        <tr>
+                            <th>#</th>
+                            <th>Product</th>
+                            <th class="text-center">Quantity</th>
+                            <th class="text-end">Price</th>
+                            <th class="text-end">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            var index = 1;
+                        }
+                        @foreach (var item in Model.Items)
+                        {
+                            <tr>
+                                <td>@index</td>
+                                <td>@item.ProductName</td>
+                                <td class="text-center">@item.Count</td>
+                                <td class="text-end">@string.Format("{0:c}", item.Price)</td>
+                                <td class="text-end">@string.Format("{0:c}", item.Price * item.Count)</td>
+                            </tr>
+                            index++;
+                        }
+                    </tbody>
+                    <tfoot>
+                        @if (Model.DiscountTotal > 0)
+                        {
+                            <tr>
+                                <td colspan="4" class="text-end">Discount:</td>
+                                <td class="text-end text-success">-@string.Format("{0:c}", Model.DiscountTotal)</td>
+                            </tr>
+                        }
+                        <tr class="table-dark">
+                            <td colspan="4" class="text-end fw-bold">Total:</td>
+                            <td class="text-end fw-bold">@string.Format("{0:c}", Model.OrderTotal)</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
