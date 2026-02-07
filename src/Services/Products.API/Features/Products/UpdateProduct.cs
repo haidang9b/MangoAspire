@@ -18,16 +18,19 @@ public class UpdateProduct
 
         public required string ImageUrl { get; set; }
 
+        public int Stock { get; set; }
+
         public class Validator : AbstractValidator<Command>
         {
             public Validator()
             {
                 RuleFor(x => x.Id).NotEmpty();
                 RuleFor(x => x.Name).NotEmpty();
-                RuleFor(x => x.Price).NotEmpty();
+                RuleFor(x => x.Price).GreaterThan(0);
                 RuleFor(x => x.Description).NotEmpty();
                 RuleFor(x => x.CategoryName).NotEmpty();
                 RuleFor(x => x.ImageUrl).NotEmpty();
+                RuleFor(x => x.Stock).GreaterThanOrEqualTo(0);
             }
         }
 
@@ -43,6 +46,7 @@ public class UpdateProduct
                 product.Description = request.Description;
                 product.CategoryName = request.CategoryName;
                 product.ImageUrl = request.ImageUrl;
+                product.AvailableStock = request.Stock;
 
                 await dbContext.SaveChangesAsync(cancellationToken);
 
