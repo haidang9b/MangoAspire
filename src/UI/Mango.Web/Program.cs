@@ -1,8 +1,10 @@
-﻿using Mango.Infrastructure.Extensions;
+﻿using Mango.Core.Options;
+using Mango.Infrastructure.Extensions;
 using Mango.ServiceDefaults;
 using Mango.Web.Services;
 using Microsoft.AspNetCore.Authentication;
 using Refit;
+using OpenIdConnectOptions = Mango.Core.Options.OpenIdConnectOptions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,7 +13,13 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddCurrentUserContext();
 builder.AddServiceDefaults();
 
-ConfigurationServices(builder.Services);
+// Configure options
+builder.Services.Configure<ServiceUrlsOptions>(
+    builder.Configuration.GetSection(ServiceUrlsOptions.SectionName));
+builder.Services.Configure<OpenIdConnectOptions>(
+    builder.Configuration.GetSection(OpenIdConnectOptions.SectionName));
+
+ConfigurationServices(builder.Services, builder.Configuration);
 
 var app = builder.Build();
 
@@ -39,18 +47,24 @@ app.MapControllerRoute(
 app.Run();
 
 
-void ConfigurationServices(IServiceCollection services)
+void ConfigurationServices(IServiceCollection services, IConfiguration configuration)
 {
+    // Get options from configuration
+    var serviceUrls = configuration.GetSection(ServiceUrlsOptions.SectionName).Get<ServiceUrlsOptions>() 
+        ?? new ServiceUrlsOptions();
+    var oidcOptions = configuration.GetSection(OpenIdConnectOptions.SectionName).Get<OpenIdConnectOptions>() 
+        ?? new OpenIdConnectOptions();
+
     services.AddRefitClient<IProductsApi>()
-        .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://products-api"))
+        .ConfigureHttpClient(c => c.BaseAddress = new Uri(serviceUrls.ProductsApi))
         .AddAuthToken();
 
     services.AddRefitClient<ICartApi>()
-        .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://shoppingcart-api"))
+        .ConfigureHttpClient(c => c.BaseAddress = new Uri(serviceUrls.ShoppingCartApi))
         .AddAuthToken();
 
     services.AddRefitClient<ICouponsApi>()
-        .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://coupons-api"))
+        .ConfigureHttpClient(c => c.BaseAddress = new Uri(serviceUrls.CouponsApi))
         .AddAuthToken();
 
     services.AddAuthentication(options =>
@@ -58,19 +72,22 @@ void ConfigurationServices(IServiceCollection services)
         options.DefaultScheme = "Cookies";
         options.DefaultChallengeScheme = "oidc";
     })
-    .AddCookie("Cookies", c => c.ExpireTimeSpan = TimeSpan.FromMinutes(10))
+    .AddCookie("Cookies", c => c.ExpireTimeSpan = TimeSpan.FromMinutes(oidcOptions.CookieExpireMinutes))
     .AddOpenIdConnect("oidc", options =>
     {
-        options.Authority = "https://localhost:8080/";
-        options.GetClaimsFromUserInfoEndpoint = true;
-        options.ClientId = "mango";
-        options.ClientSecret = "secret";
-        options.ResponseType = "code";
+        options.Authority = oidcOptions.Authority;
+        options.GetClaimsFromUserInfoEndpoint = oidcOptions.GetClaimsFromUserInfoEndpoint;
+        options.ClientId = oidcOptions.ClientId;
+        options.ClientSecret = oidcOptions.ClientSecret;
+        options.ResponseType = oidcOptions.ResponseType;
         options.ClaimActions.MapJsonKey("role", "role", "role");
         options.ClaimActions.MapJsonKey("sub", "sub", "sub");
         options.TokenValidationParameters.NameClaimType = "name";
         options.TokenValidationParameters.RoleClaimType = "role";
-        options.Scope.Add("mango");
-        options.SaveTokens = true;
+        foreach (var scope in oidcOptions.Scopes)
+        {
+            options.Scope.Add(scope);
+        }
+        options.SaveTokens = oidcOptions.SaveTokens;
     });
 }
