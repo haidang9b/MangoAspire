@@ -13,7 +13,7 @@ builder.AddApiDefaults();
 //    .AddTopic<CartCheckedOutEvent>("checked-out-events");
 
 builder.AddRabbitMQEventBus("eventbus")
-    .AddSubscription<ProductCdcEvent,ProductCdcEventHandler>("mango-cdc-exchange");
+    .AddSubscription<ProductCdcEvent, ProductCdcEventHandler>("mango-cdc-exchange");
 
 var app = builder.Build();
 

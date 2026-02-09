@@ -1,5 +1,4 @@
-﻿using EventBus.Abstractions;
-using EventBus.Events;
+﻿using EventBus.Events;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
