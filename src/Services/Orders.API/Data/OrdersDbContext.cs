@@ -16,11 +16,14 @@ public class OrdersDbContext : AppDbContextBase
 
     public virtual DbSet<ProcessedMessage> ProcessedMessages { get; set; }
 
+    public virtual DbSet<IntegrationEventLogEntry> IntegrationEventLogEntry { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        base.OnModelCreating(modelBuilder);
+
         AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(OrdersDbContext).Assembly);
         modelBuilder.ApplyProcessedMessageConfiguration();
-        base.OnModelCreating(modelBuilder);
     }
 }

@@ -1,4 +1,6 @@
-﻿namespace Orders.API.Features.Orders;
+﻿using Orders.API.Services;
+
+namespace Orders.API.Features.Orders;
 
 public class CreateOrder
 {
@@ -28,7 +30,7 @@ public class CreateOrder
 
     internal class Handler(
         OrdersDbContext dbContext,
-        IEventBus eventBus
+        IIntegrationEventService integrationEventService
     ) : IRequestHandler<Command, ResultModel<Guid>>
     {
         public async Task<ResultModel<Guid>> Handle(Command request, CancellationToken cancellationToken)
@@ -69,7 +71,7 @@ public class CreateOrder
             dbContext.OrderHeaders.Add(orderHeader);
             await dbContext.SaveChangesAsync(cancellationToken);
 
-            await eventBus.PublishAsync(new OrderCreatedEvent(request.CorrelationId, orderHeader.Id));
+            await integrationEventService.AddAndSaveEventAsync(new OrderCreatedEvent(request.CorrelationId, orderHeader.Id));
 
             return ResultModel<Guid>.Create(orderHeader.Id);
         }

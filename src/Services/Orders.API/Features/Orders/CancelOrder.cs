@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Orders.API.Services;
 
 namespace Orders.API.Features.Orders;
 
@@ -30,7 +31,7 @@ public class CancelOrder
 
     internal class Handler(
         OrdersDbContext dbContext,
-        IEventBus eventBus
+        IIntegrationEventService integrationEventService
     ) : IRequestHandler<Command, ResultModel<bool>>
     {
         public async Task<ResultModel<bool>> Handle(Command request, CancellationToken cancellationToken)
@@ -48,7 +49,7 @@ public class CancelOrder
             order.CancelReason = request.CancelReason;
             await dbContext.SaveChangesAsync(cancellationToken);
 
-            await eventBus.PublishAsync(new OrderCancelledEvent(request.CorrelationId, request.OrderId));
+            await integrationEventService.AddAndSaveEventAsync(new OrderCancelledEvent(request.CorrelationId, request.OrderId));
 
             return ResultModel<bool>.Create(true);
         }

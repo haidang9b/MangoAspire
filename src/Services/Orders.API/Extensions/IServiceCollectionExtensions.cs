@@ -7,7 +7,9 @@ using Mango.Infrastructure.ProcessedMessages;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Orders.API.Behaviours;
 using Orders.API.ExceptionHandlers;
+using Orders.API.Services;
 
 namespace Orders.API.Extensions;
 
@@ -35,9 +37,11 @@ public static class IServiceCollectionExtensions
             cfg.AddOpenBehavior(typeof(IdentifiedBehavior<,>));
             cfg.AddOpenBehavior(typeof(LoggingBehavior<,>));
             cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
-            cfg.AddOpenBehavior(typeof(TxBehavior<,>));
+            cfg.AddOpenBehavior(typeof(TransactionBehavior<,>));
         });
         services.AddProcessedMessages<OrdersDbContext>();
+
+        services.AddScoped<IIntegrationEventService, IntegrationEventService>();
 
         services.AddValidatorsFromAssembly(typeof(Program).Assembly);
 
