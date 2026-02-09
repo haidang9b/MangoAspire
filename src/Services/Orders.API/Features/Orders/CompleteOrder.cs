@@ -4,10 +4,16 @@ namespace Orders.API.Features.Orders;
 
 public class CompleteOrder
 {
-    public class Command : ICommand<bool>
+    public class Command : IIdentifiedCommand<bool>
     {
         public required Guid CorrelationId { get; init; }
         public required Guid OrderId { get; init; }
+        public Guid Id { get; set; }
+
+        public bool CreateDefaultResponse()
+        {
+            return false;
+        }
     }
 
     public class Validator : AbstractValidator<Command>

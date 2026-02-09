@@ -5,13 +5,20 @@ namespace Products.API.Features.Products;
 
 public class ReserveProductStock
 {
-    public class Command : ICommand<bool>
+    public class Command : IIdentifiedCommand<bool>
     {
         public required Guid CorrelationId { get; init; }
 
         public required IEnumerable<StockItem> Items { get; init; }
 
         public record StockItem(Guid ProductId, int Quantity);
+
+        public Guid Id { get; set; }
+
+        public bool CreateDefaultResponse()
+        {
+            return false;
+        }
     }
 
     public class Validator : AbstractValidator<Command>

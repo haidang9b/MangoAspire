@@ -2,11 +2,18 @@
 
 public class CreateOrder
 {
-    public class Command : ICommand<Guid>
+    public class Command : IIdentifiedCommand<Guid>
     {
         public required Guid CorrelationId { get; init; }
 
         public required CartCheckedOutEvent Event { get; init; }
+
+        public Guid Id { get; set; }
+
+        public Guid CreateDefaultResponse()
+        {
+            return Guid.NewGuid();
+        }
     }
 
     public class Validator : AbstractValidator<Command>

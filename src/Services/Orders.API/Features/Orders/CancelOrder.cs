@@ -4,13 +4,20 @@ namespace Orders.API.Features.Orders;
 
 public class CancelOrder
 {
-    public class Command : ICommand<bool>
+    public class Command : IIdentifiedCommand<bool>
     {
+        public Guid Id { get; set; }
+
         public required Guid CorrelationId { get; init; }
 
         public required Guid OrderId { get; init; }
 
         public string? CancelReason { get; init; }
+
+        public bool CreateDefaultResponse()
+        {
+            return false;
+        }
     }
 
     public class Validator : AbstractValidator<Command>

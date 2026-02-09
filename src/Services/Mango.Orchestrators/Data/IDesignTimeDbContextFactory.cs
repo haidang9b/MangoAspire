@@ -1,8 +1,7 @@
-﻿using Mango.SagaOrchestrators.Data;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
-namespace Products.API.Data;
+namespace Mango.SagaOrchestrators.Data;
 
 public class ProductDbContextFactory
     : IDesignTimeDbContextFactory<SagaDbContext>

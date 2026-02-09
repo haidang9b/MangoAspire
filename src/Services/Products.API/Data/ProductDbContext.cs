@@ -1,4 +1,5 @@
 ﻿using Mango.Infrastructure;
+using Mango.Infrastructure.ProcessedMessages;
 using Microsoft.EntityFrameworkCore;
 
 namespace Products.API.Data;
@@ -18,6 +19,8 @@ public class ProductDbContext : AppDbContextBase
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ProductDbContext).Assembly);
+        modelBuilder.ApplyProcessedMessageConfiguration();
     }
 }
