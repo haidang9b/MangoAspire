@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Refit;
+using ShoppingCart.API.Cdc;
 using ShoppingCart.API.ExceptionHandlers;
 using ShoppingCart.API.Services;
 
@@ -87,5 +88,4 @@ public static class IServiceCollectionExtensions
             return services;
         }
     }
-
 }

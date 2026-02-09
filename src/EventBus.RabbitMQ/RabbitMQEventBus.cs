@@ -69,6 +69,10 @@ public sealed class RabbitMQEventBus(
     public async Task PublishAsync<TEvent>(TEvent @event) where TEvent : class
     {
         var routingKey = @event.GetType().Name;
+        if (@event.GetType().GetCustomAttributes(typeof(EventNameAttribute), true).FirstOrDefault() is EventNameAttribute eventNameAttribute)
+        {
+            routingKey = eventNameAttribute.Name;
+        }
 
         if (logger.IsEnabled(LogLevel.Trace))
         {
@@ -224,10 +228,16 @@ public sealed class RabbitMQEventBus(
                     // Make sure the exchange is created
                     await _consumerChannel.ExchangeDeclareAsync(exchange: exchangeName, type: ExchangeType.Direct);
 
+                    var routingKey = eventType.Name;
+                    if (eventType.GetCustomAttributes(typeof(EventNameAttribute), true).FirstOrDefault() is EventNameAttribute eventNameAttribute)
+                    {
+                        routingKey = eventNameAttribute.Name;
+                    }
+
                     await _consumerChannel.QueueBindAsync(
                         queue: _queueName,
                         exchange: exchangeName,
-                        routingKey: eventType.Name);
+                        routingKey: routingKey);
                 }
             }
             catch (Exception ex)
@@ -244,7 +254,7 @@ public sealed class RabbitMQEventBus(
     {
         static IEnumerable<string> ExtractTraceContextFromBasicProperties(IReadOnlyBasicProperties props, string key)
         {
-            if (props.Headers!.TryGetValue(key, out var value))
+            if (props.Headers != null && props.Headers.TryGetValue(key, out var value))
             {
                 var bytes = value as byte[];
                 return [Encoding.UTF8.GetString(bytes)];
@@ -301,7 +311,15 @@ public sealed class RabbitMQEventBus(
         }
 
         await using var scope = serviceProvider.CreateAsyncScope();
-        var eventType = _rabbitMQInfo.EventTypes.FirstOrDefault(x => x.EventType.Name == eventName).EventType;
+        var eventType = _rabbitMQInfo.EventTypes.FirstOrDefault(x =>
+        {
+            var routingKey = x.EventType.Name;
+            if (x.EventType.GetCustomAttributes(typeof(EventNameAttribute), true).FirstOrDefault() is EventNameAttribute eventNameAttribute)
+            {
+                routingKey = eventNameAttribute.Name;
+            }
+            return routingKey == eventName;
+        }).EventType;
         if (eventType == null)
         {
             logger.LogWarning("Unable to resolve event type for event name {EventName}", eventName);
