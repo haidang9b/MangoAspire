@@ -6,7 +6,7 @@ var rabbitMqPassword = builder.AddParameter("rabbitmq-password", "YourSecretPass
 var postgres = builder.AddPostgres("postgres", port: 5435, password: postgresPassword)
     .WithLifetime(ContainerLifetime.Persistent)
     .WithDataVolume()
-    .WithBindMount("./init-scripts", "/docker-entrypoint-initdb.d");
+    .WithBindMount("./init-scripts/productdb", "/docker-entrypoint-initdb.d");
 
 var productdb = postgres.AddDatabase("productdb");
 var orderdb = postgres.AddDatabase("orderdb");
@@ -21,7 +21,7 @@ var rabbitMq = builder.AddRabbitMQ("eventbus", password: rabbitMqPassword)
 
 var debezium = builder.AddContainer("debezium", "debezium/server", "2.7.3.Final")
     .WithHttpEndpoint(port: 8083, targetPort: 8083, name: "api")
-    .WithBindMount("./application.properties", "/debezium/conf/application.properties")
+    .WithBindMount("./init-configs/products/application.properties", "/debezium/conf/application.properties")
     .WithVolume("debezium-data", "/debezium/data")
     .WithLifetime(ContainerLifetime.Persistent)
     .WithReference(productdb).WaitFor(productdb)
