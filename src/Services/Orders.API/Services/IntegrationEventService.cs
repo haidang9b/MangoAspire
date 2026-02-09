@@ -27,14 +27,8 @@ public class IntegrationEventService : IIntegrationEventService
 
     public async Task AddAndSaveEventAsync(IntegrationEvent evt)
     {
-        var eventLog = new IntegrationEventLogEntry
-        {
-            Content = System.Text.Json.JsonSerializer.Serialize(evt),
-            EventTypeName = evt.GetType().AssemblyQualifiedName ?? string.Empty,
-            CreationTime = DateTime.UtcNow,
-            EventId = evt.Id,
-            TransactionId = _ordersDbContext.Database.CurrentTransaction?.TransactionId ?? Guid.Empty
-        };
+        var transactionId = _ordersDbContext.Database.CurrentTransaction?.TransactionId ?? Guid.Empty;
+        var eventLog = new IntegrationEventLogEntry(evt, transactionId);
         await _ordersDbContext.IntegrationEventLogEntry.AddAsync(eventLog);
 
         await _ordersDbContext.SaveChangesAsync();
@@ -56,7 +50,7 @@ public class IntegrationEventService : IIntegrationEventService
                 _logger.LogError("Event type {EventTypeName} not found", @event.EventTypeName);
                 continue;
             }
-            var integrationEvent = System.Text.Json.JsonSerializer.Deserialize(@event.Content, eventType);
+            var integrationEvent = @event.DeserializeEvent(eventType);
 
             if (integrationEvent == null)
             {
