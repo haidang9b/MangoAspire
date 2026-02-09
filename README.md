@@ -16,6 +16,7 @@ The project follows a microservices architecture, leveraging .NET Aspire to simp
 - **Communication**: Synchronous REST APIs and Asynchronous EventBus (RabbitMQ / Azure Service Bus).
 - **Data Persistence**: Dedicated PostgreSQL databases for each microservice to ensure loose coupling.
 - **Security**: Centralized identity management using Duende IdentityServer.
+- **Data Synchronization**: Change Data Capture (CDC) using Debezium for real-time data sync between services.
 
 ---
 
@@ -28,6 +29,7 @@ The project follows a microservices architecture, leveraging .NET Aspire to simp
 - **Patterns**: MediatR (CQRS), FluentValidation, Result Pattern
 - **Observability**: OpenTelemetry for Logging, Metrics, and Tracing
 - **Package Management**: Central Package Management (CPM) via `Directory.Packages.props`
+- **CDC**: [Debezium](https://debezium.io/) for capturing database changes
 
 ---
 
@@ -39,16 +41,19 @@ MangoAspire/
 │   ├── Mango.AppHost/           # .NET Aspire Orchestrator
 │   ├── Mango.ServiceDefaults/   # Common service configurations (Resilience, OTEL, etc.)
 │   ├── Services/                # Microservices
-│   │   ├── Identity.API         # Identity and Access Management (OpenIddict)
+│   │   ├── Identity.API         # Identity and Access Management
 │   │   ├── Products.API         # Product Catalog Service
 │   │   ├── Coupons.API          # Promotions and Discount Service
 │   │   ├── Orders.API           # Order Management Service
-│   │   └── ShoppingCart.API     # Shopping Cart Service
+│   │   ├── ShoppingCart.API     # Shopping Cart Service
+│   │   ├── Payments.API         # Payment Processing Service
+│   │   └── Mango.Orchestrators  # Saga Orchestrators
 │   ├── Shared/                  # Shared libraries (Mango.Core, Mango.Infrastructure)
 │   ├── EventBus/                # Message Bus abstraction
 │   ├── EventBus.RabbitMQ/       # RabbitMQ implementation
 │   ├── EventBus.ServiceBus/     # Azure Service Bus implementation
 │   └── UI/                      # Frontend applications
+│       └── Mango.Web            # Blazor Web App (Frontend)
 ├── docs/                        # Project documentation
 └── Directory.Packages.props     # Centralized NuGet versioning
 ```
@@ -91,6 +96,7 @@ For detailed information on project-specific setups:
 - [Coding Conventions & Standards](.agent/CODING_CONVENTIONS.md)
 - [Checkout Saga Workflow](docs/CHECKOUT_SAGA.md)
 - [Event Bus Usage & Switching](docs/EVENT_BUS.md)
+- [Change Data Capture (CDC)](docs/CDC.md)
 
 ---
 
