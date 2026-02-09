@@ -2,7 +2,6 @@
 using Mango.Core.Exceptions;
 using Mango.Events.Orders;
 using Microsoft.EntityFrameworkCore;
-using ShoppingCart.API.Features.Carts.Checkout.Checkout;
 using ShoppingCart.API.Services;
 
 namespace ShoppingCart.API.Features.Carts.Checkout;

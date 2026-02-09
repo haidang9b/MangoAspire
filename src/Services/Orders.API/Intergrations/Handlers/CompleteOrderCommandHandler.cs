@@ -13,6 +13,7 @@ public class CompleteOrderCommandHandler(
 
         await mediator.Send(new CompleteOrder.Command
         {
+            Id = @event.OrderId,
             CorrelationId = @event.CorrelationId,
             OrderId = @event.OrderId
         });

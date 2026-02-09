@@ -4,11 +4,17 @@ namespace Products.API.Features.Products;
 
 public class ReleaseProductStock
 {
-    public class Command : ICommand<bool>
+    public class Command : IIdentifiedCommand<bool>
     {
         public required Guid CorrelationId { get; init; }
 
         public required IEnumerable<StockItem> Items { get; init; }
+        public Guid Id { get; set; }
+
+        public bool CreateDefaultResponse()
+        {
+            return false;
+        }
 
         public record StockItem(Guid ProductId, int Quantity);
     }

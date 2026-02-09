@@ -1,4 +1,5 @@
 ﻿using Mango.Infrastructure;
+using Mango.Infrastructure.ProcessedMessages;
 using Microsoft.EntityFrameworkCore;
 
 namespace Orders.API.Data;
@@ -13,11 +14,13 @@ public class OrdersDbContext : AppDbContextBase
 
     public virtual DbSet<OrderDetails> OrderDetails { get; set; }
 
+    public virtual DbSet<ProcessedMessage> ProcessedMessages { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-
-        base.OnModelCreating(modelBuilder);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(OrdersDbContext).Assembly);
+        modelBuilder.ApplyProcessedMessageConfiguration();
+        base.OnModelCreating(modelBuilder);
     }
 }

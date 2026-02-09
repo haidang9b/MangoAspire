@@ -1,6 +1,6 @@
 ﻿using Mango.RestApis.Requests;
 using ShoppingCart.API.Features.Carts;
-using ShoppingCart.API.Features.Carts.Checkout.Checkout;
+using ShoppingCart.API.Features.Carts.Checkout;
 using ShoppingCart.API.Features.Carts.GetCarts;
 
 namespace ShoppingCart.API.Routes;

@@ -14,6 +14,7 @@ public class ReserveProductStockCommandHandler(
 
         await mediator.Send(new ReserveProductStock.Command
         {
+            Id = @event.Id,
             CorrelationId = @event.CorrelationId,
             Items = @event.Items.Select(i => new ReserveProductStock.Command.StockItem(i.ProductId, i.Quantity))
         });

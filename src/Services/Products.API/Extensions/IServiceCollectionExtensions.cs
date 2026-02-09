@@ -2,6 +2,7 @@
 using Mango.Infrastructure.Behaviors;
 using Mango.Infrastructure.Extensions;
 using Mango.Infrastructure.Interceptors;
+using Mango.Infrastructure.ProcessedMessages;
 using Microsoft.EntityFrameworkCore;
 using Products.API.ExceptionHandlers;
 
@@ -31,11 +32,13 @@ public static class IServiceCollectionExtensions
         services.AddMediatR(cfg =>
         {
             cfg.RegisterServicesFromAssembly(typeof(Program).Assembly);
+            cfg.AddOpenBehavior(typeof(IdentifiedBehavior<,>));
             cfg.AddOpenBehavior(typeof(LoggingBehavior<,>));
             cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
             cfg.AddOpenBehavior(typeof(TxBehavior<,>));
 
         });
+        services.AddProcessedMessages<ProductDbContext>();
 
         services.AddValidatorsFromAssembly(typeof(Program).Assembly);
 
