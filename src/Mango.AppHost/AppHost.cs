@@ -1,10 +1,12 @@
 ﻿var builder = DistributedApplication.CreateBuilder(args);
 
 var postgresPassword = builder.AddParameter("postgres-password", "postgres");
+var rabbitMqPassword = builder.AddParameter("rabbitmq-password", "YourSecretPassword");
 
 var postgres = builder.AddPostgres("postgres", port: 5435, password: postgresPassword)
     .WithLifetime(ContainerLifetime.Persistent)
-    .WithDataVolume();
+    .WithDataVolume()
+    .WithBindMount("./init-scripts/productdb", "/docker-entrypoint-initdb.d");
 
 var productdb = postgres.AddDatabase("productdb");
 var orderdb = postgres.AddDatabase("orderdb");
@@ -13,12 +15,28 @@ var identitydb = postgres.AddDatabase("identitydb");
 var shoppingcartdb = postgres.AddDatabase("shoppingcartdb");
 var sagaorchestratorsdb = postgres.AddDatabase("sagaorchestratorsdb");
 
-//var debezium = builder.AddContainer("debezium", "debezium/server", "2.7.3.Final")
-//    .WithHttpEndpoint(port: 8083, targetPort: 8083, name: "api")
-//    .WithBindMount("./application.properties", "/debezium/conf/application.properties")
-//    .WithVolume("debezium-data", "/debezium/data")
-//    .WithLifetime(ContainerLifetime.Persistent)
-//    .WaitFor(productdb);
+var rabbitMq = builder.AddRabbitMQ("eventbus", password: rabbitMqPassword)
+    .WithLifetime(ContainerLifetime.Persistent)
+    .WithManagementPlugin(port: 15672);
+
+var debezium = builder.AddContainer("debezium", "debezium/server", "2.7.3.Final")
+    .WithHttpEndpoint(port: 8083, targetPort: 8083, name: "api")
+    .WithBindMount("./init-configs/products/application.properties", "/debezium/conf/application.properties")
+    .WithVolume("debezium-data", "/debezium/data")
+    .WithLifetime(ContainerLifetime.Persistent)
+    .WithReference(productdb).WaitFor(productdb)
+    .WithReference(rabbitMq).WaitFor(rabbitMq)
+    // PostgreSQL connection
+    .WithEnvironment("DEBEZIUM_SOURCE_DATABASE_HOSTNAME", postgres.Resource.Name)
+    .WithEnvironment("DEBEZIUM_SOURCE_DATABASE_PORT", postgres.Resource.Port)
+    .WithEnvironment("DEBEZIUM_SOURCE_DATABASE_USER", "postgres")
+    .WithEnvironment("DEBEZIUM_SOURCE_DATABASE_PASSWORD", "postgres")
+    .WithEnvironment("DEBEZIUM_SOURCE_DATABASE_DBNAME", "productdb")
+    // RabbitMQ connection
+    .WithEnvironment("DEBEZIUM_SINK_RABBITMQ_CONNECTION_HOST", rabbitMq.Resource.Name)
+    .WithEnvironment("DEBEZIUM_SINK_RABBITMQ_CONNECTION_PORT", "5672")
+    .WithEnvironment("DEBEZIUM_SINK_RABBITMQ_CONNECTION_USERNAME", "guest")
+    .WithEnvironment("DEBEZIUM_SINK_RABBITMQ_CONNECTION_PASSWORD", "YourSecretPassword");
 
 //var serviceBus = builder.AddAzureServiceBus("mango")
 //    .RunAsEmulator();
@@ -37,10 +55,6 @@ var sagaorchestratorsdb = postgres.AddDatabase("sagaorchestratorsdb");
 //var orderPaymentSucceededEventTopic = serviceBus
 //    .AddServiceBusTopic("order-payment-succeeded-events")
 //    .AddServiceBusSubscription("order-payment-succeeded-events-ordersapi");
-
-var rabbitMq = builder.AddRabbitMQ("eventbus")
-    .WithLifetime(ContainerLifetime.Persistent)
-    .WithManagementPlugin();
 
 var identity = builder.AddProject<Projects.Identity_API>("identity-app")
     .WaitFor(identitydb)

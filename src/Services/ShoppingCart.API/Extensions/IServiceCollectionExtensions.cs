@@ -87,5 +87,4 @@ public static class IServiceCollectionExtensions
             return services;
         }
     }
-
 }
