@@ -28,7 +28,7 @@ public sealed class RabbitMQEventBus(
     RabbitMQTelemetry rabbitMQTelemetry)
     : IEventBus, IDisposable, IHostedService
 {
-    private IConnection _rabbitMQConnection;
+    private IConnection? _rabbitMQConnection;
     private readonly EventBusSubscriptionInfo _eventBusSubscriptionInfo = subscriptionOptions.Value;
     private readonly ActivitySource _activitySource = rabbitMQTelemetry.ActivitySource;
     private readonly ResiliencePipeline _pipeline = CreateResiliencePipeline(options.Value.RetryCount);
@@ -40,6 +40,9 @@ public sealed class RabbitMQEventBus(
     private readonly SemaphoreSlim _publishSemaphore = new(1, 1);
     private readonly string _queueName = options.Value.SubscriptionClientName;
     private readonly string _exchangeName = options.Value.DomainName;
+
+    private readonly string _dlxExchangeName = $"{options.Value.DomainName}.dlx";
+    private readonly string _dlqQueueName = $"{options.Value.SubscriptionClientName}.dlx";
 
     private bool _disposed;
 
@@ -198,16 +201,23 @@ public sealed class RabbitMQEventBus(
                     return Task.CompletedTask;
                 };
 
+                // Declare Dead Letter Exchange and Queue
+                await CreateDeadLetterExchangeAndQueue();
                 await _consumerChannel.ExchangeDeclareAsync(
                     exchange: _exchangeName,
                     type: "direct");
+
+                var queueArgs = new Dictionary<string, object?>
+                {
+                    { "x-dead-letter-exchange", _dlxExchangeName }
+                };
 
                 await _consumerChannel.QueueDeclareAsync(
                     queue: _queueName,
                     durable: true,
                     exclusive: false,
                     autoDelete: false,
-                    arguments: null);
+                    arguments: queueArgs);
 
                 if (logger.IsEnabled(LogLevel.Trace))
                 {
@@ -250,6 +260,30 @@ public sealed class RabbitMQEventBus(
         return Task.CompletedTask;
     }
 
+    private async Task CreateDeadLetterExchangeAndQueue()
+    {
+        if (_consumerChannel == null)
+        {
+            return;
+        }
+
+        await _consumerChannel.ExchangeDeclareAsync(
+                exchange: _dlxExchangeName,
+                type: ExchangeType.Fanout);
+
+        await _consumerChannel.QueueDeclareAsync(
+            queue: _dlqQueueName,
+            durable: true,
+            exclusive: false,
+            autoDelete: false,
+            arguments: null);
+
+        await _consumerChannel.QueueBindAsync(
+            queue: _dlqQueueName,
+            exchange: _dlxExchangeName,
+            routingKey: string.Empty);
+    }
+
     private async Task OnMessageReceived(object sender, BasicDeliverEventArgs eventArgs)
     {
         static IEnumerable<string> ExtractTraceContextFromBasicProperties(IReadOnlyBasicProperties props, string key)
@@ -257,6 +291,10 @@ public sealed class RabbitMQEventBus(
             if (props.Headers != null && props.Headers.TryGetValue(key, out var value))
             {
                 var bytes = value as byte[];
+                if (bytes == null)
+                {
+                    return [];
+                }
                 return [Encoding.UTF8.GetString(bytes)];
             }
             return [];
@@ -286,24 +324,83 @@ public sealed class RabbitMQEventBus(
                 throw new InvalidOperationException($"Fake exception requested: \"{message}\"");
             }
 
-            await ProcessEvent(eventName, message);
+            await ProcessEventAsync(eventName, message);
+
+            if (_consumerChannel != null)
+            {
+                await _consumerChannel.BasicAckAsync(eventArgs.DeliveryTag, multiple: false);
+            }
         }
         catch (Exception ex)
         {
             logger.LogWarning(ex, "Error Processing message \"{Message}\"", message);
 
             activity?.SetExceptionTags(ex);
-        }
 
-        // Even on exception we take the message off the queue.
-        // in a REAL WORLD app this should be handled with a Dead Letter Exchange (DLX). 
-        // For more information see: https://www.rabbitmq.com/dlx.html
+            await HandleDeadLetterMessageAsync(eventArgs, ex);
+        }
+    }
+
+    private async Task HandleDeadLetterMessageAsync(BasicDeliverEventArgs eventArgs, Exception ex)
+    {
         if (_consumerChannel != null)
         {
+            var properties = new BasicProperties
+            {
+                DeliveryMode = DeliveryModes.Persistent,
+                Headers = new Dictionary<string, object?>()
+            };
+
+            // Copy existing headers
+            if (eventArgs.BasicProperties.Headers != null)
+            {
+                foreach (var header in eventArgs.BasicProperties.Headers)
+                {
+                    properties.Headers[header.Key] = header.Value;
+                }
+            }
+
+            // Exception details
+            properties.Headers["x-exception-message"] = ex.Message;
+            properties.Headers["x-exception-stacktrace"] = ex.ToString();
+            properties.Headers["x-original-routing-key"] = eventArgs.RoutingKey;
+
+            var death = new Dictionary<string, object?>
+            {
+                { "count", 1L },
+                { "exchange", _exchangeName },
+                { "queue", _queueName },
+                { "reason", "rejected" },
+                { "routing-keys", new List<object> { eventArgs.RoutingKey } },
+                { "time", DateTimeOffset.UtcNow.ToUnixTimeSeconds() }
+            };
+
+            // RabbitMQ expects x-death to be a list of tables
+            var xDeath = new List<object> { death };
+            properties.Headers["x-death"] = xDeath;
+
+            // Flat headers as requested
+            properties.Headers["x-first-death-exchange"] = _exchangeName;
+            properties.Headers["x-first-death-queue"] = _queueName;
+            properties.Headers["x-first-death-reason"] = "rejected";
+            properties.Headers["x-last-death-exchange"] = _exchangeName;
+            properties.Headers["x-last-death-queue"] = _queueName;
+            properties.Headers["x-last-death-reason"] = $"rejected: {ex.Message}";
+
+            // Publish to DLX
+            await _consumerChannel.BasicPublishAsync(
+                exchange: $"{_exchangeName}.dlx",
+                routingKey: eventArgs.RoutingKey,
+                mandatory: true,
+                basicProperties: properties,
+                body: eventArgs.Body);
+
+            // Ack the original message
             await _consumerChannel.BasicAckAsync(eventArgs.DeliveryTag, multiple: false);
         }
     }
-    private async Task ProcessEvent(string eventName, string message)
+
+    private async Task ProcessEventAsync(string eventName, string message)
     {
         if (logger.IsEnabled(LogLevel.Trace))
         {
@@ -329,12 +426,15 @@ public sealed class RabbitMQEventBus(
         // Deserialize the event
         var integrationEvent = DeserializeMessage(message, eventType);
 
-        // Get all the handlers using the event type as the key
-        var handlers = scope.ServiceProvider.GetKeyedServices<IIntegrationEventHandler>(eventType);
-        foreach (var handler in handlers)
+        if (integrationEvent == null)
         {
-            await handler.HandleAsync(integrationEvent);
+            logger.LogWarning("Unable to deserialize message to event type {EventType}", eventType.Name);
+            return;
         }
+
+        // Get the handler using the event type as the key
+        var handler = scope.ServiceProvider.GetRequiredKeyedService<IIntegrationEventHandler>(eventType);
+        await handler.HandleAsync(integrationEvent);
     }
 
     [UnconditionalSuppressMessage("Trimming", "IL2026:RequiresUnreferencedCode",
