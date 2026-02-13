@@ -18,6 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Services\ChatAgent.App\ChatAgent.App.csproj" />
     <ProjectReference Include="..\Services\Coupons.API\Coupons.API.csproj" />
     <ProjectReference Include="..\Services\Identity.API\Identity.API.csproj" />
     <ProjectReference Include="..\Services\Mango.Orchestrators\Mango.SagaOrchestrators.csproj" />

@@ -1,6 +1,17 @@
 ﻿<ul class="navbar-nav">
     @if (User.Identity.IsAuthenticated)
     {
+		<li class="nav-item">
+			<a class="nav-link" asp-controller="Cart" asp-action="Index">
+				<i class="fas fa-shopping-cart"></i>
+			</a>
+		</li>
+		<li class="nav-item">
+			<a class="nav-link" asp-controller="Order" asp-action="Index">
+				<i class="fas fa-receipt"></i> Orders
+			</a>
+		</li>
+
         <li class="nav-item">
             <a class="nav-link" href="#">Hello @User.Identity.Name</a>
         </li>

@@ -1969,3 +1969,122 @@
     });
 
 }));
+
+/* Chat Widget Logic */
+$(document).ready(function () {
+    const chatButton = $('#chat-button');
+    const chatWindow = $('#chat-window');
+    const closeChat = $('#close-chat');
+    const sendBtn = $('#send-btn');
+    const chatInput = $('#chat-input');
+    const chatMessages = $('#chat-messages');
+
+    // Toggle chat window
+    chatButton.click(function () {
+        chatWindow.toggleClass('d-none');
+    });
+
+    closeChat.click(function () {
+        chatWindow.addClass('d-none');
+    });
+
+    // Send message functionality
+    function sendMessage() {
+        const message = chatInput.val().trim();
+        if (message) {
+            // Append user message
+            const userMsgHtml = `
+                <div class="message sent mb-2 d-flex flex-column align-items-end">
+                    <small class="text-muted d-block">You</small>
+                    <div class="p-2 rounded bg-light">${escapeHtml(message)}</div>
+                </div>`;
+            chatMessages.append(userMsgHtml);
+
+            // Clear input
+            chatInput.val('');
+
+            // Scroll to bottom
+            chatMessages.scrollTop(chatMessages[0].scrollHeight);
+
+            // Send to backend via SSE
+            const aiMsgHtml = `
+                <div class="message received mb-2">
+                    <small class="text-muted d-block">AI Agent</small>
+                    <div class="p-2 rounded bg-light ai-response"></div>
+                </div>`;
+            const $aiMsg = $(aiMsgHtml);
+            chatMessages.append($aiMsg);
+            const $responseDiv = $aiMsg.find('.ai-response');
+            chatMessages.scrollTop(chatMessages[0].scrollHeight);
+
+            fetch('/Chat/SendMessage', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ content: message })
+            }).then(response => {
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+
+                return new ReadableStream({
+                    start(controller) {
+                        function push() {
+                            reader.read().then(({ done, value }) => {
+                                if (done) {
+                                    controller.close();
+                                    return;
+                                }
+                                const chunk = decoder.decode(value, { stream: true });
+                                // Parse SSE format "data: {json}\n\n"
+                                const lines = chunk.split('\n');
+                                lines.forEach(line => {
+                                    if (line.startsWith('data: ')) {
+                                        try {
+                                            const jsonStr = line.substring(6);
+                                            const data = JSON.parse(jsonStr);
+                                            $responseDiv.append(escapeHtml(data.Content));
+                                            chatMessages.scrollTop(chatMessages[0].scrollHeight);
+                                        } catch (e) {
+                                            console.error("Error parsing SSE data", e);
+                                        }
+                                    }
+                                });
+                                push();
+                            });
+                        }
+                        push();
+                    }
+                });
+            }).catch(error => {
+                console.error("Error sending message:", error);
+                const errorMsgHtml = `
+                    <div class="message received mb-2">
+                        <small class="text-muted d-block">System</small>
+                        <div class="p-2 rounded bg-light text-danger">Error: Could not connect to AI Agent.</div>
+                    </div>`;
+                chatMessages.append(errorMsgHtml);
+                chatMessages.scrollTop(chatMessages[0].scrollHeight);
+            });
+        }
+    }
+
+    sendBtn.click(sendMessage);
+
+    chatInput.keypress(function (e) {
+        if (e.which == 13) {
+            sendMessage();
+        }
+    });
+
+    function escapeHtml(text) {
+        var map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+        return text.replace(/[&<>"']/g, function (m) { return map[m]; });
+    }
+});

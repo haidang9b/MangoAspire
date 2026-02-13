@@ -70,6 +70,10 @@ void ConfigurationServices(IServiceCollection services, IConfiguration configura
     services.AddRefitClient<IOrdersApi>()
         .ConfigureHttpClient(c => c.BaseAddress = new Uri(serviceUrls.OrdersApi))
         .AddAuthToken();
+    services.AddHttpClient<ChatService>()
+        .ConfigureHttpClient(c => c.BaseAddress = new Uri(serviceUrls.ChatAgentApp))
+        .AddAuthToken();
+
 
     services.AddAuthentication(options =>
     {
