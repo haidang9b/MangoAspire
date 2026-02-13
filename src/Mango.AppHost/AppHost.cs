@@ -14,6 +14,7 @@ var coupondb = postgres.AddDatabase("coupondb");
 var identitydb = postgres.AddDatabase("identitydb");
 var shoppingcartdb = postgres.AddDatabase("shoppingcartdb");
 var sagaorchestratorsdb = postgres.AddDatabase("sagaorchestratorsdb");
+var chatagentdb = postgres.AddDatabase("chatagentdb");
 
 var rabbitMq = builder.AddRabbitMQ("eventbus", password: rabbitMqPassword)
     .WithLifetime(ContainerLifetime.Persistent)
@@ -100,12 +101,20 @@ var payments = builder.AddProject<Projects.Payments_API>("payments-api")
 //.WithReference(serviceBus);
 
 
+var agentApp = builder.AddProject<Projects.ChatAgent_App>("chatagent-app")
+    .WithReference(chatagentdb).WaitFor(chatagentdb)
+    .WithReference(identity).WaitFor(identity)
+    .WithEnvironment("ServiceUrls__IdentityApp", identityEndpoint)
+    .WithReference(coupon).WaitFor(coupon);
+
+
 builder.AddProject<Projects.Mango_Web>("mango-web")
     .WithReference(identity)
     .WithReference(products)
     .WithReference(shoppingcart)
     .WithReference(orders)
     .WithReference(coupon)
+    .WithReference(agentApp)
     .WithEnvironment("ServiceUrls__IdentityApp", identityEndpoint)
     .WithEnvironment("OpenIdConnect__Authority", identityEndpoint);
 

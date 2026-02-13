@@ -1,28 +1,33 @@
-﻿using Mango.Core.Behaviors;
+﻿using Azure.AI.OpenAI;
+using ChatAgent.App.Configurations;
+using ChatAgent.App.Data;
+using ChatAgent.App.Plugins;
+using ChatAgent.App.Services;
+using Mango.Core.Behaviors;
 using Mango.Core.Options;
 using Mango.Infrastructure.Behaviors;
 using Mango.Infrastructure.ExceptionHandlers;
 using Mango.Infrastructure.Extensions;
 using Mango.Infrastructure.Interceptors;
-using Mango.Infrastructure.ProcessedMessages;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Orders.API.Behaviours;
-using Orders.API.Services;
+using Microsoft.SemanticKernel;
+using Refit;
+using System.ClientModel;
 
-namespace Orders.API.Extensions;
+namespace ChatAgent.App.Extensions;
 
 public static class IServiceCollectionExtensions
 {
     public static IServiceCollection AddServices(this IServiceCollection services, IConfiguration configuration)
     {
         // Add services to the container.
+        // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         services.AddOpenApi();
 
-        services.AddPostgresDbContext<OrdersDbContext>(
-            configuration.GetConnectionString("orderdb")
-                ?? throw new ArgumentNullException("orderdb"),
+        services.AddPostgresDbContext<ChatAgentDbContext>(
+            configuration.GetConnectionString("chatagentdb")
+                ?? throw new ArgumentNullException("chatagentdb"),
             doMoreDbContextOptionsConfigure: (sp, options) =>
             {
                 options.AddInterceptors(
@@ -34,14 +39,11 @@ public static class IServiceCollectionExtensions
         services.AddMediatR(cfg =>
         {
             cfg.RegisterServicesFromAssembly(typeof(Program).Assembly);
-            cfg.AddOpenBehavior(typeof(IdentifiedBehavior<,>));
             cfg.AddOpenBehavior(typeof(LoggingBehavior<,>));
             cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
-            cfg.AddOpenBehavior(typeof(TransactionBehavior<,>));
-        });
-        services.AddProcessedMessages<OrdersDbContext>();
+            cfg.AddOpenBehavior(typeof(TxBehavior<,>));
 
-        services.AddScoped<IIntegrationEventService, IntegrationEventService>();
+        });
 
         services.AddValidatorsFromAssembly(typeof(Program).Assembly);
 
@@ -50,9 +52,15 @@ public static class IServiceCollectionExtensions
         services.AddExceptionHandler<GlobalExceptionHandler>();
         services.AddProblemDetails();
 
-        services.AddDocumentApi("Orders API", "v1", "Orders API");
+        services.AddScoped<IAgentService, AgentService>();
 
-        services.AddCurrentUserContext();
+
+        services.AddDocumentApi("ChatAgent", "v1", "ChatAgent");
+
+        services.AddAIAgent(configuration);
+        services.Configure<AIAgentConfiguration>(configuration.GetSection(AIAgentConfiguration.SectionName));
+
+        services.AddApiServices(configuration);
 
         // Configure ServiceUrls options
         var serviceUrls = configuration.GetSection(ServiceUrlsOptions.SectionName).Get<ServiceUrlsOptions>()
@@ -77,6 +85,36 @@ public static class IServiceCollectionExtensions
             });
         });
 
+        services.AddCurrentUserContext();
+        services.AddSingleton<ChatHistoryMemoryStorage>();
+        return services;
+
+    }
+
+    private static IServiceCollection AddApiServices(this IServiceCollection services, IConfiguration configuration)
+    {
+
+        var serviceUrls = configuration.GetSection(ServiceUrlsOptions.SectionName).Get<ServiceUrlsOptions>()
+                ?? new ServiceUrlsOptions();
+        services.AddRefitClient<ICouponsApi>()
+    .ConfigureHttpClient(c => c.BaseAddress = new Uri(serviceUrls.CouponsApi))
+    .AddAuthToken();
+
+        return services;
+    }
+
+    private static IServiceCollection AddAIAgent(this IServiceCollection services, IConfiguration configuration)
+    {
+        var config = configuration.GetSection(AIAgentConfiguration.SectionName).Get<AIAgentConfiguration>();
+        var client = new AzureOpenAIClient(
+            new Uri(config.ApiUrl),
+            new ApiKeyCredential(config.ApiKey));
+
+        services.AddKernel()
+            .AddAzureOpenAIChatCompletion(config.ModelId, client)
+            ;
+
+        services.AddScoped<CartPlugin>();
         return services;
     }
 }

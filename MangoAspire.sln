@@ -47,7 +47,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mango.Events", "src\Shared\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Payments.API", "src\Services\Payments.API\Payments.API.csproj", "{8AF5D059-BCD8-A44F-FC18-BA87EA56C80F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mango.SagaOrchestrators", "src\Services\Mango.Orchestrators\Mango.SagaOrchestrators.csproj", "{2D4EF2A3-7737-08CF-FE08-51D6F0C54E78}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mango.Orchestrators", "src\Services\Mango.Orchestrators\Mango.Orchestrators.csproj", "{2D4EF2A3-7737-08CF-FE08-51D6F0C54E78}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChatAgent.App", "src\Services\ChatAgent.App\ChatAgent.App.csproj", "{1B3A012D-D60B-2F84-A297-965C59E006B3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -127,6 +129,10 @@ Global
 		{2D4EF2A3-7737-08CF-FE08-51D6F0C54E78}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2D4EF2A3-7737-08CF-FE08-51D6F0C54E78}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2D4EF2A3-7737-08CF-FE08-51D6F0C54E78}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1B3A012D-D60B-2F84-A297-965C59E006B3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1B3A012D-D60B-2F84-A297-965C59E006B3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1B3A012D-D60B-2F84-A297-965C59E006B3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1B3A012D-D60B-2F84-A297-965C59E006B3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -154,6 +160,7 @@ Global
 		{8378D804-CD53-45B5-B29C-891CFA3ABD8A} = {DB8CF3E7-683E-4796-BFC0-A45D5D763353}
 		{8AF5D059-BCD8-A44F-FC18-BA87EA56C80F} = {F6C64EEE-3D6C-410E-A3DA-717CA2B6B483}
 		{2D4EF2A3-7737-08CF-FE08-51D6F0C54E78} = {F6C64EEE-3D6C-410E-A3DA-717CA2B6B483}
+		{1B3A012D-D60B-2F84-A297-965C59E006B3} = {F6C64EEE-3D6C-410E-A3DA-717CA2B6B483}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {48C3975E-18DE-421F-A08C-8855ABE94F44}

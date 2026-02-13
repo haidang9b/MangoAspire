@@ -12,11 +12,15 @@
 
 The project follows a microservices architecture, leveraging .NET Aspire to simplify service discovery, configuration, and orchestration.
 
+> [!NOTE]
+> For a detailed deep-dive into the system design, see [**Architecture Documentation**](docs/ARCHITECTURE.md).
+
 - **Orchestration**: .NET Aspire AppHost manages service lifecycles and dependencies.
-- **Communication**: Synchronous REST APIs and Asynchronous EventBus (RabbitMQ / Azure Service Bus).
-- **Data Persistence**: Dedicated PostgreSQL databases for each microservice to ensure loose coupling.
+- **Gateway**: YARP (Coming Soon) / Direct client-to-service communication.
+- **Communication**: Synchronous REST APIs and Asynchronous EventBus.
+- **Data Persistence**: Dedicated PostgreSQL databases for each microservice.
 - **Security**: Centralized identity management using Duende IdentityServer.
-- **Data Synchronization**: Change Data Capture (CDC) using Debezium for real-time data sync between services.
+- **Data Synchronization**: Change Data Capture (CDC) with Debezium.
 
 ---
 
@@ -26,10 +30,11 @@ The project follows a microservices architecture, leveraging .NET Aspire to simp
 - **Orchestration**: [.NET Aspire](https://learn.microsoft.com/en-us/dotnet/aspire/)
 - **Database**: [PostgreSQL](https://www.postgresql.org/) with [Entity Framework Core](https://learn.microsoft.com/en-us/ef/core/)
 - **Identity**: [Duende IdentityServer](https://duendesoftware.com/products/identityserver)
-- **Patterns**: MediatR (CQRS), FluentValidation, Result Pattern
-- **Observability**: OpenTelemetry for Logging, Metrics, and Tracing
-- **Package Management**: Central Package Management (CPM) via `Directory.Packages.props`
-- **CDC**: [Debezium](https://debezium.io/) for capturing database changes
+- **Messaging**: [RabbitMQ](https://www.rabbitmq.com/) (Default) / [Azure Service Bus](https://azure.microsoft.com/en-us/services/service-bus/)
+- **AI**: [Semantic Kernel](https://github.com/microsoft/semantic-kernel) (ChatAgent)
+- **Patterns**: MediatR (CQRS), FluentValidation, Result Pattern, Vertical Slice Architecture
+- **Observability**: OpenTelemetry (Metrics, Tracing, Logging)
+- **CDC**: [Debezium](https://debezium.io/)
 
 ---
 
@@ -41,13 +46,14 @@ MangoAspire/
 │   ├── Mango.AppHost/           # .NET Aspire Orchestrator
 │   ├── Mango.ServiceDefaults/   # Common service configurations (Resilience, OTEL, etc.)
 │   ├── Services/                # Microservices
-│   │   ├── Identity.API         # Identity and Access Management
+│   │   ├── Identity.API         # Duende IdentityServer
 │   │   ├── Products.API         # Product Catalog Service
-│   │   ├── Coupons.API          # Promotions and Discount Service
+│   │   ├── Coupons.API          # Promotions Service
 │   │   ├── Orders.API           # Order Management Service
 │   │   ├── ShoppingCart.API     # Shopping Cart Service
-│   │   ├── Payments.API         # Payment Processing Service
-│   │   └── Mango.Orchestrators  # Saga Orchestrators
+│   │   ├── Payments.API         # Payment Mock Service
+│   │   ├── ChatAgent.App        # AI Assistant Service
+│   │   └── Mango.Orchestrators  # Saga Orchestrators (MassTransit/Custom)
 │   ├── Shared/                  # Shared libraries (Mango.Core, Mango.Infrastructure)
 │   ├── EventBus/                # Message Bus abstraction
 │   ├── EventBus.RabbitMQ/       # RabbitMQ implementation
@@ -55,6 +61,7 @@ MangoAspire/
 │   └── UI/                      # Frontend applications
 │       └── Mango.Web            # Blazor Web App (Frontend)
 ├── docs/                        # Project documentation
+├── .agent/                      # AI Agent Guidelines
 └── Directory.Packages.props     # Centralized NuGet versioning
 ```
 

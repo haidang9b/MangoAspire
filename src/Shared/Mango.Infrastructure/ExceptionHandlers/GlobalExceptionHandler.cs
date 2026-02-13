@@ -1,10 +1,14 @@
-﻿using Mango.Core.Exceptions;
+﻿using FluentValidation;
+using Mango.Core.Domain;
+using Mango.Core.Exceptions;
 using Mango.Core.Extensions;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 
-namespace ShoppingCart.API.ExceptionHandlers;
+namespace Mango.Infrastructure.ExceptionHandlers;
 
 public class GlobalExceptionHandler : IExceptionHandler
 {

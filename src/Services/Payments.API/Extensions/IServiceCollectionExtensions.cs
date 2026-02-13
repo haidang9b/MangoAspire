@@ -1,8 +1,8 @@
 ﻿using Mango.Core.Behaviors;
+using Mango.Infrastructure.ExceptionHandlers;
 using Mango.Infrastructure.Extensions;
 using Mango.Infrastructure.Interceptors;
 using Payments.API.Configurations;
-using Payments.API.ExceptionHandlers;
 
 namespace Payments.API.Extensions;
 

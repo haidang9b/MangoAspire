@@ -1,10 +1,10 @@
 ﻿using Mango.Core.Behaviors;
 using Mango.Infrastructure.Behaviors;
+using Mango.Infrastructure.ExceptionHandlers;
 using Mango.Infrastructure.Extensions;
 using Mango.Infrastructure.Interceptors;
 using Mango.Infrastructure.ProcessedMessages;
 using Microsoft.EntityFrameworkCore;
-using Products.API.ExceptionHandlers;
 
 namespace Products.API.Extensions;
 

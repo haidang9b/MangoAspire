@@ -1,13 +1,13 @@
 ﻿using Mango.Core.Behaviors;
 using Mango.Core.Options;
 using Mango.Infrastructure.Behaviors;
+using Mango.Infrastructure.ExceptionHandlers;
 using Mango.Infrastructure.Extensions;
 using Mango.Infrastructure.Interceptors;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Refit;
-using ShoppingCart.API.ExceptionHandlers;
 using ShoppingCart.API.Services;
 
 namespace ShoppingCart.API.Extensions;

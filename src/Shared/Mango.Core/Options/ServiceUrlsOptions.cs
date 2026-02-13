@@ -1,4 +1,4 @@
-namespace Mango.Core.Options;
+﻿namespace Mango.Core.Options;
 
 /// <summary>
 /// Configuration options for service URLs.
@@ -13,4 +13,5 @@ public class ServiceUrlsOptions
     public string CouponsApi { get; set; } = "https://coupons-api";
     public string IdentityApp { get; set; } = "https://identity-app";
     public string OrdersApi { get; set; } = "https://orders-api";
+    public string ChatAgentApp { get; set; } = "https://chatagent-app";
 }
