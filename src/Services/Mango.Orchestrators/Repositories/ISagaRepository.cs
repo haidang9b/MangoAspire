@@ -1,4 +1,4 @@
-﻿namespace Mango.SagaOrchestrators.Repositories;
+﻿namespace Mango.Orchestrators.Repositories;
 
 public interface ISagaRepository
 {

@@ -1,4 +1,4 @@
-namespace Mango.Core.Pagination;
+﻿namespace Mango.Core.Pagination;
 
 public static class PaginationExtensions
 {
@@ -8,14 +8,10 @@ public static class PaginationExtensions
     /// </summary>
     public static IQueryable<T> Paginate<T>(this IQueryable<T> query, int? pageIndex, int? pageSize)
     {
-        var pageIndexValue = pageIndex ?? 1;
-        if (pageIndex == null || pageIndex < 1)
-            pageIndexValue = 1;
+        var pageIndexValue = Math.Max(1, pageIndex ?? 1);
 
-        var pageSizeValue = pageSize ?? 10;
-        if (pageSize == null || pageSize < 1)
-            pageSizeValue = 10;
+        var pageSizeValue = Math.Max(10, pageSize ?? 10);
 
-        return query.Skip((pageIndexValue - 1) * pageSizeValue).Take(pageSizeValue);
+        return query.Skip(Math.Max(0, (pageIndexValue - 1)) * pageSizeValue).Take(pageSizeValue);
     }
 }

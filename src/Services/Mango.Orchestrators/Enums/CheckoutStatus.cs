@@ -1,4 +1,4 @@
-﻿namespace Mango.SagaOrchestrators.Enums;
+﻿namespace Mango.Orchestrators.Enums;
 
 public enum OrderStatus
 {

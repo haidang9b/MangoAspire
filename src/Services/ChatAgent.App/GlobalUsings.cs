@@ -2,7 +2,6 @@
 
 // System
 global using ChatAgent.App.Configurations;
-global using ChatAgent.App.Models;
 global using ChatAgent.App.Plugins.Interfaces;
 // ChatAgent
 global using ChatAgent.App.Services;

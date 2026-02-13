@@ -2,7 +2,7 @@
 
 public class AIAgentConfiguration
 {
-    public static string SectionName = "AIAgent";
+    public const string SectionName = "AIAgent";
 
     public string? ApiKey { get; set; }
 
