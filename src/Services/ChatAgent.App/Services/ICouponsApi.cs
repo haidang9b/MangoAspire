@@ -1,5 +1,4 @@
 ﻿using Mango.Core.Domain;
-using Mango.RestApis.Requests;
 using Refit;
 
 namespace ChatAgent.App.Services;

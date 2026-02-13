@@ -1,12 +1,8 @@
-﻿using ChatAgent.App.Services;
-using Mango.Core.Auth;
-using Mango.RestApis.Requests;
-using Microsoft.SemanticKernel;
-using System.ComponentModel;
+﻿using Mango.Core.Auth;
 
 namespace ChatAgent.App.Plugins;
 
-public class CartPlugin
+public class CartPlugin : ICartPlugin
 {
     private readonly ICartApi _cartApi;
 

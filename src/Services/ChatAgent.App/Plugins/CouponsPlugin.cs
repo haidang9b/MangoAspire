@@ -1,11 +1,6 @@
-﻿using ChatAgent.App.Services;
-using Mango.RestApis.Requests;
-using Microsoft.SemanticKernel;
-using System.ComponentModel;
+﻿namespace ChatAgent.App.Plugins;
 
-namespace ChatAgent.App.Plugins;
-
-public class CouponsPlugin
+public class CouponsPlugin : ICouponsPlugin
 {
     private readonly ICouponsApi _couponsApi;
 
@@ -16,7 +11,7 @@ public class CouponsPlugin
 
     [KernelFunction]
     [Description("Get coupon details by code")]
-    public async Task<CouponResponseDto?> ValidateCoupount([Description("Coupon code")] string code)
+    public async Task<CouponResponseDto?> GetCouponAsync([Description("Coupon code")] string code)
     {
         var result = await _couponsApi.GetCouponAsync(code);
 

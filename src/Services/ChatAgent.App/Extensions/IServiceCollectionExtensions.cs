@@ -1,8 +1,6 @@
 ﻿using Azure.AI.OpenAI;
-using ChatAgent.App.Configurations;
 using ChatAgent.App.Data;
 using ChatAgent.App.Plugins;
-using ChatAgent.App.Services;
 using Mango.Core.Behaviors;
 using Mango.Core.Options;
 using Mango.Infrastructure.Behaviors;
@@ -11,7 +9,6 @@ using Mango.Infrastructure.Extensions;
 using Mango.Infrastructure.Interceptors;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.SemanticKernel;
 using Refit;
 using System.ClientModel;
 
@@ -86,7 +83,9 @@ public static class IServiceCollectionExtensions
         });
 
         services.AddCurrentUserContext();
-        services.AddSingleton<ChatHistoryMemoryStorage>();
+        services.AddSingleton<IChatHistoryMemoryStorage, ChatHistoryMemoryStorage>();
+        services.AddSingleton<IProductMemoryStorage, ProductMemoryStorage>();
+        services.AddScoped<IAgentService, AgentService>();
         return services;
 
     }
@@ -108,6 +107,12 @@ public static class IServiceCollectionExtensions
             .ConfigureHttpClient(c => c.BaseAddress = new Uri(serviceUrls.ShoppingCartApi))
             .AddAuthToken();
 
+        // Add HttpClient for Bing Search
+        services.AddHttpClient("BingSearch", client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(10);
+        });
+
         return services;
     }
 
@@ -119,11 +124,14 @@ public static class IServiceCollectionExtensions
             new ApiKeyCredential(config.ApiKey));
 
         services.AddKernel()
-            .AddAzureOpenAIChatCompletion(config.ModelId, client);
+            .AddAzureOpenAIChatCompletion(config.ModelId, client)
+            .AddAzureOpenAITextEmbeddingGeneration(config.ModelId ?? "text-embedding-ada-002", client);
 
-        services.AddScoped<CartPlugin>();
-        services.AddScoped<ProductsPlugin>();
-        services.AddScoped<CouponsPlugin>();
+        services.AddScoped<ICartPlugin, CartPlugin>();
+        services.AddScoped<IProductsPlugin, ProductsPlugin>();
+        services.AddScoped<ICouponsPlugin, CouponsPlugin>();
+        services.AddScoped<ICheckoutPlugin, CheckoutPlugin>();
+        services.AddScoped<IWebSearchPlugin, WebSearchPlugin>();
         return services;
     }
 }

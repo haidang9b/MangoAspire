@@ -1,6 +1,4 @@
-﻿using ChatAgent.App.Models;
-
-namespace ChatAgent.App.Services;
+﻿namespace ChatAgent.App.Services.Interfaces;
 
 public interface IAgentService
 {

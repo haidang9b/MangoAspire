@@ -1,6 +1,4 @@
-﻿using ChatAgent.App.Models;
-using ChatAgent.App.Services;
-using Mango.Core.Auth;
+﻿using Mango.Core.Auth;
 using System.Runtime.CompilerServices;
 
 namespace ChatAgent.App.Routes;
@@ -21,8 +19,6 @@ public static class ChatRoute
         ICurrentUserContext currentUserContext,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        var message = $"This is an AI response to: {request.Content}";
-        var chunks = message.Split(' ');
 
         await foreach (var chunk in agentService.ChatStreamingAsync(
             currentUserContext.UserId ?? throw new UnauthorizedAccessException(),
@@ -31,7 +27,7 @@ public static class ChatRoute
         {
             if (cancellationToken.IsCancellationRequested) break;
 
-            yield return new PromptResponse { Content = chunk + " " };
+            yield return new PromptResponse { Content = chunk };
         }
     }
 }
