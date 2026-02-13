@@ -97,8 +97,16 @@ public static class IServiceCollectionExtensions
         var serviceUrls = configuration.GetSection(ServiceUrlsOptions.SectionName).Get<ServiceUrlsOptions>()
                 ?? new ServiceUrlsOptions();
         services.AddRefitClient<ICouponsApi>()
-    .ConfigureHttpClient(c => c.BaseAddress = new Uri(serviceUrls.CouponsApi))
-    .AddAuthToken();
+            .ConfigureHttpClient(c => c.BaseAddress = new Uri(serviceUrls.CouponsApi))
+            .AddAuthToken();
+
+        services.AddRefitClient<IProductsApi>()
+            .ConfigureHttpClient(c => c.BaseAddress = new Uri(serviceUrls.ProductsApi))
+            .AddAuthToken();
+
+        services.AddRefitClient<ICartApi>()
+            .ConfigureHttpClient(c => c.BaseAddress = new Uri(serviceUrls.ShoppingCartApi))
+            .AddAuthToken();
 
         return services;
     }
@@ -111,10 +119,11 @@ public static class IServiceCollectionExtensions
             new ApiKeyCredential(config.ApiKey));
 
         services.AddKernel()
-            .AddAzureOpenAIChatCompletion(config.ModelId, client)
-            ;
+            .AddAzureOpenAIChatCompletion(config.ModelId, client);
 
         services.AddScoped<CartPlugin>();
+        services.AddScoped<ProductsPlugin>();
+        services.AddScoped<CouponsPlugin>();
         return services;
     }
 }

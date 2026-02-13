@@ -12,14 +12,25 @@ public class AgentService : IAgentService
 
     private readonly CartPlugin _cartPlugin;
 
+    private readonly ProductsPlugin _productsPlugin;
+
+    private readonly CouponsPlugin _couponsPlugin;
+
     private readonly ChatHistoryMemoryStorage _chatHistory;
 
-
-    public AgentService(Kernel kernel, CartPlugin cartPlugin, ChatHistoryMemoryStorage chatHistory)
+    public AgentService(
+        Kernel kernel, 
+        CartPlugin cartPlugin, 
+        ChatHistoryMemoryStorage chatHistory,
+        ProductsPlugin productPlugin, 
+        CouponsPlugin couponsPlugin
+    )
     {
         _kernel = kernel;
         _cartPlugin = cartPlugin;
         _chatHistory = chatHistory;
+        _productsPlugin = productPlugin;
+        _couponsPlugin = couponsPlugin;
     }
 
     public async IAsyncEnumerable<string> ChatStreamingAsync(string userId, PromptRequest promptRequest)
@@ -28,9 +39,9 @@ public class AgentService : IAgentService
         var scopedKernel = _kernel.Clone();
 
         // 2. Import plugins from DI
-        //scopedKernel.ImportPluginFromObject(_productPlugin);
+        scopedKernel.ImportPluginFromObject(_productsPlugin);
         scopedKernel.ImportPluginFromObject(_cartPlugin);
-        //scopedKernel.ImportPluginFromObject(_voucherPlugin);
+        scopedKernel.ImportPluginFromObject(_couponsPlugin);
 
         var chatHistory = _chatHistory.GetChatHistory(userId);
 
