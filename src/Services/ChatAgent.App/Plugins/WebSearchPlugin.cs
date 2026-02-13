@@ -14,9 +14,9 @@ public class WebSearchPlugin : IWebSearchPlugin
     }
 
     [KernelFunction]
-    [Description("Search the web for information about dishes, ingredients, recipes, or food-related topics. Use this when you need external information not available in the menu.")]
+    [Description("Search the web for information about dishes, ingredients, recipes, cooking methods, or food-related topics. Use this ONLY when the information is NOT available in the menu (e.g., nutritional facts, recipe details, cooking tips, food origins, or general culinary knowledge).")]
     public async Task<string> SearchWebAsync(
-        [Description("Search query about food, dish, ingredient, or recipe")] string query)
+        [Description("Search query about food, dish, ingredient, recipe, or culinary topic (e.g., 'carbonara recipe', 'is pho healthy', 'origin of tiramisu')")] string query)
     {
         if (string.IsNullOrWhiteSpace(_searchApiKey))
             return "Web search is not configured.";

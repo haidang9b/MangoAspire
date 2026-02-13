@@ -15,8 +15,8 @@ public class CartPlugin : ICartPlugin
     }
 
     [KernelFunction]
-    [Description("Apply coupon to cart")]
-    public async Task<bool> ApplyCouponAsync([Description("Counpon code")] string code)
+    [Description("Apply a discount coupon code to the user's shopping cart. Use this when the user provides a coupon or discount code they want to use.")]
+    public async Task<bool> ApplyCouponAsync([Description("The coupon or discount code to apply")] string code)
     {
         var result = await _cartApi.ApplyCouponAsync(new ApplyCouponRequestDto
         {
@@ -27,7 +27,7 @@ public class CartPlugin : ICartPlugin
     }
 
     [KernelFunction]
-    [Description("Remove coupon from cart")]
+    [Description("Remove the currently applied coupon from the user's cart. Use this when the user wants to remove or change their discount code.")]
     public async Task<bool> RemoveCouponAsync()
     {
         var result = await _cartApi.RemoveCouponAsync();
@@ -36,8 +36,10 @@ public class CartPlugin : ICartPlugin
     }
 
     [KernelFunction]
-    [Description("Add product to cart")]
-    public async Task<bool> AddProductAsync([Description("Product id")] Guid productId, [Description("Quantity")] int quantity)
+    [Description("Add a product to the user's shopping cart with the specified quantity. Use this when the user wants to order or add items to their cart.")]
+    public async Task<bool> AddProductAsync(
+        [Description("The unique identifier (GUID) of the product to add")] Guid productId,
+        [Description("The number of items to add (must be greater than 0)")] int quantity)
     {
         var result = await _cartApi.AddToCartAsync(new AddToCartRequestDto
         {
@@ -49,7 +51,7 @@ public class CartPlugin : ICartPlugin
     }
 
     [KernelFunction]
-    [Description("Get cart of current user")]
+    [Description("Retrieve the current user's shopping cart with all items, quantities, prices, and applied coupons. Use this to show what's in the cart or calculate totals.")]
     public async Task<CartDto?> GetCurrentCartAsync()
     {
         var result = await _cartApi.GetCartByUserIdAsync(_currentUserContext.UserId!);
