@@ -1,7 +1,7 @@
-﻿using Mango.SagaOrchestrators.Data;
+﻿using Mango.Orchestrators.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace Mango.SagaOrchestrators.Repositories;
+namespace Mango.Orchestrators.Repositories;
 
 public class SagaRepository(SagaDbContext dbContext) : ISagaRepository
 {

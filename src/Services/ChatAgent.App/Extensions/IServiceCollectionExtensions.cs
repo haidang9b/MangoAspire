@@ -85,6 +85,7 @@ public static class IServiceCollectionExtensions
         services.AddCurrentUserContext();
         services.AddSingleton<IChatHistoryMemoryStorage, ChatHistoryMemoryStorage>();
         services.AddSingleton<IProductMemoryStorage, ProductMemoryStorage>();
+        services.AddScoped<IChatHistoryRepository, ChatHistoryRepository>();
         services.AddScoped<IAgentService, AgentService>();
         return services;
 
@@ -118,14 +119,17 @@ public static class IServiceCollectionExtensions
 
     private static IServiceCollection AddAIAgent(this IServiceCollection services, IConfiguration configuration)
     {
-        var config = configuration.GetSection(AIAgentConfiguration.SectionName).Get<AIAgentConfiguration>();
+        var config = configuration.GetSection(AIAgentConfiguration.SectionName).Get<AIAgentConfiguration>()
+            ?? throw new ArgumentNullException(AIAgentConfiguration.SectionName);
         var client = new AzureOpenAIClient(
-            new Uri(config.ApiUrl),
-            new ApiKeyCredential(config.ApiKey));
+            new Uri(config.ApiUrl ?? throw new ArgumentNullException(nameof(AIAgentConfiguration.ApiUrl))),
+            new ApiKeyCredential(config.ApiKey ?? throw new ArgumentNullException(nameof(AIAgentConfiguration.ApiKey))));
 
         services.AddKernel()
-            .AddAzureOpenAIChatCompletion(config.ModelId, client)
-            .AddAzureOpenAITextEmbeddingGeneration(config.ModelId ?? "text-embedding-ada-002", client);
+            .AddAzureOpenAIChatCompletion(
+                config.ModelId ?? throw new ArgumentNullException(nameof(AIAgentConfiguration.ModelId)),
+                client);
+        //.AddAzureOpenAITextEmbeddingGeneration(config.ModelId ?? "text-embedding-ada-002", client);
 
         services.AddScoped<ICartPlugin, CartPlugin>();
         services.AddScoped<IProductsPlugin, ProductsPlugin>();

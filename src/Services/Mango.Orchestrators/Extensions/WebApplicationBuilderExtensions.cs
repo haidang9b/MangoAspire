@@ -1,7 +1,7 @@
-﻿using Mango.SagaOrchestrators.Data;
+﻿using Mango.Orchestrators.Data;
 using Mango.ServiceDefaults;
 
-namespace Mango.SagaOrchestrators.Extensions;
+namespace Mango.Orchestrators.Extensions;
 
 public static class WebApplicationBuilderExtensions
 {

@@ -1,4 +1,6 @@
-﻿using Microsoft.SemanticKernel.ChatCompletion;
+﻿using ChatAgent.App.Data.Enums;
+using ChatAgent.App.Dtos;
+using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 
 namespace ChatAgent.App.Services;
@@ -32,7 +34,7 @@ public class AgentService : IAgentService
         _webSearchPlugin = webSearchPlugin;
     }
 
-    public async IAsyncEnumerable<string> ChatStreamingAsync(string userId, PromptRequest promptRequest)
+    public async IAsyncEnumerable<string> ChatStreamingAsync(string userId, PromptRequestDto promptRequest)
     {
         // 1. Clone kernel (important for scoped plugins)
         var scopedKernel = _kernel.Clone();
@@ -44,9 +46,12 @@ public class AgentService : IAgentService
         scopedKernel.ImportPluginFromObject(_checkoutPlugin);
         scopedKernel.ImportPluginFromObject(_webSearchPlugin);
 
-        var chatHistory = _chatHistory.GetChatHistory(userId);
+        var chatHistory = await _chatHistory.GetChatHistoryAsync(userId);
 
         chatHistory.AddUserMessage(promptRequest.Content);
+
+        // Save user message to database
+        await _chatHistory.SaveMessageAsync(userId, ChatMessageRole.User, promptRequest.Content);
 
         var settings = new OpenAIPromptExecutionSettings
         {
@@ -70,6 +75,9 @@ public class AgentService : IAgentService
         }
 
         chatHistory.AddAssistantMessage(fullResponse);
+
+        // Save assistant response to database
+        await _chatHistory.SaveMessageAsync(userId, ChatMessageRole.Assistant, fullResponse);
     }
 
 }

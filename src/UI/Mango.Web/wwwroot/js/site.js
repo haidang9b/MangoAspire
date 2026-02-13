@@ -1979,9 +1979,85 @@ $(document).ready(function () {
     const chatInput = $('#chat-input');
     const chatMessages = $('#chat-messages');
 
+    let currentPage = 1;
+    let isLoadingHistory = false;
+    let hasMoreHistory = true;
+
+    // Load chat history
+    async function loadChatHistory(append = false) {
+        if (isLoadingHistory || !hasMoreHistory) return;
+
+        isLoadingHistory = true;
+
+        try {
+            const response = await fetch(`/Chat/GetHistory?pageSize=10&pageIndex=${currentPage}`);
+            const data = await response.json();
+
+            console.log('Pagination response:', data);
+            console.log('Current page:', currentPage, 'Has next:', data.hasNextPage, 'Total pages:', data.totalPages);
+
+            if (data.data && data.data.length > 0) {
+                const scrollHeight = chatMessages[0].scrollHeight;
+
+                data.data.forEach(msg => {
+                    const roleLabel = msg.role === 1 ? 'You' : 'AI Agent'; // 1 = User, 2 = Assistant
+                    const alignClass = msg.role === 1 ? 'sent d-flex flex-column align-items-end' : 'received';
+
+                    const msgHtml = `
+                        <div class="message ${alignClass} mb-2">
+                            <small class="text-muted d-block">${roleLabel}</small>
+                            <div class="p-2 rounded bg-light">${escapeHtml(msg.content)}</div>
+                        </div>`;
+
+                    if (append) {
+                        chatMessages.append(msgHtml);
+                    } else {
+                        chatMessages.prepend(msgHtml);
+                    }
+                });
+
+                currentPage++;
+                hasMoreHistory = data.hasNextPage;
+
+                // Maintain scroll position when prepending
+                if (!append) {
+                    const newScrollHeight = chatMessages[0].scrollHeight;
+                    chatMessages.scrollTop(newScrollHeight - scrollHeight);
+                } else {
+                    chatMessages.scrollTop(chatMessages[0].scrollHeight);
+                }
+            } else {
+                hasMoreHistory = false;
+            }
+        } catch (error) {
+            console.error('Error loading chat history:', error);
+        } finally {
+            isLoadingHistory = false;
+        }
+    }
+
+    let scrollTimeout;
+    // Scroll event for infinite scroll (load older messages)
+    chatMessages.on('scroll', function () {
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(function () {
+            // Only load when scrolled to within 50px of the top
+            if (chatMessages.scrollTop() < 50 && hasMoreHistory && !isLoadingHistory) {
+                loadChatHistory(false);
+            }
+        }, 100); // Debounce for 100ms
+    });
+
     // Toggle chat window
     chatButton.click(function () {
         chatWindow.toggleClass('d-none');
+
+        // Load history when opening chat for the first time
+        if (!chatWindow.hasClass('d-none') && currentPage === 1) {
+            // Clear welcome message
+            chatMessages.find('.message').remove();
+            loadChatHistory(true);
+        }
     });
 
     closeChat.click(function () {

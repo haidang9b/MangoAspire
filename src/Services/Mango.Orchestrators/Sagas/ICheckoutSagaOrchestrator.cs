@@ -1,4 +1,4 @@
-﻿namespace Mango.SagaOrchestrators.Sagas;
+﻿namespace Mango.Orchestrators.Sagas;
 
 /// <summary>
 /// Interface for the Checkout Saga Orchestrator.

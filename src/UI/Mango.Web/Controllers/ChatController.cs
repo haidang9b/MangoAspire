@@ -35,4 +35,12 @@ public class ChatController : Controller
 
         return new EmptyResult();
     }
+
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> GetHistory(int pageSize = 10, int pageIndex = 1)
+    {
+        var history = await _chatService.GetChatHistoryAsync(pageSize, pageIndex);
+        return Ok(history);
+    }
 }

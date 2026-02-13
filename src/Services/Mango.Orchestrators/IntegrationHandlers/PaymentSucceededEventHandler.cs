@@ -1,4 +1,4 @@
-﻿namespace Mango.SagaOrchestrators.IntegrationHandlers;
+﻿namespace Mango.Orchestrators.IntegrationHandlers;
 
 public class PaymentSucceededEventHandler(
     ICheckoutSagaOrchestrator orchestrator,

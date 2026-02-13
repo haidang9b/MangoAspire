@@ -1,6 +1,6 @@
 ﻿using Mango.Core.Domain;
 
-namespace Mango.SagaOrchestrators.Entities;
+namespace Mango.Orchestrators.Entities;
 
 public class CheckoutSagaState : EntityBase<Guid>
 {

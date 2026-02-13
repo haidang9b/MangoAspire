@@ -1,9 +1,9 @@
 ﻿using Mango.Infrastructure.Extensions;
-using Mango.SagaOrchestrators.Data;
+using Mango.Orchestrators.Data;
 using Mango.ServiceDefaults;
 using Microsoft.EntityFrameworkCore;
 
-namespace Mango.SagaOrchestrators.Extensions;
+namespace Mango.Orchestrators.Extensions;
 
 public static class WebApplicationExtensions
 {

@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
 
-namespace Mango.SagaOrchestrators.Sagas;
+namespace Mango.Orchestrators.Sagas;
 
 /// <summary>
 /// Orchestrates the Checkout Saga workflow.

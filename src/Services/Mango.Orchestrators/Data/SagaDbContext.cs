@@ -1,7 +1,7 @@
 ﻿using Mango.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
-namespace Mango.SagaOrchestrators.Data;
+namespace Mango.Orchestrators.Data;
 
 public class SagaDbContext : AppDbContextBase
 {
