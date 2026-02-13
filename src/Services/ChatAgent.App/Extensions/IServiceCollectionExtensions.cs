@@ -12,7 +12,6 @@ using Mango.Infrastructure.Interceptors;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.SemanticKernel;
-using OpenAI;
 using Refit;
 using System.ClientModel;
 

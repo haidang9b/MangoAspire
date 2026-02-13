@@ -26,13 +26,13 @@ public class ChatController : Controller
 
         Response.Headers.Append("Content-Type", "text/event-stream");
 
-        await foreach(var promptResponse in _chatService.SendPromptAsync(request))
+        await foreach (var promptResponse in _chatService.SendPromptAsync(request))
         {
             var json = System.Text.Json.JsonSerializer.Serialize(promptResponse);
             await Response.WriteAsync($"data: {json}\n\n");
             await Response.Body.FlushAsync();
         }
-        
+
         return new EmptyResult();
     }
 }

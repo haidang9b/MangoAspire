@@ -4,7 +4,7 @@ public class AIAgentConfiguration
 {
     public static string SectionName = "AIAgent";
 
-    public string? ApiKey { get; set; } 
+    public string? ApiKey { get; set; }
 
     public string? ApiUrl { get; set; }
 

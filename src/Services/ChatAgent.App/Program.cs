@@ -1,7 +1,5 @@
 ﻿using ChatAgent.App.Extensions;
 using ChatAgent.App.Routes;
-using ChatAgent.App.Services;
-using Microsoft.SemanticKernel;
 
 var builder = WebApplication.CreateBuilder(args);
 
