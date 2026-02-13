@@ -1,26 +1,45 @@
-﻿//using Mango.Core.Domain;
-//using Mango.Web.Models;
-//using Refit;
+﻿using Mango.Core.Domain;
+using Refit;
 
-//namespace ChatAgent.App.Services;
+namespace ChatAgent.App.Services;
 
-//public interface IProductsApi
+public interface IProductsApi
+{
+    [Get("/api/products")]
+    Task<ResultModel<PaginatedItemsDto<ProductDto>>> GetProductsAsync(int pageIndex = 1, int pageSize = 50, int? catalogTypeId = null);
+}
+
+
+public class PaginatedItemsDto<T> where T : class
+{
+    public int PageIndex { get; set; }
+    public int PageSize { get; set; }
+    public long Count { get; set; }
+    public IEnumerable<T> Data { get; set; } = [];
+
+    public int TotalPages => (int)Math.Ceiling(Count / (double)PageSize);
+    public bool HasPreviousPage => PageIndex > 1;
+    public bool HasNextPage => PageIndex < TotalPages;
+}
+
+
+
+//public record ProductDto
 //{
-//    [Get("/api/products")]
-//    Task<ResultModel<PaginatedItemsDto<ProductDto>>> GetProductsAsync(int pageIndex = 1, int pageSize = 10, int? catalogTypeId = null);
+//    public Guid Id { get; set; }
 
-//    [Get("/api/products/{id}")]
-//    Task<ResultModel<ProductDto>> GetProductByIdAsync(Guid id);
+//    public required string Name { get; set; }
 
-//    [Post("/api/products")]
-//    Task<ResultModel<Guid>> CreateProductAsync([Body] ProductDto productDto);
+//    public decimal Price { get; set; }
 
-//    [Put("/api/products")]
-//    Task<ResultModel<bool>> UpdateProductAsync([Body] ProductDto productDto);
+//    public required string Description { get; set; }
 
-//    [Delete("/api/products/{id}")]
-//    Task<ResultModel<bool>> DeleteProductAsync(Guid id);
+//    public required string CategoryName { get; set; }
 
-//    [Get("/api/catalog-types")]
-//    Task<ResultModel<List<CatalogTypeDto>>> GetCatalogTypesAsync();
+//    public int? CatalogTypeId { get; set; }
+
+//    public required string ImageUrl { get; set; }
+
+//    public int Stock { get; set; }
 //}
+

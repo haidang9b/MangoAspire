@@ -1,7 +1,4 @@
-﻿using ChatAgent.App.Models;
-using ChatAgent.App.Plugins;
-using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.ChatCompletion;
+﻿using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 
 namespace ChatAgent.App.Services;
@@ -9,17 +6,30 @@ namespace ChatAgent.App.Services;
 public class AgentService : IAgentService
 {
     private readonly Kernel _kernel;
+    private readonly ICartPlugin _cartPlugin;
+    private readonly IProductsPlugin _productsPlugin;
+    private readonly ICouponsPlugin _couponsPlugin;
+    private readonly ICheckoutPlugin _checkoutPlugin;
+    private readonly IWebSearchPlugin _webSearchPlugin;
+    private readonly IChatHistoryMemoryStorage _chatHistory;
 
-    private readonly CartPlugin _cartPlugin;
-
-    private readonly ChatHistoryMemoryStorage _chatHistory;
-
-
-    public AgentService(Kernel kernel, CartPlugin cartPlugin, ChatHistoryMemoryStorage chatHistory)
+    public AgentService(
+        Kernel kernel,
+        ICartPlugin cartPlugin,
+        IChatHistoryMemoryStorage chatHistory,
+        IProductsPlugin productPlugin,
+        ICouponsPlugin couponsPlugin,
+        ICheckoutPlugin checkoutPlugin,
+        IWebSearchPlugin webSearchPlugin
+    )
     {
         _kernel = kernel;
         _cartPlugin = cartPlugin;
         _chatHistory = chatHistory;
+        _productsPlugin = productPlugin;
+        _couponsPlugin = couponsPlugin;
+        _checkoutPlugin = checkoutPlugin;
+        _webSearchPlugin = webSearchPlugin;
     }
 
     public async IAsyncEnumerable<string> ChatStreamingAsync(string userId, PromptRequest promptRequest)
@@ -28,9 +38,11 @@ public class AgentService : IAgentService
         var scopedKernel = _kernel.Clone();
 
         // 2. Import plugins from DI
-        //scopedKernel.ImportPluginFromObject(_productPlugin);
+        scopedKernel.ImportPluginFromObject(_productsPlugin);
         scopedKernel.ImportPluginFromObject(_cartPlugin);
-        //scopedKernel.ImportPluginFromObject(_voucherPlugin);
+        scopedKernel.ImportPluginFromObject(_couponsPlugin);
+        scopedKernel.ImportPluginFromObject(_checkoutPlugin);
+        scopedKernel.ImportPluginFromObject(_webSearchPlugin);
 
         var chatHistory = _chatHistory.GetChatHistory(userId);
 

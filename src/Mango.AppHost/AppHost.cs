@@ -105,7 +105,9 @@ var agentApp = builder.AddProject<Projects.ChatAgent_App>("chatagent-app")
     .WithReference(chatagentdb).WaitFor(chatagentdb)
     .WithReference(identity).WaitFor(identity)
     .WithEnvironment("ServiceUrls__IdentityApp", identityEndpoint)
-    .WithReference(coupon).WaitFor(coupon);
+    .WithReference(coupon).WaitFor(coupon)
+    .WithReference(shoppingcart).WaitFor(shoppingcart)
+    .WithReference(products).WaitFor(products);
 
 
 builder.AddProject<Projects.Mango_Web>("mango-web")
@@ -119,7 +121,7 @@ builder.AddProject<Projects.Mango_Web>("mango-web")
     .WithEnvironment("OpenIdConnect__Authority", identityEndpoint);
 
 
-builder.AddProject<Projects.Mango_SagaOrchestrators>("mango-saga-orchestrators")
+builder.AddProject<Projects.Mango_Orchestrators>("mango-saga-orchestrators")
     .WaitFor(rabbitMq).WithReference(rabbitMq)
     .WaitFor(sagaorchestratorsdb).WithReference(sagaorchestratorsdb);
 
