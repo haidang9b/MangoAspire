@@ -1,6 +1,7 @@
 ﻿using Mango.Core.Options;
 using Mango.Infrastructure.Extensions;
 using Mango.ServiceDefaults;
+using Mango.Web.Filters;
 using Mango.Web.Services;
 using Microsoft.AspNetCore.Authentication;
 using Refit;
@@ -8,8 +9,12 @@ using OpenIdConnectOptions = Mango.Core.Options.OpenIdConnectOptions;
 
 var builder = WebApplication.CreateBuilder(args);
 
+
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews(options =>
+{
+    options.Filters.Add<RefitExceptionFilter>();
+});
 builder.Services.AddCurrentUserContext();
 builder.AddServiceDefaults();
 
