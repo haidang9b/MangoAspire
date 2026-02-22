@@ -133,7 +133,13 @@ builder.AddProject<Projects.Mango_Gateway>("mango-gateway")
     .WithReference(products)
     .WithReference(orders)
     .WithReference(shoppingcart)
-    .WithReference(coupon);
+    .WithReference(coupon)
+    .WithReference(agentApp);
+
+
+//builder.AddExecutable("mango-ui", "pnpm", "../UI/mango-ui", "dev")
+//    .WithHttpEndpoint(port: 5173, env: "PORT")
+//    .WithExternalHttpEndpoints();
 
 builder.Build().Run();
 

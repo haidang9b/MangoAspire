@@ -1,0 +1,85 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+:root {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  font-weight: 400;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  /* Theme Variables - Dark Mode (Default) */
+  --bg-base: #1e1e2e;
+  --bg-crust: #11111b;
+  --bg-mantle: #181825;
+  --bg-surface: #313244;
+  --text-main: #cdd6f4;
+  --text-sub: #a6adc8;
+  --text-overlay: #7f849c;
+  --accent-blue: #89b4fa;
+  --accent-pink: #f5c2e7;
+  --accent-peach: #fab387;
+  --accent-yellow: #f9e2af;
+  --accent-green: #a6e3a1;
+  --accent-red: #f38ba8;
+  --border-color: #45475a;
+  --card-bg: #313244;
+  --input-bg: #11111b;
+}
+
+[data-theme='light'] {
+  --bg-base: #eff1f5;
+  --bg-crust: #dce0e8;
+  --bg-mantle: #e6e9ef;
+  --bg-surface: #ccd0da;
+  --text-main: #4c4f69;
+  --text-sub: #5c5f77;
+  --text-overlay: #6c6f85;
+  --accent-blue: #1e66f5;
+  --accent-pink: #ea76cb;
+  --accent-peach: #fe640b;
+  --accent-yellow: #df8e1d;
+  --accent-green: #40a02b;
+  --accent-red: #d20f39;
+  --border-color: #bcc0cc;
+  --card-bg: #e6e9ef;
+  --input-bg: #ffffff;
+}
+
+:root {
+  color-scheme: dark;
+  color: var(--text-main);
+  background-color: var(--bg-crust);
+}
+
+[data-theme='light'] {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+a {
+  color: #89b4fa;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+button {
+  font-family: inherit;
+}
