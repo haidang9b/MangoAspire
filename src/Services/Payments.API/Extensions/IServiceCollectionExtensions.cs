@@ -1,7 +1,8 @@
-﻿using Mango.Core.Behaviors;
+﻿using Mango.Infrastructure.Behaviors;
 using Mango.Infrastructure.ExceptionHandlers;
 using Mango.Infrastructure.Extensions;
 using Mango.Infrastructure.Interceptors;
+using Mediator.Extensions;
 using Payments.API.Configurations;
 
 namespace Payments.API.Extensions;
@@ -16,14 +17,10 @@ public static class IServiceCollectionExtensions
 
         services.AddScoped<PerformanceInterceptor>();
 
-        services.AddMediatR(cfg =>
-        {
-            cfg.RegisterServicesFromAssembly(typeof(Program).Assembly);
-            cfg.AddOpenBehavior(typeof(LoggingBehavior<,>));
-            cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
-            //cfg.AddOpenBehavior(typeof(TxBehavior<,>));
+        services.AddMediator(typeof(Program).Assembly);
+        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
+        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
-        });
 
         services.AddValidatorsFromAssembly(typeof(Program).Assembly);
 

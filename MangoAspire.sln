@@ -51,6 +51,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mango.Orchestrators", "src\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChatAgent.App", "src\Services\ChatAgent.App\ChatAgent.App.csproj", "{1B3A012D-D60B-2F84-A297-965C59E006B3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mediator", "src\Shared\Mediator\Mediator.csproj", "{50931D6D-9983-48C7-81B0-FEE61AECA71C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -133,6 +135,10 @@ Global
 		{1B3A012D-D60B-2F84-A297-965C59E006B3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1B3A012D-D60B-2F84-A297-965C59E006B3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1B3A012D-D60B-2F84-A297-965C59E006B3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{50931D6D-9983-48C7-81B0-FEE61AECA71C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{50931D6D-9983-48C7-81B0-FEE61AECA71C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{50931D6D-9983-48C7-81B0-FEE61AECA71C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{50931D6D-9983-48C7-81B0-FEE61AECA71C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -161,6 +167,7 @@ Global
 		{8AF5D059-BCD8-A44F-FC18-BA87EA56C80F} = {F6C64EEE-3D6C-410E-A3DA-717CA2B6B483}
 		{2D4EF2A3-7737-08CF-FE08-51D6F0C54E78} = {F6C64EEE-3D6C-410E-A3DA-717CA2B6B483}
 		{1B3A012D-D60B-2F84-A297-965C59E006B3} = {F6C64EEE-3D6C-410E-A3DA-717CA2B6B483}
+		{50931D6D-9983-48C7-81B0-FEE61AECA71C} = {DB8CF3E7-683E-4796-BFC0-A45D5D763353}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {48C3975E-18DE-421F-A08C-8855ABE94F44}
