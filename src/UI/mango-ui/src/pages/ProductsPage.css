@@ -1,0 +1,217 @@
+.products-page {
+    min-height: 100vh;
+    background: var(--bg-base);
+    color: var(--text-main);
+}
+
+/* ── Header ── */
+.products-page__header {
+    background: linear-gradient(135deg, var(--bg-surface) 0%, var(--bg-mantle) 100%);
+    border-bottom: 1px solid var(--border-color);
+    padding: 40px 24px 32px;
+}
+
+.products-page__header-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+}
+
+.products-page__title {
+    margin: 0 0 6px;
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    background: linear-gradient(90deg, var(--text-main) 30%, var(--accent-blue) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.products-page__title-accent {
+    -webkit-text-fill-color: initial;
+}
+
+.products-page__subtitle {
+    margin: 0;
+    color: var(--text-overlay);
+    font-size: 0.95rem;
+}
+
+/* ── Controls ── */
+.products-page__controls {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 24px 24px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.products-page__filter-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.filter-chip {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    color: var(--text-sub);
+    border-radius: 999px;
+    padding: 6px 16px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.filter-chip:hover {
+    background: var(--bg-surface);
+    border-color: var(--accent-blue);
+    color: var(--accent-blue);
+}
+
+.filter-chip--active {
+    background: var(--accent-blue);
+    border-color: var(--accent-blue);
+    color: var(--bg-base);
+}
+
+.products-page__count {
+    margin: 0;
+    font-size: 0.82rem;
+    color: var(--text-overlay);
+    white-space: nowrap;
+}
+
+/* ── Content ── */
+.products-page__content {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 28px 24px;
+}
+
+.products-page__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 20px;
+}
+
+/* Skeleton */
+.products-page__skeleton-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 20px;
+}
+
+.skeleton-card {
+    background: var(--bg-surface);
+    border-radius: 16px;
+    aspect-ratio: 3 / 4;
+    position: relative;
+    overflow: hidden;
+}
+
+.skeleton-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg,
+            transparent 0%,
+            var(--border-color) 50%,
+            transparent 100%);
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        transform: translateX(-100%);
+    }
+
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+/* Error */
+.products-page__error,
+.products-page__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 320px;
+    gap: 12px;
+    color: var(--text-overlay);
+}
+
+.products-page__error span,
+.products-page__empty span {
+    font-size: 2.5rem;
+}
+
+.products-page__error p,
+.products-page__empty p {
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+.products-page__error button {
+    margin-top: 8px;
+    background: transparent;
+    border: 1px solid var(--accent-red);
+    color: var(--accent-red);
+    border-radius: 8px;
+    padding: 8px 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.products-page__error button:hover {
+    background: var(--accent-red);
+    color: white;
+}
+
+/* ── Pagination ── */
+.products-page__pagination {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 24px 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+}
+
+.pagination-btn {
+    background: transparent;
+    border: 1px solid var(--accent-blue);
+    color: var(--accent-blue);
+    border-radius: 8px;
+    padding: 8px 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.pagination-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    border-color: var(--text-overlay);
+    color: var(--text-overlay);
+}
+
+.pagination-btn:not(:disabled):hover {
+    background: var(--accent-blue);
+    color: var(--bg-base);
+}
+
+.pagination-info {
+    font-size: 0.85rem;
+    color: var(--text-overlay);
+}

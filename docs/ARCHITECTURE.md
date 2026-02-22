@@ -10,12 +10,14 @@ The system is composed of several autonomous microservices, each with its own da
 
 ```mermaid
 graph TD
-    subgraph "Frontend"
-        Web[Mango.Web (Blazor)]
+    subgraph "Frontend Applications"
+        Web[Mango.Web (MVC)]
+        UI[mango-ui (React SPA)]
     end
 
     subgraph "Gateway / Orchestrator"
         AppHost[Mango.AppHost (.NET Aspire)]
+        Gateway[Mango.Gateway (YARP Proxy)]
     end
 
     subgraph "Core Microservices"
@@ -34,12 +36,15 @@ graph TD
         Debezium[Debezium (CDC)]
     end
 
-    Web --> Identity
-    Web --> Product
-    Web --> Cart
-    Web --> Order
-    Web --> Coupon
-    Web --> Chat
+    Web --> Gateway
+    UI --> Gateway
+    
+    Gateway --> Identity
+    Gateway --> Product
+    Gateway --> Cart
+    Gateway --> Order
+    Gateway --> Coupon
+    Gateway --> Chat
 
     Product --> Postgres
     Cart --> Postgres
@@ -66,7 +71,7 @@ graph TD
 
 ### 1. Identity & Security
 - **Duende IdentityServer**: Centralized authentication and authorization.
-- **OpenID Connect (OIDC)**: Used for secure communication between the frontend and microservices.
+- **OpenID Connect (OIDC)**: Used for secure communication between the frontends and microservices.
 - **Token-Based Auth**: Bearer tokens handling access control.
 
 ### 2. Event-Driven Communication
@@ -84,7 +89,7 @@ graph TD
 - **Entity Framework Core**: ORM for data access, using Code-First migrations.
 
 ### 5. AI Integration
-- **ChatAgent.App**: A dedicated service for AI-powered interactions, utilizing Semantic Kernel (or similar) to provide intelligent responses to user queries.
+- **ChatAgent.App**: A dedicated service for AI-powered interactions, utilizing **Semantic Kernel** to provide intelligent responses to user queries and conversation history persistence.
 
 ### 6. Observability
 - **OpenTelemetry**: Built-in logging, metrics, and distributed tracing.
@@ -100,8 +105,8 @@ graph TD
 | **Coupons.API** | Discount codes & promotions | `coupondb` |
 | **Orders.API** | Order lifecycle management | `orderdb` |
 | **Payments.API** | Payment processing simulation | `N/A` (Stateless) |
-| **ChatAgent.App** | AI assistant for user queries | `chatagentdb` |
-| **Mango.SagaOrchestrators** | Complex transaction management | `sagaorchestratorsdb` |
+| **ChatAgent.App** | AI assistant for user queries | `chatagent` |
+| **Mango.Orchestrators** | Complex transaction management (Sagas) | `mango-orchestrators` |
 
 ## Project Structure (Vertical Slice)
 

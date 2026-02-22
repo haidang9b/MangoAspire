@@ -21,6 +21,7 @@ The project follows a microservices architecture, leveraging .NET Aspire to simp
 - **Data Persistence**: Dedicated PostgreSQL databases for each microservice.
 - **Security**: Centralized identity management using Duende IdentityServer.
 - **Data Synchronization**: Change Data Capture (CDC) with Debezium.
+- **Frontend Variety**: Choice of a traditional **ASP.NET Core MVC** or a modern **React SPA**.
 
 ---
 
@@ -28,11 +29,12 @@ The project follows a microservices architecture, leveraging .NET Aspire to simp
 
 - **Framework**: [.NET 10.0](https://dotnet.microsoft.com/)
 - **Orchestration**: [.NET Aspire](https://learn.microsoft.com/en-us/dotnet/aspire/)
+- **Frontend**: [React 18](https://reactjs.org/) (Vite) / [ASP.NET Core MVC](https://learn.microsoft.com/en-us/aspnet/core/mvc/overview)
 - **Database**: [PostgreSQL](https://www.postgresql.org/) with [Entity Framework Core](https://learn.microsoft.com/en-us/ef/core/)
 - **Identity**: [Duende IdentityServer](https://duendesoftware.com/products/identityserver)
 - **Messaging**: [RabbitMQ](https://www.rabbitmq.com/) (Default) / [Azure Service Bus](https://azure.microsoft.com/en-us/services/service-bus/)
-- **AI**: [Semantic Kernel](https://github.com/microsoft/semantic-kernel) (ChatAgent)
-- **Gateway**: [YARP](https://microsoft.github.io/reverse-proxy/) with Aspire Service Discovery
+- **AI Integration**: [Semantic Kernel](https://github.com/microsoft/semantic-kernel) (ChatAgent) with OpenAI support.
+- **Gateway**: [YARP Reverse Proxy](https://microsoft.github.io/reverse-proxy/)
 - **Patterns**: MediatR (CQRS), FluentValidation, Result Pattern, Vertical Slice Architecture
 - **Observability**: OpenTelemetry (Metrics, Tracing, Logging)
 - **CDC**: [Debezium](https://debezium.io/)
@@ -55,15 +57,16 @@ MangoAspire/
 │   │   ├── Orders.API           # Order Management Service
 │   │   ├── ShoppingCart.API     # Shopping Cart Service
 │   │   ├── Payments.API         # Payment Mock Service
-│   │   ├── ChatAgent.App        # AI Assistant Service
+│   │   ├── ChatAgent.App        # AI Assistant Service (Semantic Kernel)
 │   │   └── Mango.Orchestrators  # Saga Orchestrators
 │   ├── Shared/                  # Shared libraries (Mango.Core, Mango.Infrastructure)
 │   ├── EventBus/                # Message Bus abstraction
-│   ├── EventBus.RabbitMQ/       # RabbitMQ implementation
-│   ├── EventBus.ServiceBus/     # Azure Service Bus implementation
-│   └── UI/                      # Frontend applications
-│       └── Mango.Web            # MVC Web App (Frontend)
+│   ├── UI/                      # Frontend applications
+│   │   ├── Mango.Web            # MVC Web App (Classic)
+│   │   └── mango-ui             # Modern React SPA (Vite + TypeScript)
 ├── docs/                        # Project documentation
+│   ├── ARCHITECTURE.md          # Global System Architecture
+│   └── ...                      # Feature-specific guides
 ├── .agent/                      # AI Agent Guidelines
 └── Directory.Packages.props     # Centralized NuGet versioning
 ```
@@ -101,6 +104,7 @@ MangoAspire/
 ## 📘 Documentation
 
 For detailed information on project-specific setups:
+- [React UI Documentation](src/UI/mango-ui/README.md)
 - [NuGet Package Management Guide](docs/PACKAGE_MANAGEMENT.md)
 - [API Project Structure & Architecture](.agent/API_PROJECT_STRUCTURE.md)
 - [Coding Conventions & Standards](.agent/CODING_CONVENTIONS.md)

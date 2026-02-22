@@ -88,6 +88,30 @@
                 ],
                 "RequirePkce": true,
                 "AllowOfflineAccess": true
+            },
+            {
+                "ClientId": "mango-spa",
+                "AllowedGrantTypes": [
+                    "authorization_code"
+                ],
+                "RedirectUris": [
+                    "http://localhost:5173/callback"
+                ],
+                "PostLogoutRedirectUris": [
+                    "http://localhost:5173"
+                ],
+                "AllowedCorsOrigins": [
+                    "http://localhost:5173"
+                ],
+                "AllowedScopes": [
+                    "openid",
+                    "profile",
+                    "email",
+                    "mango"
+                ],
+                "RequirePkce": true,
+                "RequireClientSecret": false,
+                "AllowOfflineAccess": true
             }
         ]
     }
