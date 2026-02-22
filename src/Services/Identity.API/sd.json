@@ -1,0 +1,94 @@
+{
+    "IdentityServer": {
+        "AdminRole": "Admin",
+        "CustomerRole": "Customer",
+        "IdentityResources": [
+            {
+                "Name": "openid",
+                "DisplayName": "Your user identifier",
+                "Required": true,
+                "UserClaims": [
+                    "sub"
+                ]
+            },
+            {
+                "Name": "email",
+                "DisplayName": "Your email address",
+                "UserClaims": [
+                    "email"
+                ]
+            },
+            {
+                "Name": "profile",
+                "DisplayName": "User profile",
+                "Description": "Your user profile information (first name, last name, etc.)",
+                "UserClaims": [
+                    "name",
+                    "family_name",
+                    "given_name"
+                ]
+            }
+        ],
+        "ApiScopes": [
+            {
+                "Name": "mango",
+                "DisplayName": "Mango Server"
+            },
+            {
+                "Name": "read",
+                "DisplayName": "read your data"
+            },
+            {
+                "Name": "write",
+                "DisplayName": "write your data"
+            },
+            {
+                "Name": "delete",
+                "DisplayName": "delete your data"
+            }
+        ],
+        "Clients": [
+            {
+                "ClientId": "client",
+                "ClientSecrets": [
+                    {
+                        "Value": "secret"
+                    }
+                ],
+                "AllowedGrantTypes": [
+                    "client_credentials"
+                ],
+                "AllowedScopes": [
+                    "read",
+                    "write",
+                    "profile"
+                ]
+            },
+            {
+                "ClientId": "mango",
+                "ClientSecrets": [
+                    {
+                        "Value": "secret"
+                    }
+                ],
+                "AllowedGrantTypes": [
+                    "authorization_code"
+                ],
+                "RedirectUris": [
+                    "https://localhost:7188/signin-oidc"
+                ],
+                "PostLogoutRedirectUris": [
+                    "https://localhost:7188/signout-callback-oidc"
+                ],
+                "AllowedScopes": [
+                    "openid",
+                    "profile",
+                    "email",
+                    "mango"
+                ],
+                "RequirePkce": true,
+                "AllowOfflineAccess": true
+            }
+        ]
+    }
+}

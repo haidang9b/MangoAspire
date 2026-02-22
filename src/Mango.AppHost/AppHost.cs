@@ -110,7 +110,7 @@ var agentApp = builder.AddProject<Projects.ChatAgent_App>("chatagent-app")
     .WithReference(products).WaitFor(products);
 
 
-builder.AddProject<Projects.Mango_Web>("mango-web")
+var webApp = builder.AddProject<Projects.Mango_Web>("mango-web")
     .WithReference(identity)
     .WithReference(products)
     .WithReference(shoppingcart)
@@ -119,6 +119,9 @@ builder.AddProject<Projects.Mango_Web>("mango-web")
     .WithReference(agentApp)
     .WithEnvironment("ServiceUrls__IdentityApp", identityEndpoint)
     .WithEnvironment("OpenIdConnect__Authority", identityEndpoint);
+
+identity.WithEnvironment("IdentityServer__Clients__1__RedirectUris__0", $"{webApp.GetEndpoint("https")}/signin-oidc")
+        .WithEnvironment("IdentityServer__Clients__1__PostLogoutRedirectUris__0", $"{webApp.GetEndpoint("https")}/signout-callback-oidc");
 
 
 builder.AddProject<Projects.Mango_Orchestrators>("mango-saga-orchestrators")

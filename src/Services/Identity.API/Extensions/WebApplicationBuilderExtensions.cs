@@ -28,7 +28,7 @@ public static class WebApplicationBuilderExtensions
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();
 
-        builder.Services.AddIdentityServerConfiguration();
+        builder.Services.AddIdentityServerConfiguration(builder.Configuration);
 
         return builder;
     }
