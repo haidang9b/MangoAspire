@@ -3,4 +3,4 @@ global using EventBus.Abstractions;
 global using FluentValidation;
 global using Mango.Core.Domain;
 global using Mango.Events.Orders;
-global using MediatR;
+global using Mediator.Abstractions;

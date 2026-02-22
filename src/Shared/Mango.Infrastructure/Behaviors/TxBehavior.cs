@@ -1,5 +1,5 @@
 ﻿using Mango.Core.Domain;
-using MediatR;
+using Mediator.Abstractions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Data;
@@ -13,19 +13,15 @@ public class TxBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResp
 {
     private readonly IDbFacadeResolver _dbFacadeResolver;
 
-    private readonly IServiceProvider _serviceProvider;
-
     private readonly ILogger<TxBehavior<TRequest, TResponse>> _logger;
 
     public TxBehavior(
         IDbFacadeResolver dbFacadeResolver,
-        ILogger<TxBehavior<TRequest, TResponse>> logger,
-        IServiceProvider serviceProvider
+        ILogger<TxBehavior<TRequest, TResponse>> logger
     )
     {
         _dbFacadeResolver = dbFacadeResolver ?? throw new ArgumentNullException(nameof(dbFacadeResolver));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
     }
 
     public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
@@ -52,10 +48,6 @@ public class TxBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResp
 
             var response = await next();
             _logger.LogInformation("{Prefix} Executed the {MediatRRequest} request", nameof(TxBehavior<TRequest, TResponse>), typeof(TRequest).FullName);
-
-            //await PublishAuditEventsAsync();
-
-            //await PublishEventsAsync();
 
             await transaction.CommitAsync(cancellationToken);
 

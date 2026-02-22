@@ -1,12 +1,13 @@
 ﻿using Azure.AI.OpenAI;
 using ChatAgent.App.Data;
 using ChatAgent.App.Plugins;
-using Mango.Core.Behaviors;
 using Mango.Core.Options;
 using Mango.Infrastructure.Behaviors;
 using Mango.Infrastructure.ExceptionHandlers;
 using Mango.Infrastructure.Extensions;
 using Mango.Infrastructure.Interceptors;
+using Mediator.Abstractions;
+using Mediator.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Refit;
@@ -33,14 +34,11 @@ public static class IServiceCollectionExtensions
 
         services.AddScoped<PerformanceInterceptor>();
 
-        services.AddMediatR(cfg =>
-        {
-            cfg.RegisterServicesFromAssembly(typeof(Program).Assembly);
-            cfg.AddOpenBehavior(typeof(LoggingBehavior<,>));
-            cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
-            cfg.AddOpenBehavior(typeof(TxBehavior<,>));
+        services.AddMediator(typeof(Program).Assembly);
+        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
+        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(TxBehavior<,>));
 
-        });
 
         services.AddValidatorsFromAssembly(typeof(Program).Assembly);
 

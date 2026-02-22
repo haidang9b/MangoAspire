@@ -1,8 +1,8 @@
 ﻿using Mango.Core.Extensions;
-using MediatR;
+using Mediator.Abstractions;
 using Microsoft.Extensions.Logging;
 
-namespace Mango.Core.Behaviors;
+namespace Mango.Infrastructure.Behaviors;
 
 public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse> where TRequest : IRequest<TResponse>
 {

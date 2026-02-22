@@ -1,6 +1,6 @@
 ﻿using Mango.Core.Domain;
 using Mango.Infrastructure.ProcessedMessages;
-using MediatR;
+using Mediator.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 

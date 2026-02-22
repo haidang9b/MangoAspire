@@ -1,4 +1,4 @@
-﻿using MediatR;
+﻿using Mediator.Abstractions;
 
 namespace Mango.Core.Domain;
 
