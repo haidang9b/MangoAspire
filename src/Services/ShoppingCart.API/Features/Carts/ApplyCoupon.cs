@@ -21,7 +21,7 @@ public class ApplyCoupon
 
     internal class Handler(ShoppingCartDbContext dbContext, ICurrentUserContext currentUser) : IRequestHandler<Command, ResultModel<bool>>
     {
-        public async Task<ResultModel<bool>> Handle(Command request, CancellationToken cancellationToken)
+        public async Task<ResultModel<bool>> HandleAsync(Command request, CancellationToken cancellationToken)
         {
             var cartHeader = await dbContext.CartHeaders
                 .FirstOrDefaultAsync(h => h.UserId == currentUser.UserId, cancellationToken)

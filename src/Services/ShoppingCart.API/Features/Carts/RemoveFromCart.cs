@@ -20,7 +20,7 @@ public class RemoveFromCart
 
     internal class Handler(ShoppingCartDbContext dbContext) : IRequestHandler<Command, ResultModel<bool>>
     {
-        public async Task<ResultModel<bool>> Handle(Command request, CancellationToken cancellationToken)
+        public async Task<ResultModel<bool>> HandleAsync(Command request, CancellationToken cancellationToken)
         {
             var cartDetails = await dbContext.CartDetails
                 .FirstOrDefaultAsync(d => d.Id == request.CartDetailsId, cancellationToken)

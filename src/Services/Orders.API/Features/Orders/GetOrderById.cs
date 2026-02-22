@@ -1,4 +1,4 @@
-using Mango.Core.Exceptions;
+﻿using Mango.Core.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using Orders.API.Dtos;
 
@@ -13,7 +13,7 @@ public class GetOrderById
 
         internal class Handler(OrdersDbContext dbContext) : IRequestHandler<Query, ResultModel<OrderDetailDto>>
         {
-            public async Task<ResultModel<OrderDetailDto>> Handle(Query request, CancellationToken cancellationToken)
+            public async Task<ResultModel<OrderDetailDto>> HandleAsync(Query request, CancellationToken cancellationToken)
             {
                 var order = await dbContext.OrderHeaders
                     .AsNoTracking()

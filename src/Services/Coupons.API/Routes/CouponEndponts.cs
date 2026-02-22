@@ -12,7 +12,7 @@ public static class CouponEndponts
 
             routeGroupBuilder.MapGet("/{code}", async (string code, ISender sender) =>
             {
-                return await sender.Send(new GetCoupon.Query
+                return await sender.SendAsync(new GetCoupon.Query
                 {
                     Code = code
                 });

@@ -33,7 +33,7 @@ public class ReleaseProductStock
         ILogger<Handler> logger
     ) : IRequestHandler<Command, ResultModel<bool>>
     {
-        public async Task<ResultModel<bool>> Handle(Command request, CancellationToken cancellationToken)
+        public async Task<ResultModel<bool>> HandleAsync(Command request, CancellationToken cancellationToken)
         {
             var itemsList = request.Items.ToList();
             var productIds = itemsList.Select(i => i.ProductId).ToList();

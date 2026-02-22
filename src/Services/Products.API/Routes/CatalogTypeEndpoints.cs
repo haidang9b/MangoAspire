@@ -1,4 +1,4 @@
-using Products.API.Features.CatalogTypes;
+﻿using Products.API.Features.CatalogTypes;
 
 namespace Products.API.Routes;
 
@@ -13,7 +13,7 @@ public static class CatalogTypeEndpoints
 
             group.MapGet("/", async (ISender sender) =>
             {
-                var result = await sender.Send(new GetCatalogTypes.Query());
+                var result = await sender.SendAsync(new GetCatalogTypes.Query());
                 return Results.Ok(result);
             });
 

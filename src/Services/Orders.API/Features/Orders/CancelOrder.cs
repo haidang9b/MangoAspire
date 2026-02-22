@@ -34,7 +34,7 @@ public class CancelOrder
         IIntegrationEventService integrationEventService
     ) : IRequestHandler<Command, ResultModel<bool>>
     {
-        public async Task<ResultModel<bool>> Handle(Command request, CancellationToken cancellationToken)
+        public async Task<ResultModel<bool>> HandleAsync(Command request, CancellationToken cancellationToken)
         {
             var order = await dbContext.OrderHeaders
                 .FirstOrDefaultAsync(o => o.Id == request.OrderId, cancellationToken);

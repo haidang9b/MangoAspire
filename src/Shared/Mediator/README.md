@@ -15,11 +15,12 @@ A lightweight, custom Mediator library for the MangoAspire project. It is a drop
 ```
 Mediator/
 ├── Abstractions/
-│   ├── IRequest.cs         — Core interfaces
-│   └── IMediator.cs        — ISender, IMediator
+│   ├── IRequest.cs         — IRequest<T>, IRequestHandler<,>, IPipelineBehavior<,>
+│   ├── INotification.cs    — INotification, INotificationHandler<T>
+│   └── IMediator.cs        — ISender, IPublisher, IMediator
 ├── Extensions/
 │   └── ServiceCollectionExtensions.cs — AddMediator(params Assembly[])
-├── Mediator.cs             — Concrete implementation + RequestHandlerWrapper
+├── Mediator.cs             — Concrete implementation + Wrappers + Caching
 └── Mediator.csproj
 ```
 
@@ -42,7 +43,7 @@ The handler for a specific request type. One handler per request type.
 public interface IRequestHandler<in TRequest, TResponse>
     where TRequest : IRequest<TResponse>
 {
-    Task<TResponse> Handle(TRequest request, CancellationToken cancellationToken);
+    Task<TResponse> HandleAsync(TRequest request, CancellationToken cancellationToken);
 }
 ```
 
@@ -52,7 +53,7 @@ A middleware-style wrapper around handler execution. Register multiple behaviors
 ```csharp
 public interface IPipelineBehavior<in TRequest, TResponse>
 {
-    Task<TResponse> Handle(
+    Task<TResponse> HandleAsync(
         TRequest request,
         RequestHandlerDelegate<TResponse> next,
         CancellationToken cancellationToken);
@@ -61,15 +62,35 @@ public interface IPipelineBehavior<in TRequest, TResponse>
 
 > **Note:** `IPipelineBehavior<,>` intentionally has **no constraint on `TRequest`** (unlike MediatR). This allows it to work correctly with domain interfaces like `ICommand<T>` where the actual `TResponse` is `ResultModel<T>`.
 
-### `ISender` / `IMediator`
+### `ISender` / `IPublisher` / `IMediator`
 
 ```csharp
 public interface ISender
 {
-    Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default);
+    Task<TResponse> SendAsync<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default);
 }
 
-public interface IMediator : ISender { }
+public interface IPublisher
+{
+    Task PublishAsync<TNotification>(TNotification notification, CancellationToken cancellationToken = default)
+        where TNotification : INotification;
+}
+
+public interface IMediator : ISender, IPublisher { }
+```
+
+### `INotification` / `INotificationHandler<T>`
+
+Notifications are fan-out messages. **Multiple handlers** can exist for the same notification, and they are all called sequentially.
+
+```csharp
+public interface INotification { }
+
+public interface INotificationHandler<in TNotification>
+    where TNotification : INotification
+{
+    Task HandleAsync(TNotification notification, CancellationToken cancellationToken);
+}
 ```
 
 ---
@@ -123,7 +144,7 @@ public record CreateProductCommand(string Name, decimal Price) : ICommand<Guid>;
 // Handler
 public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand, ResultModel<Guid>>
 {
-    public async Task<ResultModel<Guid>> Handle(CreateProductCommand request, CancellationToken ct)
+    public async Task<ResultModel<Guid>> HandleAsync(CreateProductCommand request, CancellationToken ct)
     {
         // ... your business logic
         return ResultModel<Guid>.Create(newId);
@@ -140,7 +161,7 @@ Inject `ISender` or `IMediator` into your endpoint or service:
 ```csharp
 app.MapPost("/products", async (CreateProductCommand cmd, ISender sender) =>
 {
-    var result = await sender.Send(cmd);
+    var result = await sender.SendAsync(cmd);
     return result.IsError ? Results.BadRequest(result.ErrorMessage) : Results.Ok(result.Data);
 });
 ```
@@ -151,7 +172,7 @@ app.MapPost("/products", async (CreateProductCommand cmd, ISender sender) =>
 public class MyBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
     where TRequest : notnull
 {
-    public async Task<TResponse> Handle(
+    public async Task<TResponse> HandleAsync(
         TRequest request,
         RequestHandlerDelegate<TResponse> next,
         CancellationToken cancellationToken)
@@ -183,7 +204,7 @@ Request → IdentifiedBehavior → LoggingBehavior → ValidationBehavior → Tx
 
 ## Performance: Caching
 
-The `Mediator` implementation uses a `ConcurrentDictionary<Type, RequestHandlerWrapper>` to cache handler execution for each request type. Reflection is only used **once per request type** during the first call to `Send`. Subsequent calls dispatch directly through typed delegates — no reflection in the hot path.
+The `Mediator` implementation uses a `ConcurrentDictionary<Type, RequestHandlerWrapper>` to cache handler execution for each request type. Reflection is only used **once per request type** during the first call to `SendAsync`. Subsequent calls dispatch directly through typed delegates — no reflection in the hot path.
 
 ```
 1st call:  Type lookup → Reflection (create wrapper) → Cache → Execute

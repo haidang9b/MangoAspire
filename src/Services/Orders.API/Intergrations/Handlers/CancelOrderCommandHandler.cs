@@ -11,7 +11,7 @@ public class CancelOrderCommandHandler(
     {
         logger.LogInformation("Handling CancelOrderCommand: {OrderId}", @event.OrderId);
 
-        await mediator.Send(new CancelOrder.Command
+        await mediator.SendAsync(new CancelOrder.Command
         {
             Id = @event.Id,
             CorrelationId = @event.CorrelationId,

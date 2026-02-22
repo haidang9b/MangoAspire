@@ -29,7 +29,7 @@ public class CompleteOrder
         ILogger<Handler> logger
     ) : IRequestHandler<Command, ResultModel<bool>>
     {
-        public async Task<ResultModel<bool>> Handle(Command request, CancellationToken cancellationToken)
+        public async Task<ResultModel<bool>> HandleAsync(Command request, CancellationToken cancellationToken)
         {
             logger.LogInformation("Completing order {OrderId}", request.OrderId);
 

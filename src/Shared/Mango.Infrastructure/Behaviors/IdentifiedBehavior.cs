@@ -18,7 +18,7 @@ public class IdentifiedBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
         _processedMessageRepository = serviceProvider.GetService<IProcessedMessageRepository>();
     }
 
-    public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
+    public async Task<TResponse> HandleAsync(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
     {
         if (_processedMessageRepository is null)
         {

@@ -12,7 +12,7 @@ public class GetProductById
 
         internal class Handler(ProductDbContext dbContext) : IRequestHandler<Query, ResultModel<ProductDto>>
         {
-            public async Task<ResultModel<ProductDto>> Handle(Query request, CancellationToken cancellationToken)
+            public async Task<ResultModel<ProductDto>> HandleAsync(Query request, CancellationToken cancellationToken)
             {
                 var product = await dbContext.Products
                     .AsNoTracking()

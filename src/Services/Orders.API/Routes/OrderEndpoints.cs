@@ -20,7 +20,7 @@ public static class OrderEndpoints
                 [FromServices] ICurrentUserContext userContext
             ) =>
             {
-                var result = await sender.Send(new GetUserOrders.Query
+                var result = await sender.SendAsync(new GetUserOrders.Query
                 {
                     UserId = userContext.UserId ?? string.Empty,
                     PageIndex = pageIndex,
@@ -38,7 +38,7 @@ public static class OrderEndpoints
                 [FromServices] ICurrentUserContext userContext
             ) =>
             {
-                var result = await sender.Send(new GetOrderById.Query
+                var result = await sender.SendAsync(new GetOrderById.Query
                 {
                     OrderId = id,
                     UserId = userContext.UserId ?? string.Empty

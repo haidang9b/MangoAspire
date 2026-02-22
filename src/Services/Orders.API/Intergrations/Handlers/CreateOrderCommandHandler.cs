@@ -11,7 +11,7 @@ public class CreateOrderCommandHandler(
     {
         logger.LogInformation("Handling CreateOrderCommand: {CorrelationId}", @event.CorrelationId);
 
-        await mediator.Send(new CreateOrder.Command
+        await mediator.SendAsync(new CreateOrder.Command
         {
             Id = @event.Id,
             CorrelationId = @event.CorrelationId,
