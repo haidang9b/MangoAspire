@@ -129,6 +129,12 @@ builder.AddProject<Projects.Mango_Orchestrators>("mango-saga-orchestrators")
     .WaitFor(sagaorchestratorsdb).WithReference(sagaorchestratorsdb);
 
 
+builder.AddProject<Projects.Mango_Gateway>("mango-gateway")
+    .WithReference(products)
+    .WithReference(orders)
+    .WithReference(shoppingcart)
+    .WithReference(coupon);
+
 builder.Build().Run();
 
 static bool ShouldUseHttpForEndpoints()
