@@ -9,19 +9,24 @@ public class DBInitializer : IDBInitializer
 {
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly RoleManager<IdentityRole> _roleManager;
+    private readonly IConfiguration _configuration;
 
-    public DBInitializer(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager)
+    public DBInitializer(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IConfiguration configuration)
     {
         _userManager = userManager;
         _roleManager = roleManager;
+        _configuration = configuration;
     }
 
     public async Task InitializesAsync()
     {
-        if (_roleManager.FindByNameAsync(SD.Admin).Result == null)
+        var adminRole = _configuration["IdentityServer:AdminRole"] ?? "Admin";
+        var customerRole = _configuration["IdentityServer:CustomerRole"] ?? "Customer";
+
+        if (_roleManager.FindByNameAsync(adminRole).Result == null)
         {
-            await _roleManager.CreateAsync(new IdentityRole(SD.Admin));
-            await _roleManager.CreateAsync(new IdentityRole(SD.Customer));
+            await _roleManager.CreateAsync(new IdentityRole(adminRole));
+            await _roleManager.CreateAsync(new IdentityRole(customerRole));
         }
         else
         {
@@ -39,13 +44,13 @@ public class DBInitializer : IDBInitializer
         };
 
         await _userManager.CreateAsync(adminUser, "Admin123*");
-        await _userManager.AddToRoleAsync(adminUser, SD.Admin);
+        await _userManager.AddToRoleAsync(adminUser, adminRole);
 
         var tempAdminUser = await _userManager.AddClaimsAsync(adminUser, new Claim[] {
             new Claim(JwtClaimTypes.Name, $"{adminUser.FirstName} {adminUser.LastName}"),
             new Claim(JwtClaimTypes.GivenName, adminUser.FirstName),
             new Claim(JwtClaimTypes.FamilyName, adminUser.LastName),
-            new Claim(JwtClaimTypes.Role, SD.Admin),
+            new Claim(JwtClaimTypes.Role, adminRole),
         });
 
         ApplicationUser customerUser = new ApplicationUser()
@@ -59,13 +64,13 @@ public class DBInitializer : IDBInitializer
         };
 
         await _userManager.CreateAsync(customerUser, "Customer123*");
-        await _userManager.AddToRoleAsync(customerUser, SD.Customer);
+        await _userManager.AddToRoleAsync(customerUser, customerRole);
 
         var tempCustomerUser = await _userManager.AddClaimsAsync(customerUser, new Claim[] {
             new Claim(JwtClaimTypes.Name, $"{customerUser.FirstName} {customerUser.LastName}"),
             new Claim(JwtClaimTypes.GivenName, customerUser.FirstName),
             new Claim(JwtClaimTypes.FamilyName, customerUser.LastName),
-            new Claim(JwtClaimTypes.Role, SD.Customer),
+            new Claim(JwtClaimTypes.Role, customerRole),
         });
     }
 }
