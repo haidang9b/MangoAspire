@@ -12,7 +12,7 @@ public class ReleaseProductStockCommandHandler(
     {
         logger.LogInformation("Handling ReleaseProductStockCommand: {CorrelationId}", @event.CorrelationId);
 
-        await mediator.Send(new ReleaseProductStock.Command
+        await mediator.SendAsync(new ReleaseProductStock.Command
         {
             Id = @event.Id,
             CorrelationId = @event.CorrelationId,

@@ -13,7 +13,7 @@ public static class ProductEndpoints
 
             group.MapGet("/", async (int pageIndex, int pageSize, int? catalogTypeId, ISender sender) =>
             {
-                var result = await sender.Send(new GetProducts.Query
+                var result = await sender.SendAsync(new GetProducts.Query
                 {
                     PageIndex = pageIndex,
                     PageSize = pageSize,
@@ -25,25 +25,25 @@ public static class ProductEndpoints
 
             group.MapGet("/{id:guid}", async (Guid id, ISender sender) =>
             {
-                var result = await sender.Send(new GetProductById.Query { ProductId = id });
+                var result = await sender.SendAsync(new GetProductById.Query { ProductId = id });
                 return Results.Ok(result);
             });
 
             group.MapPost("/", async (CreateProduct.Command command, ISender sender) =>
             {
-                var result = await sender.Send(command);
+                var result = await sender.SendAsync(command);
                 return Results.Created($"/api/products/{result.Data}", result);
             });
 
             group.MapPut("/", async (UpdateProduct.Command command, ISender sender) =>
             {
-                var result = await sender.Send(command);
+                var result = await sender.SendAsync(command);
                 return Results.Ok(result);
             });
 
             group.MapDelete("/{id:guid}", async (Guid id, ISender sender) =>
             {
-                var result = await sender.Send(new DeleteProduct.Command { Id = id });
+                var result = await sender.SendAsync(new DeleteProduct.Command { Id = id });
                 return Results.Ok(result);
             });
 

@@ -19,7 +19,7 @@ public class GetCoupon
 
         internal class Handler(CouponDbContext dbContext) : IRequestHandler<Query, ResultModel<CouponDto>>
         {
-            public async Task<ResultModel<CouponDto>> Handle(Query request, CancellationToken cancellationToken)
+            public async Task<ResultModel<CouponDto>> HandleAsync(Query request, CancellationToken cancellationToken)
             {
                 var coupon = await dbContext.Coupons
                     .Where(x => x.Code == request.Code)

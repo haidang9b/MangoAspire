@@ -14,7 +14,7 @@ public class GetProducts
 
         internal class Handler(ProductDbContext dbContext) : IRequestHandler<Query, ResultModel<PaginatedItems<ProductDto>>>
         {
-            public async Task<ResultModel<PaginatedItems<ProductDto>>> Handle(Query request, CancellationToken cancellationToken)
+            public async Task<ResultModel<PaginatedItems<ProductDto>>> HandleAsync(Query request, CancellationToken cancellationToken)
             {
                 var query = dbContext.Products
                     .AsNoTracking()

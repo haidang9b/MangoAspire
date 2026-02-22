@@ -12,7 +12,7 @@ public class CreatePaymentCommandHandler(
         logger.LogInformation("Handling CreatePaymentCommand: {CorrelationId}, OrderId: {OrderId}",
             @event.CorrelationId, @event.OrderId);
 
-        await mediator.Send(new ProcessPayment.Command
+        await mediator.SendAsync(new ProcessPayment.Command
         {
             CorrelationId = @event.CorrelationId,
             OrderId = @event.OrderId,

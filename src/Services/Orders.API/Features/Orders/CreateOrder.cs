@@ -33,7 +33,7 @@ public class CreateOrder
         IIntegrationEventService integrationEventService
     ) : IRequestHandler<Command, ResultModel<Guid>>
     {
-        public async Task<ResultModel<Guid>> Handle(Command request, CancellationToken cancellationToken)
+        public async Task<ResultModel<Guid>> HandleAsync(Command request, CancellationToken cancellationToken)
         {
             var @event = request.Event;
 

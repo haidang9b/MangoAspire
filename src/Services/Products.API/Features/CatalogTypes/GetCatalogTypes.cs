@@ -14,7 +14,7 @@ public class GetCatalogTypes
     {
         internal class Handler(ProductDbContext dbContext, IMemoryCache memoryCache) : IRequestHandler<Query, ResultModel<List<CatalogTypeDto>>>
         {
-            public async Task<ResultModel<List<CatalogTypeDto>>> Handle(Query request, CancellationToken cancellationToken)
+            public async Task<ResultModel<List<CatalogTypeDto>>> HandleAsync(Query request, CancellationToken cancellationToken)
             {
                 if (memoryCache.TryGetValue(CacheKey, out List<CatalogTypeDto>? cachedTypes) && cachedTypes != null)
                 {

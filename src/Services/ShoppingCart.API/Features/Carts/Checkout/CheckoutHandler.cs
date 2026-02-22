@@ -13,7 +13,7 @@ public class CheckoutHandler(
         ICurrentUserContext currentUser
     ) : IRequestHandler<CheckoutDto, ResultModel<bool>>
 {
-    public async Task<ResultModel<bool>> Handle(CheckoutDto request, CancellationToken cancellationToken)
+    public async Task<ResultModel<bool>> HandleAsync(CheckoutDto request, CancellationToken cancellationToken)
     {
         var checkOutHeader = request.CheckoutRequestDto;
 

@@ -27,7 +27,7 @@ public class TransactionBehavior<TRequest, TResponse> : IPipelineBehavior<TReque
         _integrationEventService = integrationEventService ?? throw new ArgumentNullException(nameof(integrationEventService));
     }
 
-    public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
+    public async Task<TResponse> HandleAsync(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
     {
         if (request is not ITransactionRequest)
         {

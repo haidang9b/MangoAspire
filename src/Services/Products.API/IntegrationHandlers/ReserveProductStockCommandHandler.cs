@@ -12,7 +12,7 @@ public class ReserveProductStockCommandHandler(
     {
         logger.LogInformation("Handling ReserveProductStockCommand: {CorrelationId}", @event.CorrelationId);
 
-        await mediator.Send(new ReserveProductStock.Command
+        await mediator.SendAsync(new ReserveProductStock.Command
         {
             Id = @event.Id,
             CorrelationId = @event.CorrelationId,

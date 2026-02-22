@@ -10,7 +10,7 @@ public class DeleteProduct
 
         internal class Handler(ProductDbContext dbContext) : IRequestHandler<Command, ResultModel<bool>>
         {
-            public async Task<ResultModel<bool>> Handle(Command request, CancellationToken cancellationToken)
+            public async Task<ResultModel<bool>> HandleAsync(Command request, CancellationToken cancellationToken)
             {
                 var product = await dbContext.Products.FindAsync(request.Id)
                     ?? throw new DataVerificationException("Product not found");

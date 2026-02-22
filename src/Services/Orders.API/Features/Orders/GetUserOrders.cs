@@ -1,4 +1,4 @@
-using Mango.Core.Pagination;
+﻿using Mango.Core.Pagination;
 using Microsoft.EntityFrameworkCore;
 using Orders.API.Dtos;
 
@@ -14,7 +14,7 @@ public class GetUserOrders
 
         internal class Handler(OrdersDbContext dbContext) : IRequestHandler<Query, ResultModel<PaginatedItems<OrderDto>>>
         {
-            public async Task<ResultModel<PaginatedItems<OrderDto>>> Handle(Query request, CancellationToken cancellationToken)
+            public async Task<ResultModel<PaginatedItems<OrderDto>>> HandleAsync(Query request, CancellationToken cancellationToken)
             {
                 var query = dbContext.OrderHeaders
                     .AsNoTracking()

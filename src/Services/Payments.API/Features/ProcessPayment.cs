@@ -34,7 +34,7 @@ public class ProcessPayment
         ILogger<Handler> logger
     ) : IRequestHandler<Command, ResultModel<bool>>
     {
-        public async Task<ResultModel<bool>> Handle(Command request, CancellationToken cancellationToken)
+        public async Task<ResultModel<bool>> HandleAsync(Command request, CancellationToken cancellationToken)
         {
             logger.LogInformation("Processing payment for Order {OrderId}, Amount: {Amount}",
                 request.OrderId, request.OrderTotal);

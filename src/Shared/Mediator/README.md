@@ -15,11 +15,12 @@ A lightweight, custom Mediator library for the MangoAspire project. It is a drop
 ```
 Mediator/
 ├── Abstractions/
-│   ├── IRequest.cs         — Core interfaces
-│   └── IMediator.cs        — ISender, IMediator
+│   ├── IRequest.cs         — IRequest<T>, IRequestHandler<,>, IPipelineBehavior<,>
+│   ├── INotification.cs    — INotification, INotificationHandler<T>
+│   └── IMediator.cs        — ISender, IPublisher, IMediator
 ├── Extensions/
 │   └── ServiceCollectionExtensions.cs — AddMediator(params Assembly[])
-├── Mediator.cs             — Concrete implementation + RequestHandlerWrapper
+├── Mediator.cs             — Concrete implementation + Wrappers + Caching
 └── Mediator.csproj
 ```
 
@@ -61,7 +62,7 @@ public interface IPipelineBehavior<in TRequest, TResponse>
 
 > **Note:** `IPipelineBehavior<,>` intentionally has **no constraint on `TRequest`** (unlike MediatR). This allows it to work correctly with domain interfaces like `ICommand<T>` where the actual `TResponse` is `ResultModel<T>`.
 
-### `ISender` / `IMediator`
+### `ISender` / `IPublisher` / `IMediator`
 
 ```csharp
 public interface ISender
@@ -69,7 +70,27 @@ public interface ISender
     Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default);
 }
 
-public interface IMediator : ISender { }
+public interface IPublisher
+{
+    Task Publish<TNotification>(TNotification notification, CancellationToken cancellationToken = default)
+        where TNotification : INotification;
+}
+
+public interface IMediator : ISender, IPublisher { }
+```
+
+### `INotification` / `INotificationHandler<T>`
+
+Notifications are fan-out messages. **Multiple handlers** can exist for the same notification, and they are all called sequentially.
+
+```csharp
+public interface INotification { }
+
+public interface INotificationHandler<in TNotification>
+    where TNotification : INotification
+{
+    Task Handle(TNotification notification, CancellationToken cancellationToken);
+}
 ```
 
 ---

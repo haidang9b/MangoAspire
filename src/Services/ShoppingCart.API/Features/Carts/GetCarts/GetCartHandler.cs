@@ -15,7 +15,7 @@ public class GetCartHandler
 
     internal class Handler(ShoppingCartDbContext dbContext) : IRequestHandler<GetCardQuery, ResultModel<GetCardResponse>>
     {
-        public async Task<ResultModel<GetCardResponse>> Handle(GetCardQuery request, CancellationToken cancellationToken)
+        public async Task<ResultModel<GetCardResponse>> HandleAsync(GetCardQuery request, CancellationToken cancellationToken)
         {
             var cartHeaderDto = await dbContext.CartHeaders
                 .AsNoTracking()
