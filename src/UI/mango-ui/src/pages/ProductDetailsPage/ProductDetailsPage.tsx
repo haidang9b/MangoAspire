@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useApi } from '../../hooks/useApi';
+import { useFetch } from '../../hooks/useFetch';
 import { useAuth } from '../../auth/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { PageMetadata } from '../../components/PageMetadata';
@@ -14,50 +15,28 @@ export function ProductDetailsPage() {
     const { user, login } = useAuth();
     const { addToCart } = useCart();
 
-    const [product, setProduct] = useState<Product | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
     const [quantity, setQuantity] = useState(1);
     const [adding, setAdding] = useState(false);
 
-    useEffect(() => {
-        if (!id) return;
-
-        const loadProduct = async () => {
-            setLoading(true);
-            setError(null);
-            try {
-                const result = await productsService.fetchProductById(id);
-                if (!result.isError && result.data) {
-                    setProduct(result.data);
-                } else {
-                    setError(result.errorMessage ?? 'Product not found.');
-                }
-            } catch (err) {
-                setError('Failed to load product details.');
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        loadProduct();
-    }, [id]);
+    const { data: product, isLoading, error } = useFetch<Product>(
+        `product-${id}`,
+        async () => {
+            const result = await productsService.fetchProductById(id!);
+            if (result.isError || !result.data) throw new Error(result.errorMessage ?? 'Product not found.');
+            return result.data;
+        },
+        { enabled: !!id }
+    );
 
     const handleAddToCart = async () => {
         if (!product) return;
-        if (!user) {
-            login();
-            return;
-        }
+        if (!user) { login(); return; }
         setAdding(true);
-        const success = await addToCart(product.id, quantity);
+        await addToCart(product.id, quantity);
         setAdding(false);
-        if (success) {
-            // Optional: show a toast or message
-        }
     };
 
-    if (loading) {
+    if (isLoading) {
         return (
             <div className="product-details-page product-details-page--loading">
                 <p>Loading product details...</p>
