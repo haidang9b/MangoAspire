@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useApi } from '../hooks/useApi';
 import { Link } from 'react-router-dom';
+import { PageMetadata } from '../components/PageMetadata';
 import type { OrderDto } from '../types/order';
 import './OrdersPage.css';
 
@@ -43,6 +44,10 @@ const OrdersPage: React.FC = () => {
 
     return (
         <div className="orders-page container py-5">
+            <PageMetadata
+                title="My Orders | Mango Store"
+                description="View and track your previous orders from Mango Store."
+            />
             <header className="page-header mb-5">
                 <h1 className="page-title">My Orders</h1>
                 <p className="page-subtitle">Track and manage your order history</p>

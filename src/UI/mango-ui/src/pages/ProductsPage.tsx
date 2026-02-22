@@ -1,21 +1,27 @@
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useApi } from '../hooks/useApi';
 import { useProducts } from '../hooks/useProducts';
 import { ProductCard } from '../components/ProductCard';
+import { PageMetadata } from '../components/PageMetadata';
 import type { CatalogType } from '../types/product';
 import './ProductsPage.css';
 
-const PAGE_SIZE = 12;
+const DEFAULT_PAGE_SIZE = 12;
 
 export function ProductsPage() {
     const { products: productsService } = useApi();
+    const [searchParams, setSearchParams] = useSearchParams();
     const [catalogTypes, setCatalogTypes] = useState<CatalogType[]>([]);
-    const [selectedType, setSelectedType] = useState<number | undefined>();
-    const [pageIndex, setPageIndex] = useState(0);
+
+    // State derived from URL
+    const selectedType = searchParams.get('type') ? Number(searchParams.get('type')) : undefined;
+    const pageIndex = Math.max(0, (Number(searchParams.get('page')) || 1) - 1);
+    const pageSize = Number(searchParams.get('size')) || DEFAULT_PAGE_SIZE;
 
     const { products, totalCount, isLoading, error, reload } = useProducts({
         pageIndex,
-        pageSize: PAGE_SIZE,
+        pageSize,
         catalogTypeId: selectedType,
     });
 
@@ -25,15 +31,32 @@ export function ProductsPage() {
             .catch(() => {/* non-fatal */ });
     }, [productsService]);
 
-    const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+    const totalPages = Math.ceil(totalCount / pageSize);
+
+    const updateParams = (updates: Record<string, string | number | undefined>) => {
+        setSearchParams(prev => {
+            const next = new URLSearchParams(prev);
+            Object.entries(updates).forEach(([key, value]) => {
+                if (value === undefined || value === '' || (key === 'page' && value === 1) || (key === 'size' && value === DEFAULT_PAGE_SIZE)) {
+                    next.delete(key);
+                } else {
+                    next.set(key, String(value));
+                }
+            });
+            return next;
+        }, { replace: true });
+    };
 
     const handleTypeChange = (typeId?: number) => {
-        setSelectedType(typeId);
-        setPageIndex(0);
+        updateParams({ type: typeId, page: 1 });
     };
 
     return (
         <div className="products-page">
+            <PageMetadata
+                title="Products | Mango Store"
+                description="Explore our wide variety of fresh mangoes and tropical fruits."
+            />
             {/* Controls */}
             <div className="products-page__controls">
                 <div className="products-page__filter-group">
@@ -98,7 +121,7 @@ export function ProductsPage() {
                     <button
                         className="pagination-btn"
                         disabled={pageIndex === 0}
-                        onClick={() => setPageIndex((p) => p - 1)}
+                        onClick={() => updateParams({ page: pageIndex })}
                     >
                         ← Prev
                     </button>
@@ -108,7 +131,7 @@ export function ProductsPage() {
                     <button
                         className="pagination-btn"
                         disabled={pageIndex >= totalPages - 1}
-                        onClick={() => setPageIndex((p) => p + 1)}
+                        onClick={() => updateParams({ page: pageIndex + 2 })}
                     >
                         Next →
                     </button>

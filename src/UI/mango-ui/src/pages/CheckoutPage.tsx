@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { useAuth } from '../auth/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useApi } from '../hooks/useApi';
+import { PageMetadata } from '../components/PageMetadata';
 import type { CheckoutRequest } from '../types/cart';
 import './CheckoutPage.css';
 
@@ -85,6 +86,10 @@ export function CheckoutPage() {
 
     return (
         <div className="checkout-page">
+            <PageMetadata
+                title="Checkout | Mango Store"
+                description="Complete your order and enjoy our premium mangoes soon!"
+            />
             <h1 className="checkout-page__title">Checkout</h1>
 
             {submitError && <div className="checkout-error-alert">{submitError}</div>}

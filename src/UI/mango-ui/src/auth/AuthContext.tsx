@@ -8,9 +8,12 @@ import {
 } from 'react';
 import type { User } from 'oidc-client-ts';
 import { userManager } from './authConfig';
+import { userApi } from '../api/userApi';
+import type { UserInfo } from '../types/user';
 
 interface AuthContextValue {
     user: User | null;
+    userInfo: UserInfo | null;
     isLoading: boolean;
     login: () => Promise<void>;
     logout: () => Promise<void>;
@@ -20,28 +23,49 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
+    const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+
+    const fetchUserInfo = useCallback(async (u: User) => {
+        try {
+            const info = await userApi.getUserInfo(u.access_token);
+            setUserInfo(info);
+        } catch (error) {
+            console.error('Failed to fetch user info:', error);
+            setUserInfo(null);
+        }
+    }, []);
 
     useEffect(() => {
         // Load existing session from storage
         userManager.getUser().then((u) => {
             setUser(u);
+            if (u) fetchUserInfo(u);
             setIsLoading(false);
         });
 
         // Keep state in sync with token renewals / expirations
-        const onUserLoaded = (u: User) => setUser(u);
-        const onUserUnloaded = () => setUser(null);
+        const onUserLoaded = (u: User) => {
+            setUser(u);
+            fetchUserInfo(u);
+        };
+        const onUserUnloaded = () => {
+            setUser(null);
+            setUserInfo(null);
+        };
 
         userManager.events.addUserLoaded(onUserLoaded);
         userManager.events.addUserUnloaded(onUserUnloaded);
-        userManager.events.addSilentRenewError(() => setUser(null));
+        userManager.events.addSilentRenewError(() => {
+            setUser(null);
+            setUserInfo(null);
+        });
 
         return () => {
             userManager.events.removeUserLoaded(onUserLoaded);
             userManager.events.removeUserUnloaded(onUserUnloaded);
         };
-    }, []);
+    }, [fetchUserInfo]);
 
     const login = useCallback(() => userManager.signinRedirect(), []);
     const logout = useCallback(
@@ -50,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
 
     return (
-        <AuthContext.Provider value={{ user, isLoading, login, logout }}>
+        <AuthContext.Provider value={{ user, userInfo, isLoading, login, logout }}>
             {children}
         </AuthContext.Provider>
     );
