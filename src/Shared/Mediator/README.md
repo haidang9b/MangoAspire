@@ -43,7 +43,7 @@ The handler for a specific request type. One handler per request type.
 public interface IRequestHandler<in TRequest, TResponse>
     where TRequest : IRequest<TResponse>
 {
-    Task<TResponse> Handle(TRequest request, CancellationToken cancellationToken);
+    Task<TResponse> HandleAsync(TRequest request, CancellationToken cancellationToken);
 }
 ```
 
@@ -53,7 +53,7 @@ A middleware-style wrapper around handler execution. Register multiple behaviors
 ```csharp
 public interface IPipelineBehavior<in TRequest, TResponse>
 {
-    Task<TResponse> Handle(
+    Task<TResponse> HandleAsync(
         TRequest request,
         RequestHandlerDelegate<TResponse> next,
         CancellationToken cancellationToken);
@@ -67,12 +67,12 @@ public interface IPipelineBehavior<in TRequest, TResponse>
 ```csharp
 public interface ISender
 {
-    Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default);
+    Task<TResponse> SendAsync<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default);
 }
 
 public interface IPublisher
 {
-    Task Publish<TNotification>(TNotification notification, CancellationToken cancellationToken = default)
+    Task PublishAsync<TNotification>(TNotification notification, CancellationToken cancellationToken = default)
         where TNotification : INotification;
 }
 
@@ -89,7 +89,7 @@ public interface INotification { }
 public interface INotificationHandler<in TNotification>
     where TNotification : INotification
 {
-    Task Handle(TNotification notification, CancellationToken cancellationToken);
+    Task HandleAsync(TNotification notification, CancellationToken cancellationToken);
 }
 ```
 
@@ -144,7 +144,7 @@ public record CreateProductCommand(string Name, decimal Price) : ICommand<Guid>;
 // Handler
 public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand, ResultModel<Guid>>
 {
-    public async Task<ResultModel<Guid>> Handle(CreateProductCommand request, CancellationToken ct)
+    public async Task<ResultModel<Guid>> HandleAsync(CreateProductCommand request, CancellationToken ct)
     {
         // ... your business logic
         return ResultModel<Guid>.Create(newId);
@@ -161,7 +161,7 @@ Inject `ISender` or `IMediator` into your endpoint or service:
 ```csharp
 app.MapPost("/products", async (CreateProductCommand cmd, ISender sender) =>
 {
-    var result = await sender.Send(cmd);
+    var result = await sender.SendAsync(cmd);
     return result.IsError ? Results.BadRequest(result.ErrorMessage) : Results.Ok(result.Data);
 });
 ```
@@ -172,7 +172,7 @@ app.MapPost("/products", async (CreateProductCommand cmd, ISender sender) =>
 public class MyBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
     where TRequest : notnull
 {
-    public async Task<TResponse> Handle(
+    public async Task<TResponse> HandleAsync(
         TRequest request,
         RequestHandlerDelegate<TResponse> next,
         CancellationToken cancellationToken)
@@ -204,7 +204,7 @@ Request → IdentifiedBehavior → LoggingBehavior → ValidationBehavior → Tx
 
 ## Performance: Caching
 
-The `Mediator` implementation uses a `ConcurrentDictionary<Type, RequestHandlerWrapper>` to cache handler execution for each request type. Reflection is only used **once per request type** during the first call to `Send`. Subsequent calls dispatch directly through typed delegates — no reflection in the hot path.
+The `Mediator` implementation uses a `ConcurrentDictionary<Type, RequestHandlerWrapper>` to cache handler execution for each request type. Reflection is only used **once per request type** during the first call to `SendAsync`. Subsequent calls dispatch directly through typed delegates — no reflection in the hot path.
 
 ```
 1st call:  Type lookup → Reflection (create wrapper) → Cache → Execute
