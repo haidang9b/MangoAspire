@@ -1,17 +1,20 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './auth/AuthContext';
 import { AuthCallback } from './auth/AuthCallback';
+import { SilentCallback } from './auth/SilentCallback';
 import { ProtectedRoute } from './auth/ProtectedRoute';
 import { CartProvider } from './context/CartContext';
 import { Navbar } from './components/Navbar';
 import { ChatPopup } from './components/ChatPopup';
-import { ProductsPage } from './pages/ProductsPage';
-import { CartPage } from './pages/CartPage';
-import { ProductDetailsPage } from './pages/ProductDetailsPage';
-import { CheckoutPage } from './pages/CheckoutPage';
-import { ConfirmationPage } from './pages/ConfirmationPage';
-import OrdersPage from './pages/OrdersPage';
-import OrderDetailsPage from './pages/OrderDetailsPage';
+import {
+  ProductsPage,
+  CartPage,
+  ProductDetailsPage,
+  CheckoutPage,
+  ConfirmationPage,
+  OrdersPage,
+  OrderDetailsPage
+} from './pages';
 import { ThemeProvider } from './context/ThemeContext';
 import './index.css';
 import './App.css';
@@ -27,6 +30,7 @@ function App() {
               <main className="main-content">
                 <Routes>
                   <Route path="/callback" element={<AuthCallback />} />
+                  <Route path="/silent-callback" element={<SilentCallback />} />
                   <Route path="/" element={<ProductsPage />} />
                   <Route
                     path="/cart"

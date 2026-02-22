@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from 'react';
-import { useApi } from '../hooks/useApi';
+import { useEffect, useState } from 'react';
+import { useApi } from '../../hooks/useApi';
 import { Link } from 'react-router-dom';
-import { PageMetadata } from '../components/PageMetadata';
-import type { OrderDto } from '../types/order';
+import { PageMetadata } from '../../components/PageMetadata';
+import type { OrderDto } from '../../types/order';
 import './OrdersPage.css';
 
-const OrdersPage: React.FC = () => {
+export function OrdersPage() {
     const { orders: ordersService } = useApi();
     const [orders, setOrders] = useState<OrderDto[]>([]);
     const [loading, setLoading] = useState(true);
@@ -102,4 +102,3 @@ const OrdersPage: React.FC = () => {
     );
 };
 
-export default OrdersPage;

@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { useAuth } from '../auth/AuthContext';
-import { useCart } from '../context/CartContext';
-import { useApi } from '../hooks/useApi';
-import { PageMetadata } from '../components/PageMetadata';
-import type { CheckoutRequest } from '../types/cart';
+import { useAuth } from '../../auth/AuthContext';
+import { useCart } from '../../context/CartContext';
+import { useApi } from '../../hooks/useApi';
+import { PageMetadata } from '../../components/PageMetadata';
+import type { CheckoutRequest } from '../../types/cart';
 import './CheckoutPage.css';
 
 interface CheckoutFormData {
