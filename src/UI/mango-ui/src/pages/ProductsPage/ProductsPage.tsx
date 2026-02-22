@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useApi } from '../hooks/useApi';
-import { useProducts } from '../hooks/useProducts';
-import { ProductCard } from '../components/ProductCard';
-import { PageMetadata } from '../components/PageMetadata';
-import type { CatalogType } from '../types/product';
+import { useApi } from '../../hooks/useApi';
+import { useProducts } from '../../hooks/useProducts';
+import { ProductCard } from '../../components/ProductCard';
+import { PageMetadata } from '../../components/PageMetadata';
+import type { CatalogType } from '../../types/product';
 import './ProductsPage.css';
 
 const DEFAULT_PAGE_SIZE = 12;

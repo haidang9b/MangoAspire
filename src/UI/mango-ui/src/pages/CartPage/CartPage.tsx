@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
-import { useCart } from '../context/CartContext';
-import { PageMetadata } from '../components/PageMetadata';
+import { useCart } from '../../context/CartContext';
+import { PageMetadata } from '../../components/PageMetadata';
 import './CartPage.css';
 
 export function CartPage() {

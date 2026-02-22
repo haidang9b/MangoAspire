@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useApi } from '../hooks/useApi';
-import type { OrderDetailDto } from '../types/order';
+import { useApi } from '../../hooks/useApi';
+import type { OrderDetailDto } from '../../types/order';
 import './OrderDetailsPage.css';
 
-const OrderDetailsPage: React.FC = () => {
+export function OrderDetailsPage() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const { orders: ordersService } = useApi();
@@ -122,4 +122,3 @@ const OrderDetailsPage: React.FC = () => {
     );
 };
 
-export default OrderDetailsPage;

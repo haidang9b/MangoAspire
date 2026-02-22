@@ -95,7 +95,8 @@
                     "authorization_code"
                 ],
                 "RedirectUris": [
-                    "http://localhost:5173/callback"
+                    "http://localhost:5173/callback",
+                    "http://localhost:5173/silent-callback"
                 ],
                 "PostLogoutRedirectUris": [
                     "http://localhost:5173"
