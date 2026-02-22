@@ -5,7 +5,7 @@ import { useTheme } from '../context/ThemeContext';
 import './Navbar.css';
 
 export function Navbar() {
-    const { user, isLoading, login, logout } = useAuth();
+    const { user, userInfo, isLoading, login, logout } = useAuth();
     const { theme, toggleTheme } = useTheme();
     const { cartCount } = useCart();
     const navigate = useNavigate();
@@ -37,7 +37,7 @@ export function Navbar() {
                                 My Orders
                             </Link>
                             <span className="navbar__user-name">
-                                {user.profile.name ?? user.profile.email ?? 'User'}
+                                {userInfo?.given_name || userInfo?.name || user.profile.name || user.profile.email || 'User'}
                             </span>
                             <button className="navbar__btn navbar__btn--logout" onClick={logout}>
                                 Sign out

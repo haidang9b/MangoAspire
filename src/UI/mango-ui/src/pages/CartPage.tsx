@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { PageMetadata } from '../components/PageMetadata';
 import './CartPage.css';
 
 export function CartPage() {
@@ -39,6 +40,10 @@ export function CartPage() {
 
     return (
         <div className="cart-page">
+            <PageMetadata
+                title="Your Cart | Mango Store"
+                description="Review your items and proceed to checkout for your delicious mangoes."
+            />
             <h1 className="cart-page__title">Shopping Cart</h1>
 
             <div className="cart-page__container">

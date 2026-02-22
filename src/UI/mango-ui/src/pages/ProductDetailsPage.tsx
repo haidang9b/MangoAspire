@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useApi } from '../hooks/useApi';
+import { useAuth } from '../auth/AuthContext';
 import { useCart } from '../context/CartContext';
+import { PageMetadata } from '../components/PageMetadata';
 import type { Product } from '../types/product';
 import './ProductDetailsPage.css';
 
@@ -9,6 +11,7 @@ export function ProductDetailsPage() {
     const { products: productsService } = useApi();
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
+    const { user, login } = useAuth();
     const { addToCart } = useCart();
 
     const [product, setProduct] = useState<Product | null>(null);
@@ -42,6 +45,10 @@ export function ProductDetailsPage() {
 
     const handleAddToCart = async () => {
         if (!product) return;
+        if (!user) {
+            login();
+            return;
+        }
         setAdding(true);
         const success = await addToCart(product.id, quantity);
         setAdding(false);
@@ -71,6 +78,10 @@ export function ProductDetailsPage() {
 
     return (
         <div className="product-details-page">
+            <PageMetadata
+                title={`${product.name} | Mango Store`}
+                description={product.description?.replace(/<[^>]*>/g, '').slice(0, 160) || `Buy ${product.name} at Mango Store.`}
+            />
             <div className="product-details__back">
                 <Link to="/" className="back-link">← Back to Products</Link>
             </div>

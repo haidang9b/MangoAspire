@@ -27,14 +27,7 @@ function App() {
               <main className="main-content">
                 <Routes>
                   <Route path="/callback" element={<AuthCallback />} />
-                  <Route
-                    path="/"
-                    element={
-                      <ProtectedRoute>
-                        <ProductsPage />
-                      </ProtectedRoute>
-                    }
-                  />
+                  <Route path="/" element={<ProductsPage />} />
                   <Route
                     path="/cart"
                     element={
@@ -43,14 +36,7 @@ function App() {
                       </ProtectedRoute>
                     }
                   />
-                  <Route
-                    path="/product/:id"
-                    element={
-                      <ProtectedRoute>
-                        <ProductDetailsPage />
-                      </ProtectedRoute>
-                    }
-                  />
+                  <Route path="/product/:id" element={<ProductDetailsPage />} />
                   <Route
                     path="/checkout"
                     element={
