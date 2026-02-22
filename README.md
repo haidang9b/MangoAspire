@@ -16,7 +16,7 @@ The project follows a microservices architecture, leveraging .NET Aspire to simp
 > For a detailed deep-dive into the system design, see [**Architecture Documentation**](docs/ARCHITECTURE.md).
 
 - **Orchestration**: .NET Aspire AppHost manages service lifecycles and dependencies.
-- **Gateway**: YARP (Coming Soon) / Direct client-to-service communication.
+- **Gateway**: [YARP Reverse Proxy](https://microsoft.github.io/reverse-proxy/) for centralized request routing to all backend services.
 - **Communication**: Synchronous REST APIs and Asynchronous EventBus.
 - **Data Persistence**: Dedicated PostgreSQL databases for each microservice.
 - **Security**: Centralized identity management using Duende IdentityServer.
@@ -32,6 +32,7 @@ The project follows a microservices architecture, leveraging .NET Aspire to simp
 - **Identity**: [Duende IdentityServer](https://duendesoftware.com/products/identityserver)
 - **Messaging**: [RabbitMQ](https://www.rabbitmq.com/) (Default) / [Azure Service Bus](https://azure.microsoft.com/en-us/services/service-bus/)
 - **AI**: [Semantic Kernel](https://github.com/microsoft/semantic-kernel) (ChatAgent)
+- **Gateway**: [YARP](https://microsoft.github.io/reverse-proxy/) with Aspire Service Discovery
 - **Patterns**: MediatR (CQRS), FluentValidation, Result Pattern, Vertical Slice Architecture
 - **Observability**: OpenTelemetry (Metrics, Tracing, Logging)
 - **CDC**: [Debezium](https://debezium.io/)
@@ -45,6 +46,8 @@ MangoAspire/
 ├── src/
 │   ├── Mango.AppHost/           # .NET Aspire Orchestrator
 │   ├── Mango.ServiceDefaults/   # Common service configurations (Resilience, OTEL, etc.)
+│   ├── Gateway/
+│   │   └── Mango.Gateway        # YARP Reverse Proxy Gateway
 │   ├── Services/                # Microservices
 │   │   ├── Identity.API         # Duende IdentityServer
 │   │   ├── Products.API         # Product Catalog Service
@@ -53,13 +56,13 @@ MangoAspire/
 │   │   ├── ShoppingCart.API     # Shopping Cart Service
 │   │   ├── Payments.API         # Payment Mock Service
 │   │   ├── ChatAgent.App        # AI Assistant Service
-│   │   └── Mango.Orchestrators  # Saga Orchestrators (MassTransit/Custom)
+│   │   └── Mango.Orchestrators  # Saga Orchestrators
 │   ├── Shared/                  # Shared libraries (Mango.Core, Mango.Infrastructure)
 │   ├── EventBus/                # Message Bus abstraction
 │   ├── EventBus.RabbitMQ/       # RabbitMQ implementation
 │   ├── EventBus.ServiceBus/     # Azure Service Bus implementation
 │   └── UI/                      # Frontend applications
-│       └── Mango.Web            # Blazor Web App (Frontend)
+│       └── Mango.Web            # MVC Web App (Frontend)
 ├── docs/                        # Project documentation
 ├── .agent/                      # AI Agent Guidelines
 └── Directory.Packages.props     # Centralized NuGet versioning
