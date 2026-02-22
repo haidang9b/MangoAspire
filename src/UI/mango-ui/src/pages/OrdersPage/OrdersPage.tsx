@@ -1,34 +1,22 @@
-import { useEffect, useState } from 'react';
-import { useApi } from '../../hooks/useApi';
 import { Link } from 'react-router-dom';
+import { useApi } from '../../hooks/useApi';
+import { useFetch } from '../../hooks/useFetch';
 import { PageMetadata } from '../../components/PageMetadata';
 import type { OrderDto } from '../../types/order';
+import type { PaginatedItems } from '../../types/api';
 import './OrdersPage.css';
 
 export function OrdersPage() {
     const { orders: ordersService } = useApi();
-    const [orders, setOrders] = useState<OrderDto[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        const loadOrders = async () => {
-            try {
-                const result = await ordersService.fetchOrders();
-                if (!result.isError && result.data) {
-                    setOrders(result.data.data);
-                } else {
-                    setError(result.errorMessage || 'Failed to load orders');
-                }
-            } catch (err) {
-                setError('An unexpected error occurred');
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        loadOrders();
-    }, [ordersService]);
+    const { data: orders, isLoading, error } = useFetch<PaginatedItems<OrderDto>>(
+        'orders-list',
+        async () => {
+            const result = await ordersService.fetchOrders();
+            if (result.isError) throw new Error(result.errorMessage || 'Failed to load orders');
+            return result.data;
+        }
+    );
 
     const getStatusColor = (status: string) => {
         switch (status.toLowerCase()) {
@@ -40,7 +28,7 @@ export function OrdersPage() {
         }
     };
 
-    if (loading) return <div className="page-loading">Loading order history...</div>;
+    if (isLoading) return <div className="page-loading">Loading order history...</div>;
 
     return (
         <div className="orders-page container py-5">
@@ -55,7 +43,7 @@ export function OrdersPage() {
 
             {error && <div className="error-banner mb-4">{error}</div>}
 
-            {orders.length === 0 ? (
+            {!orders || orders.data.length === 0 ? (
                 <div className="empty-state">
                     <div className="empty-state__icon">📦</div>
                     <h2>No orders found</h2>
@@ -64,7 +52,7 @@ export function OrdersPage() {
                 </div>
             ) : (
                 <div className="orders-grid">
-                    {orders.map((order) => (
+                    {orders.data.map((order) => (
                         <div key={order.id} className="order-card">
                             <div className="order-card__header">
                                 <span className="order-card__id">Order #{order.id.split('-')[0].toUpperCase()}</span>
@@ -100,5 +88,4 @@ export function OrdersPage() {
             )}
         </div>
     );
-};
-
+}

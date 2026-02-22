@@ -9,6 +9,55 @@ The Mango SPA is a modern React application built with TypeScript and Vite. It s
 ## Key Architectural Patterns
 
 ### 1. API Integration (`/src/api` & `/src/hooks`)
+
+#### `useFetch` — Data Fetching with Cache
+
+`useFetch` is a generic hook that wraps any async fetcher with a **stale-while-revalidate** in-memory cache. This eliminates redundant loading spinners when a user navigates away and back to the same page.
+
+```ts
+const { data, isLoading, error, reload } = useFetch<T>(
+    cacheKey,   // unique string key (include route params for detail pages)
+    fetcher,    // async () => T  — throw on error
+    options?    // { ttl?: number, enabled?: boolean }
+);
+```
+
+**Behaviour**
+
+| Mount | Cache state | Result |
+|-------|------------|--------|
+| First visit | Empty | `isLoading = true` → fetch → populate cache |
+| Revisit within TTL | Hit | `isLoading = false`, data shown instantly; re-fetch runs silently in background |
+| Revisit after TTL | Expired | `isLoading = true`, full fetch again |
+
+**Options**
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `ttl` | `60000` ms | How long cached data is considered fresh |
+| `enabled` | `true` | Set to `false` to skip the fetch (e.g. while a route param is undefined) |
+
+**`reload()`** invalidates the cache entry and refetches immediately (useful for pull-to-refresh or post-mutation).
+
+**Usage examples**
+
+```ts
+// List page — stable key
+const { data: orders } = useFetch('orders-list', () => ordersService.fetchOrders());
+
+// Detail page — key includes the ID so each item is cached independently
+const { data: product } = useFetch(
+    `product-${id}`,
+    async () => {
+        const r = await productsService.fetchProductById(id!);
+        if (r.isError) throw new Error(r.errorMessage);
+        return r.data;
+    },
+    { enabled: !!id }
+);
+```
+
+> **Note**: The cache is module-level (shared for the lifetime of the browser tab). It is not persisted across page refreshes.
 - **Factory Pattern**: API services are defined as factory functions (e.g., `productsApi`, `cartApi`) that accept an Axios instance.
 - **`useApiClient`**: A custom hook that creates an Axios instance with base URL configuration and interceptors to automatically inject JWT Bearer tokens from the identity store.
 - **`useApi` Aggregator**: A simplified hook that provides access to all API services in a unified object, memoized for performance.

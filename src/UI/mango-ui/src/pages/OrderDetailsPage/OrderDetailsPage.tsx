@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useApi } from '../../hooks/useApi';
+import { useFetch } from '../../hooks/useFetch';
 import type { OrderDetailDto } from '../../types/order';
 import './OrderDetailsPage.css';
 
@@ -8,32 +8,18 @@ export function OrderDetailsPage() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const { orders: ordersService } = useApi();
-    const [order, setOrder] = useState<OrderDetailDto | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        if (!id) return;
+    const { data: order, isLoading, error } = useFetch<OrderDetailDto>(
+        `order-detail-${id}`,
+        async () => {
+            const result = await ordersService.fetchOrderById(id!);
+            if (result.isError) throw new Error(result.errorMessage || 'Failed to load order details');
+            return result.data;
+        },
+        { enabled: !!id }
+    );
 
-        const loadOrderDetails = async () => {
-            try {
-                const result = await ordersService.fetchOrderById(id);
-                if (!result.isError && result.data) {
-                    setOrder(result.data);
-                } else {
-                    setError(result.errorMessage || 'Failed to load order details');
-                }
-            } catch (err) {
-                setError('An unexpected error occurred');
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        loadOrderDetails();
-    }, [id, ordersService]);
-
-    if (loading) return <div className="page-loading">Fetching details...</div>;
+    if (isLoading) return <div className="page-loading">Fetching details...</div>;
     if (error || !order) return (
         <div className="container py-5 text-center">
             <div className="error-banner mb-4">{error || 'Order not found'}</div>
@@ -120,5 +106,4 @@ export function OrderDetailsPage() {
             </div>
         </div>
     );
-};
-
+}
