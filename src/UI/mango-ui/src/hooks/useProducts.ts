@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useFetch } from './useFetch';
 import { useApi } from './useApi';
+import type { PaginatedItems } from '../types/api';
 import type { Product } from '../types/product';
 
 interface UseProductsOptions {
@@ -22,39 +23,23 @@ export function useProducts({
     catalogTypeId,
 }: UseProductsOptions): UseProductsResult {
     const { products: productsService } = useApi();
-    const [products, setProducts] = useState<Product[]>([]);
-    const [totalCount, setTotalCount] = useState(0);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const [tick, setTick] = useState(0);
 
-    const reload = useCallback(() => setTick((t) => t + 1), []);
+    const cacheKey = `products-${pageIndex}-${pageSize}-${catalogTypeId ?? 'all'}`;
 
-    useEffect(() => {
-        let cancelled = false;
+    const { data, isLoading, error, reload } = useFetch<PaginatedItems<Product>>(
+        cacheKey,
+        async () => {
+            const result = await productsService.fetchProducts(pageIndex, pageSize, catalogTypeId);
+            if (result.isError || !result.data) throw new Error(result.errorMessage ?? 'Failed to load products.');
+            return result.data;
+        }
+    );
 
-        const load = async () => {
-            setIsLoading(true);
-            setError(null);
-            try {
-                const result = await productsService.fetchProducts(pageIndex, pageSize, catalogTypeId);
-                if (cancelled) return;
-                if (!result.isError && result.data) {
-                    setProducts(result.data.data);
-                    setTotalCount(result.data.count);
-                } else {
-                    setError(result.errorMessage ?? 'Failed to load products.');
-                }
-            } catch {
-                if (!cancelled) setError('Could not connect to the products service.');
-            } finally {
-                if (!cancelled) setIsLoading(false);
-            }
-        };
-
-        load();
-        return () => { cancelled = true; };
-    }, [pageIndex, pageSize, catalogTypeId, tick]);
-
-    return { products, totalCount, isLoading, error, reload };
+    return {
+        products: data?.data ?? [],
+        totalCount: data?.count ?? 0,
+        isLoading,
+        error,
+        reload,
+    };
 }

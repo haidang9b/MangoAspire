@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useApi } from '../../hooks/useApi';
 import { useProducts } from '../../hooks/useProducts';
+import { useFetch } from '../../hooks/useFetch';
 import { ProductCard } from '../../components/ProductCard';
 import { PageMetadata } from '../../components/PageMetadata';
 import type { CatalogType } from '../../types/product';
@@ -12,7 +12,6 @@ const DEFAULT_PAGE_SIZE = 12;
 export function ProductsPage() {
     const { products: productsService } = useApi();
     const [searchParams, setSearchParams] = useSearchParams();
-    const [catalogTypes, setCatalogTypes] = useState<CatalogType[]>([]);
 
     // State derived from URL
     const selectedType = searchParams.get('type') ? Number(searchParams.get('type')) : undefined;
@@ -25,11 +24,14 @@ export function ProductsPage() {
         catalogTypeId: selectedType,
     });
 
-    useEffect(() => {
-        productsService.fetchCatalogTypes()
-            .then((r) => { if (!r.isError && r.data) setCatalogTypes(r.data); })
-            .catch(() => {/* non-fatal */ });
-    }, [productsService]);
+    const { data: catalogTypes } = useFetch<CatalogType[]>(
+        'catalog-types',
+        async () => {
+            const result = await productsService.fetchCatalogTypes();
+            if (result.isError || !result.data) throw new Error('Failed to load categories.');
+            return result.data;
+        }
+    );
 
     const totalPages = Math.ceil(totalCount / pageSize);
 
@@ -66,7 +68,7 @@ export function ProductsPage() {
                     >
                         All
                     </button>
-                    {catalogTypes.map((ct) => (
+                    {(catalogTypes ?? []).map((ct) => (
                         <button
                             key={ct.id}
                             className={`filter-chip ${selectedType === ct.id ? 'filter-chip--active' : ''}`}
