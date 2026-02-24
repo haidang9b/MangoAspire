@@ -1,7 +1,5 @@
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../../auth';
-import { useCart } from '../../context/CartContext';
-import { useTheme } from '../../context/ThemeContext';
+import { useAuth, useCart, useTheme } from '../../hooks';
 import { ROUTES } from '../../constants';
 import { Roles, hasRole } from '../../constants/roles';
 import './Navbar.css';

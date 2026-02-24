@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom';
-import { useCart } from '../../context/CartContext';
+import { useCart } from '../../hooks';
 import { PageMetadata } from '../../components/PageMetadata';
 import { ROUTES } from '../../constants';
+import type { CartDetails } from '../../types';
 import './CartPage.css';
 
 export function CartPage() {
@@ -49,7 +50,7 @@ export function CartPage() {
 
             <div className="cart-page__container">
                 <div className="cart-page__items">
-                    {cart.cartDetails.map((item) => (
+                    {cart.cartDetails.map((item: CartDetails) => (
                         <div key={item.id} className="cart-item">
                             <div className="cart-item__image">
                                 <img src={item.product?.imageUrl || 'https://placehold.co/100x100/1e1e2e/a6adc8?text=Mango'} alt={item.product?.name} />

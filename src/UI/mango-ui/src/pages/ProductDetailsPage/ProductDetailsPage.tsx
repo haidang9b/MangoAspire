@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { useApi, useFetch } from '../../hooks';
-import { useAuth } from '../../auth/AuthContext';
-import { useCart } from '../../context/CartContext';
+import { useApi, useFetch, useAuth, useCart } from '../../hooks';
 import { PageMetadata } from '../../components';
 import { CACHE_KEYS, ROUTES } from '../../constants';
 import type { Product } from '../../types';

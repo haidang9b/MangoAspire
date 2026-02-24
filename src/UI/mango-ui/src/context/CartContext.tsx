@@ -1,28 +1,12 @@
 import {
-    createContext,
-    useContext,
     useEffect,
     useState,
     useCallback,
     type ReactNode,
 } from 'react';
-import type { Cart } from '../types/cart';
-import { useApi } from '../hooks/useApi';
-import { useAuth } from '../auth/AuthContext';
-
-interface CartContextValue {
-    cart: Cart | null;
-    isLoading: boolean;
-    error: string | null;
-    addToCart: (productId: string, count: number) => Promise<boolean>;
-    removeItem: (cartDetailsId: string) => Promise<boolean>;
-    applyCoupon: (couponCode: string) => Promise<boolean>;
-    removeCoupon: () => Promise<boolean>;
-    refresh: () => void;
-    cartCount: number;
-}
-
-const CartContext = createContext<CartContextValue | null>(null);
+import type { Cart } from '../types';
+import { useApi, useAuth } from '../hooks';
+import { CartContext } from './CartContextObject';
 
 export function CartProvider({ children }: { children: ReactNode }) {
     const { user } = useAuth();
@@ -163,10 +147,4 @@ export function CartProvider({ children }: { children: ReactNode }) {
             {children}
         </CartContext.Provider>
     );
-}
-
-export function useCart(): CartContextValue {
-    const ctx = useContext(CartContext);
-    if (!ctx) throw new Error('useCart must be used inside <CartProvider>');
-    return ctx;
 }

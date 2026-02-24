@@ -1,8 +1,8 @@
 import type { AxiosInstance } from 'axios';
-import type { ResultModel, ChatMessage, ChatMessageRole, PromptRequest } from '../types';
+import type { ResultModel, ChatMessage, ChatMessageRole, PromptRequest, PaginatedItems } from '../types';
 import { userManager } from '../auth';
 
-const mapRole = (role: any): ChatMessageRole => {
+const mapRole = (role: string | number): ChatMessageRole => {
     if (typeof role === 'number') {
         switch (role) {
             case 0: return 'System';
@@ -21,11 +21,11 @@ const mapRole = (role: any): ChatMessageRole => {
 };
 
 // Normalize backend properties which might be PascalCase or camelCase
-const normalizeMessage = (msg: any): ChatMessage => ({
-    id: msg.id || msg.Id,
-    role: mapRole(msg.role || msg.Role),
-    content: msg.content || msg.Content,
-    createdAt: msg.createdAt || msg.CreatedAt
+const normalizeMessage = (msg: Record<string, unknown>): ChatMessage => ({
+    id: (msg.id || msg.Id) as string,
+    role: mapRole((msg.role || msg.Role) as string | number),
+    content: (msg.content || msg.Content) as string,
+    createdAt: (msg.createdAt || msg.CreatedAt) as string
 });
 
 export const createChatApi = (instance: AxiosInstance) => ({
@@ -33,31 +33,34 @@ export const createChatApi = (instance: AxiosInstance) => ({
         try {
             // Backend returns PaginatedItems<ChatMessageDto>
             // Which is { data: [], pageIndex, pageSize, count }
-            const response = await instance.get<any>('/api/chat-histories', {
+            const response = await instance.get<ResultModel<PaginatedItems<Record<string, unknown>>>>('/api/chat-histories', {
                 params: { pageSize, pageIndex }
             });
 
             const rawData = response.data;
-            let messages: any[] = [];
+            let messages: Record<string, unknown>[] = [];
 
             // Handle if the backend returns PaginatedItems directly or via an data property
-            if (rawData.data && Array.isArray(rawData.data)) {
-                messages = rawData.data;
-            } else if (Array.isArray(rawData)) {
-                messages = rawData;
-            } else if (rawData.Data && Array.isArray(rawData.Data)) {
-                messages = rawData.Data;
+            if (rawData.data && typeof rawData.data === 'object') {
+                // If it's a ResultModel<PaginatedItems<T>>
+                const data = rawData.data as { data?: unknown[] };
+                if (data.data && Array.isArray(data.data)) {
+                    messages = data.data as Record<string, unknown>[];
+                } else if (Array.isArray(data)) {
+                    messages = data as Record<string, unknown>[];
+                }
             }
 
             const normalizedMessages = messages.map(normalizeMessage);
 
             return { data: normalizedMessages, isError: false };
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const err = error as { response?: { data?: { message?: string } } };
             console.error('Chat history fetch error:', error);
             return {
                 data: [],
                 isError: true,
-                errorMessage: error.response?.data?.message || 'Failed to fetch chat history'
+                errorMessage: err.response?.data?.message || 'Failed to fetch chat history'
             };
         }
     },
@@ -97,7 +100,7 @@ export const createChatApi = (instance: AxiosInstance) => ({
                 buffer += decoder.decode(value, { stream: true });
 
                 // Process buffer for complete JSON objects (assuming one per line or separated by {})
-                let boundary = buffer.lastIndexOf('\n');
+                const boundary = buffer.lastIndexOf('\n');
                 if (boundary === -1) {
                     // Try finding boundary of concatenated JSON objects if no newlines
                     // This is trickier, but ASP.NET typically uses newlines for IAsyncEnumerable
@@ -116,7 +119,7 @@ export const createChatApi = (instance: AxiosInstance) => ({
                         if (parsed.content) {
                             onChunk(parsed.content);
                         }
-                    } catch (e) {
+                    } catch {
                         // If it's not JSON, might be raw text or partial
                         console.warn('Failed to parse chat chunk:', trimmedLine);
                         onChunk(trimmedLine);
@@ -135,11 +138,12 @@ export const createChatApi = (instance: AxiosInstance) => ({
             }
 
             return { data: undefined as void, isError: false };
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const err = error as { message?: string };
             return {
                 data: undefined as void,
                 isError: true,
-                errorMessage: error.message || 'Failed to send message'
+                errorMessage: err.message || 'Failed to send message'
             };
         }
     }

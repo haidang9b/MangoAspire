@@ -1,12 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { useAuth } from '../../auth/AuthContext';
-import { useCart } from '../../context/CartContext';
-import { useApi } from '../../hooks';
+import { useAuth, useCart, useApi } from '../../hooks';
 import { PageMetadata, TextBox } from '../../components';
 import { ROUTES } from '../../constants';
-import type { CheckoutRequest } from '../../types';
+import type { CheckoutRequest, CartDetails } from '../../types';
 import './CheckoutPage.css';
 
 interface CheckoutFormData {
@@ -78,7 +76,7 @@ export function CheckoutPage() {
             } else {
                 setSubmitError(result.errorMessage || 'Failed to place order.');
             }
-        } catch (err) {
+        } catch {
             setSubmitError('An error occurred while placing your order.');
         } finally {
             setIsSubmitting(false);
@@ -204,7 +202,7 @@ export function CheckoutPage() {
                     <div className="summary-card">
                         <h3>Order Review</h3>
                         <div className="summary-items">
-                            {cart.cartDetails.map((item) => (
+                            {cart.cartDetails.map((item: CartDetails) => (
                                 <div key={item.id} className="summary-item">
                                     <span className="summary-item__name">{item.product?.name}</span>
                                     <span className="summary-item__count">x{item.count}</span>
@@ -241,5 +239,3 @@ export function CheckoutPage() {
         </div>
     );
 }
-
-

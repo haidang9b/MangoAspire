@@ -1,4 +1,5 @@
-export { AuthProvider, useAuth } from './AuthContext';
+export { AuthProvider } from './AuthContext';
+export { useAuth } from '../hooks/useAuth';
 export { AuthCallback } from './AuthCallback';
 export { SilentCallback } from './SilentCallback';
 export { ProtectedRoute } from './ProtectedRoute';
