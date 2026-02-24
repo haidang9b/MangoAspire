@@ -1,15 +1,17 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useApi } from '../../hooks/useApi';
 import { useFetch } from '../../hooks/useFetch';
-import { PageMetadata } from '../../components/PageMetadata';
+import { PageMetadata, SearchBox } from '../../components';
 import { ProductFormModal } from './ProductFormModal';
 import { DeleteDialog } from './DeleteDialog';
 import type { Product, CatalogType } from '../../types/product';
 import type { PaginatedItems } from '../../types/api';
 import { useProductsSearchParams } from '../../hooks';
+
 import './AdminProductsPage.css';
 
 const CACHE_TYPES = 'catalog-types';
+
 
 export function AdminProductsPage() {
     const { selectedType,
@@ -24,7 +26,6 @@ export function AdminProductsPage() {
     const [showForm, setShowForm] = useState(false);
     const [editing, setEditing] = useState<Product | null>(null);
     const [deleting, setDeleting] = useState<Product | null>(null);
-    const searchRef = useRef<HTMLInputElement>(null);
 
     const cacheKey = `admin-products-${pageIndex}-${pageSize}-${selectedType}-${search}-${tick}`;
 
@@ -79,12 +80,11 @@ export function AdminProductsPage() {
             </div>
 
             <div className="admin-page__toolbar">
-                <input
-                    ref={searchRef}
-                    className="admin-search"
-                    placeholder="🔍  Search by name…"
+                <SearchBox
+                    placeholder="Search by name…"
                     value={search}
-                    onChange={e => handleSearch(e.target.value)}
+                    onChange={handleSearch}
+                    className="admin-search-wrapper"
                 />
 
                 <select

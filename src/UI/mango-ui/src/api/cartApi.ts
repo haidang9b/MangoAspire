@@ -1,6 +1,5 @@
-import type { ResultModel } from '../types/api';
-import type { Cart, AddToCartRequest, ApplyCouponRequest, CheckoutRequest } from '../types/cart';
 import type { AxiosInstance } from 'axios';
+import type { ResultModel, Cart, AddToCartRequest, ApplyCouponRequest, CheckoutRequest } from '../types';
 
 export const cartApi = (apiClient: AxiosInstance) => ({
     async fetchCart(userId: string): Promise<ResultModel<Cart>> {

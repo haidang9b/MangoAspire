@@ -1,7 +1,6 @@
 import type { AxiosInstance } from 'axios';
-import type { ResultModel } from '../types/api';
-import type { ChatMessage, ChatMessageRole, PromptRequest } from '../types/chat';
-import { userManager } from '../auth/authConfig';
+import type { ResultModel, ChatMessage, ChatMessageRole, PromptRequest } from '../types';
+import { userManager } from '../auth';
 
 const mapRole = (role: any): ChatMessageRole => {
     if (typeof role === 'number') {

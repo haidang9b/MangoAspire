@@ -1,7 +1,6 @@
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { useApi } from '../../hooks/useApi';
-import { useFetch } from '../../hooks/useFetch';
-import type { OrderDetailDto } from '../../types/order';
+import { useApi, useFetch } from '../../hooks';
+import type { OrderDetailDto } from '../../types';
 import './OrderDetailsPage.css';
 
 export function OrderDetailsPage() {

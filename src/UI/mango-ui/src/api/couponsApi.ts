@@ -1,11 +1,5 @@
-import type { ResultModel } from '../types/api';
 import type { AxiosInstance } from 'axios';
-
-export interface Coupon {
-    id: string;
-    code: string;
-    discountAmount: number;
-}
+import type { ResultModel, Coupon } from '../types';
 
 export const couponsApi = (apiClient: AxiosInstance) => ({
     async fetchCoupon(couponCode: string): Promise<ResultModel<Coupon>> {

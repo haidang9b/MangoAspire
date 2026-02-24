@@ -9,7 +9,7 @@ import {
 import type { User } from 'oidc-client-ts';
 import { userManager } from './authConfig';
 import { userApi } from '../api/userApi';
-import type { UserInfo } from '../types/user';
+import type { UserInfo } from '../types';
 
 interface AuthContextValue {
     user: User | null;

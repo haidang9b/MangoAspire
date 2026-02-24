@@ -1,6 +1,5 @@
-import type { ResultModel, PaginatedItems } from '../types/api';
-import type { Product, CatalogType } from '../types/product';
 import type { AxiosInstance } from 'axios';
+import type { ResultModel, PaginatedItems, Product, CatalogType } from '../types';
 
 export interface CreateProductRequest {
     name: string;

@@ -1,9 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './auth/AuthContext';
-import { AuthCallback } from './auth/AuthCallback';
-import { SilentCallback } from './auth/SilentCallback';
-import { ProtectedRoute } from './auth/ProtectedRoute';
-import { AdminRoute } from './auth/AdminRoute';
+import { AuthProvider, AuthCallback, SilentCallback, ProtectedRoute, AdminRoute } from './auth';
 import { CartProvider } from './context/CartContext';
 import { Navbar } from './components/Navbar';
 import { ChatPopup } from './components/ChatPopup';

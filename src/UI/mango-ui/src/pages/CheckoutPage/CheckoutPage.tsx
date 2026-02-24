@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../../auth/AuthContext';
 import { useCart } from '../../context/CartContext';
-import { useApi } from '../../hooks/useApi';
-import { PageMetadata } from '../../components/PageMetadata';
-import type { CheckoutRequest } from '../../types/cart';
+import { useApi } from '../../hooks';
+import { PageMetadata } from '../../components';
+import type { CheckoutRequest } from '../../types';
 import './CheckoutPage.css';
 
 interface CheckoutFormData {

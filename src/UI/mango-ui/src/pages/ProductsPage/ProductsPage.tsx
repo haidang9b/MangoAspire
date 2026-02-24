@@ -1,11 +1,7 @@
-import { useApi } from '../../hooks/useApi';
-import { useProducts } from '../../hooks/useProducts';
-import { useFetch } from '../../hooks/useFetch';
-import { ProductCard } from '../../components/ProductCard';
-import { PageMetadata } from '../../components/PageMetadata';
-import type { CatalogType } from '../../types/product';
+import { useApi, useFetch, useProducts, useProductsSearchParams } from '../../hooks';
+import { ProductCard, SearchBox, PageMetadata } from '../../components';
+import type { CatalogType } from '../../types';
 import './ProductsPage.css';
-import { useProductsSearchParams } from '../../hooks/useProductsSeachParams';
 
 export function ProductsPage() {
     const { products: productsService } = useApi();
@@ -44,12 +40,10 @@ export function ProductsPage() {
             {/* Controls */}
             <div className="products-page__controls">
                 <div className="products-page__search-bar">
-                    <input
-                        type="text"
+                    <SearchBox
                         placeholder="Search products..."
-                        className="products-search"
                         value={search}
-                        onChange={(e) => handleSearch(e.target.value)}
+                        onChange={handleSearch}
                     />
                 </div>
                 <div className="products-page__filter-group">

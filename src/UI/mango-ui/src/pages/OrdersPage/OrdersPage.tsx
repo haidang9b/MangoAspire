@@ -1,9 +1,7 @@
 import { Link } from 'react-router-dom';
-import { useApi } from '../../hooks/useApi';
-import { useFetch } from '../../hooks/useFetch';
-import { PageMetadata } from '../../components/PageMetadata';
-import type { OrderDto } from '../../types/order';
-import type { PaginatedItems } from '../../types/api';
+import { useApi, useFetch } from '../../hooks';
+import { PageMetadata } from '../../components';
+import type { OrderDto, PaginatedItems } from '../../types';
 import './OrdersPage.css';
 
 export function OrdersPage() {

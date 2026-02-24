@@ -1,11 +1,10 @@
 import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { useApi } from '../../hooks/useApi';
-import { useFetch } from '../../hooks/useFetch';
+import { useApi, useFetch } from '../../hooks';
 import { useAuth } from '../../auth/AuthContext';
 import { useCart } from '../../context/CartContext';
-import { PageMetadata } from '../../components/PageMetadata';
-import type { Product } from '../../types/product';
+import { PageMetadata } from '../../components';
+import type { Product } from '../../types';
 import './ProductDetailsPage.css';
 
 export function ProductDetailsPage() {
