@@ -38,11 +38,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         // Load existing session from storage
-        userManager.getUser().then((u) => {
-            setUser(u);
-            if (u) fetchUserInfo(u);
-            setIsLoading(false);
-        });
+        const init = async () => {
+            try {
+                const u = await userManager.getUser();
+                setUser(u);
+                if (u) {
+                    await fetchUserInfo(u);
+                }
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        init();
 
         // Keep state in sync with token renewals / expirations
         const onUserLoaded = (u: User) => {

@@ -1,4 +1,3 @@
-import { useSearchParams } from 'react-router-dom';
 import { useApi } from '../../hooks/useApi';
 import { useProducts } from '../../hooks/useProducts';
 import { useFetch } from '../../hooks/useFetch';
@@ -6,22 +5,23 @@ import { ProductCard } from '../../components/ProductCard';
 import { PageMetadata } from '../../components/PageMetadata';
 import type { CatalogType } from '../../types/product';
 import './ProductsPage.css';
-
-const DEFAULT_PAGE_SIZE = 12;
+import { useProductsSearchParams } from '../../hooks/useProductsSeachParams';
 
 export function ProductsPage() {
     const { products: productsService } = useApi();
-    const [searchParams, setSearchParams] = useSearchParams();
-
-    // State derived from URL
-    const selectedType = searchParams.get('type') ? Number(searchParams.get('type')) : undefined;
-    const pageIndex = Math.max(0, (Number(searchParams.get('page')) || 1) - 1);
-    const pageSize = Number(searchParams.get('size')) || DEFAULT_PAGE_SIZE;
+    const { selectedType,
+        pageIndex,
+        pageSize,
+        search,
+        updateParams,
+        handleTypeChange,
+        handleSearch } = useProductsSearchParams();
 
     const { products, totalCount, isLoading, error, reload } = useProducts({
         pageIndex,
         pageSize,
         catalogTypeId: selectedType,
+        search,
     });
 
     const { data: catalogTypes } = useFetch<CatalogType[]>(
@@ -35,24 +35,6 @@ export function ProductsPage() {
 
     const totalPages = Math.ceil(totalCount / pageSize);
 
-    const updateParams = (updates: Record<string, string | number | undefined>) => {
-        setSearchParams(prev => {
-            const next = new URLSearchParams(prev);
-            Object.entries(updates).forEach(([key, value]) => {
-                if (value === undefined || value === '' || (key === 'page' && value === 1) || (key === 'size' && value === DEFAULT_PAGE_SIZE)) {
-                    next.delete(key);
-                } else {
-                    next.set(key, String(value));
-                }
-            });
-            return next;
-        }, { replace: true });
-    };
-
-    const handleTypeChange = (typeId?: number) => {
-        updateParams({ type: typeId, page: 1 });
-    };
-
     return (
         <div className="products-page">
             <PageMetadata
@@ -61,6 +43,15 @@ export function ProductsPage() {
             />
             {/* Controls */}
             <div className="products-page__controls">
+                <div className="products-page__search-bar">
+                    <input
+                        type="text"
+                        placeholder="Search products..."
+                        className="products-search"
+                        value={search}
+                        onChange={(e) => handleSearch(e.target.value)}
+                    />
+                </div>
                 <div className="products-page__filter-group">
                     <button
                         className={`filter-chip ${selectedType == null ? 'filter-chip--active' : ''}`}
@@ -122,18 +113,18 @@ export function ProductsPage() {
                 <nav className="products-page__pagination">
                     <button
                         className="pagination-btn"
-                        disabled={pageIndex === 0}
-                        onClick={() => updateParams({ page: pageIndex })}
+                        disabled={pageIndex <= 1}
+                        onClick={() => updateParams({ page: pageIndex - 1 })}
                     >
                         ← Prev
                     </button>
                     <span className="pagination-info">
-                        Page {pageIndex + 1} of {totalPages}
+                        Page {pageIndex} of {totalPages}
                     </span>
                     <button
                         className="pagination-btn"
-                        disabled={pageIndex >= totalPages - 1}
-                        onClick={() => updateParams({ page: pageIndex + 2 })}
+                        disabled={pageIndex >= totalPages}
+                        onClick={() => updateParams({ page: pageIndex + 1 })}
                     >
                         Next →
                     </button>

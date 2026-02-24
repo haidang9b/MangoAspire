@@ -25,7 +25,7 @@ public class CreateProduct
                 RuleFor(x => x.Name).NotEmpty();
                 RuleFor(x => x.Price).GreaterThan(0);
                 RuleFor(x => x.Description).NotEmpty();
-                RuleFor(x => x.CategoryName).NotEmpty();
+                //RuleFor(x => x.CategoryName).NotEmpty();
                 RuleFor(x => x.ImageUrl).NotEmpty();
                 RuleFor(x => x.Stock).GreaterThanOrEqualTo(0);
             }
@@ -45,7 +45,7 @@ public class CreateProduct
                     AvailableStock = request.Stock
                 };
 
-                dbContext.Products.Add(product);
+                await dbContext.Products.AddAsync(product);
                 await dbContext.SaveChangesAsync(cancellationToken);
 
                 return ResultModel<Guid>.Create(product.Id);

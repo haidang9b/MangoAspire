@@ -1,0 +1,452 @@
+/* ── Layout ─────────────────────────────────────────── */
+.admin-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+    color: var(--text-main);
+}
+
+.admin-page__header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.admin-page__title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-main);
+    margin: 0 0 0.25rem;
+}
+
+.admin-page__subtitle {
+    font-size: 0.875rem;
+    color: var(--text-overlay);
+    margin: 0;
+}
+
+/* ── Toolbar ─────────────────────────────────────────── */
+.admin-page__toolbar {
+    margin-bottom: 1.25rem;
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.admin-search {
+    width: 100%;
+    max-width: 380px;
+    padding: 0.6rem 1rem;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    color: var(--text-main);
+    font-size: 0.9rem;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.admin-search:focus {
+    border-color: var(--accent-blue);
+}
+
+.admin-filter {
+    padding: 0.6rem 1rem;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    color: var(--text-main);
+    font-size: 0.9rem;
+    font-family: inherit;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    min-width: 180px;
+}
+
+.admin-filter:focus {
+    border-color: var(--accent-blue);
+}
+
+/* ── Buttons (page-level overrides, not conflicting with global) ── */
+.admin-page .btn-primary {
+    flex: unset;
+    height: unset;
+    padding: 0.6rem 1.25rem;
+    font-size: 0.9rem;
+    border-radius: 10px;
+}
+
+.admin-page .btn-secondary {
+    flex: unset;
+    height: unset;
+    padding: 0.6rem 1.25rem;
+    font-size: 0.9rem;
+    border-radius: 10px;
+    text-decoration: none;
+}
+
+.btn-danger {
+    padding: 0.6rem 1.25rem;
+    background: linear-gradient(135deg, #f38ba8, #d20f39);
+    color: #1e1e2e;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 700;
+    font-family: inherit;
+    transition: opacity 0.15s, transform 0.1s;
+}
+
+.btn-danger:hover:not(:disabled) {
+    opacity: 0.88;
+    transform: translateY(-1px);
+}
+
+.btn-danger:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ── Table ──────────────────────────────────────────── */
+.admin-table-wrapper {
+    overflow-x: auto;
+    border-radius: 14px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-mantle);
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.admin-table thead {
+    background: var(--bg-surface);
+}
+
+.admin-table th {
+    padding: 0.85rem 1rem;
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-overlay);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+}
+
+.admin-table td {
+    padding: 0.85rem 1rem;
+    color: var(--text-main);
+    border-top: 1px solid var(--border-color);
+    vertical-align: middle;
+}
+
+.admin-table tbody tr:hover {
+    background: var(--bg-surface);
+    transition: background 0.15s;
+}
+
+.admin-table__thumb {
+    width: 44px;
+    height: 44px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    display: block;
+}
+
+.admin-table__name {
+    font-weight: 500;
+    max-width: 220px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.admin-table__empty {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-overlay);
+}
+
+.text-right {
+    text-align: right !important;
+}
+
+.text-center {
+    text-align: center !important;
+}
+
+/* ── Action Buttons ─────────────────────────────────── */
+.admin-table__actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+}
+
+.action-btn {
+    padding: 0.35rem 0.75rem;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: opacity 0.15s, transform 0.1s;
+    white-space: nowrap;
+    background: none;
+}
+
+.action-btn:hover {
+    opacity: 0.85;
+    transform: translateY(-1px);
+}
+
+.action-btn:active {
+    transform: translateY(0);
+}
+
+.action-btn--edit {
+    background: rgba(137, 180, 250, 0.12);
+    color: var(--accent-blue);
+    border-color: rgba(137, 180, 250, 0.3);
+}
+
+.action-btn--delete {
+    background: rgba(243, 139, 168, 0.1);
+    color: var(--accent-red);
+    border-color: rgba(243, 139, 168, 0.25);
+}
+
+/* ── Skeleton ────────────────────────────────────────── */
+.admin-table-skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.skeleton-row {
+    height: 56px;
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+    background: var(--bg-surface);
+}
+
+.skeleton-row::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg,
+            transparent 0%,
+            var(--border-color) 50%,
+            transparent 100%);
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        transform: translateX(-100%);
+    }
+
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+/* ── Pagination ──────────────────────────────────────── */
+.admin-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+/* ── Error ───────────────────────────────────────────── */
+.admin-error {
+    text-align: center;
+    padding: 3rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--text-overlay);
+}
+
+.admin-error span {
+    font-size: 2rem;
+}
+
+/* ── Modal Overlay ───────────────────────────────────── */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+    animation: fadeIn 0.15s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* ── Modal ───────────────────────────────────────────── */
+.modal {
+    background: var(--bg-mantle);
+    border: 1px solid var(--border-color);
+    border-radius: 18px;
+    width: 100%;
+    max-width: 580px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+    animation: slideUp 0.2s ease;
+}
+
+.modal--sm {
+    max-width: 420px;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.modal__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal__header h2 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-main);
+    margin: 0;
+}
+
+.modal__close {
+    background: none;
+    border: none;
+    color: var(--text-overlay);
+    cursor: pointer;
+    font-size: 1.1rem;
+    padding: 0.25rem;
+    border-radius: 6px;
+    font-family: inherit;
+    transition: color 0.15s;
+}
+
+.modal__close:hover {
+    color: var(--text-main);
+}
+
+/* ── Form ────────────────────────────────────────────── */
+.modal__form {
+    padding: 1.25rem 1.5rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+@media (max-width: 480px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.form-group label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-overlay);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    padding: 0.6rem 0.85rem;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    color: var(--text-main);
+    font-size: 0.9rem;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s;
+    resize: vertical;
+}
+
+.form-group select option {
+    background: var(--bg-mantle);
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    border-color: var(--accent-blue);
+}
+
+.form-error {
+    color: var(--accent-red);
+    font-size: 0.875rem;
+    margin: 0;
+}
+
+/* ── Modal Actions ───────────────────────────────────── */
+.modal__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding-top: 0.5rem;
+}
+
+/* ── Delete Confirm ──────────────────────────────────── */
+.delete-confirm__msg {
+    padding: 1rem 1.5rem 0.25rem;
+    color: var(--text-sub);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin: 0;
+}

@@ -1,5 +1,4 @@
 ﻿using Mango.Infrastructure.Behaviors;
-using Mango.Infrastructure.ExceptionHandlers;
 using Mango.Infrastructure.Extensions;
 using Mango.Infrastructure.Interceptors;
 using Mango.Orchestrators.Data;
@@ -40,9 +39,7 @@ public static class IServiceCollectionExtensions
 
             services.AddEndpointsApiExplorer();
 
-            services.AddExceptionHandler<GlobalExceptionHandler>();
-            services.AddProblemDetails();
-
+            services.AddGlobalExceptionHandler();
 
             services.AddCurrentUserContext();
 

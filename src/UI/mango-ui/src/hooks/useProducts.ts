@@ -7,6 +7,7 @@ interface UseProductsOptions {
     pageIndex: number;
     pageSize?: number;
     catalogTypeId?: number;
+    search?: string;
 }
 
 interface UseProductsResult {
@@ -21,15 +22,16 @@ export function useProducts({
     pageIndex,
     pageSize = 12,
     catalogTypeId,
+    search
 }: UseProductsOptions): UseProductsResult {
     const { products: productsService } = useApi();
 
-    const cacheKey = `products-${pageIndex}-${pageSize}-${catalogTypeId ?? 'all'}`;
+    const cacheKey = `products-${pageIndex}-${pageSize}-${catalogTypeId ?? 'all'}-${search ?? ''}`;
 
     const { data, isLoading, error, reload } = useFetch<PaginatedItems<Product>>(
         cacheKey,
         async () => {
-            const result = await productsService.fetchProducts(pageIndex, pageSize, catalogTypeId);
+            const result = await productsService.fetchProducts(pageIndex, pageSize, catalogTypeId, search);
             if (result.isError || !result.data) throw new Error(result.errorMessage ?? 'Failed to load products.');
             return result.data;
         }

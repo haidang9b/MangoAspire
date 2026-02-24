@@ -14,7 +14,7 @@ public class UpdateProduct
 
         public required string Description { get; set; }
 
-        public required string CategoryName { get; set; }
+        //public string CategoryName { get; set; }
 
         public int? CatalogTypeId { get; set; }
 
@@ -30,7 +30,7 @@ public class UpdateProduct
                 RuleFor(x => x.Name).NotEmpty();
                 RuleFor(x => x.Price).GreaterThan(0);
                 RuleFor(x => x.Description).NotEmpty();
-                RuleFor(x => x.CategoryName).NotEmpty();
+                //RuleFor(x => x.CategoryName).NotEmpty();
                 RuleFor(x => x.ImageUrl).NotEmpty();
                 RuleFor(x => x.Stock).GreaterThanOrEqualTo(0);
             }
@@ -46,7 +46,6 @@ public class UpdateProduct
                 product.Name = request.Name;
                 product.Price = request.Price;
                 product.Description = request.Description;
-                product.CategoryName = request.CategoryName;
                 product.CatalogTypeId = request.CatalogTypeId;
                 product.ImageUrl = request.ImageUrl;
                 product.AvailableStock = request.Stock;

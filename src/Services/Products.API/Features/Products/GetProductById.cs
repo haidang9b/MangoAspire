@@ -22,7 +22,8 @@ public class GetProductById
                         Id = x.Id,
                         Name = x.Name,
                         Price = x.Price,
-                        CategoryName = x.CategoryName,
+                        CatalogTypeId = x.CatalogTypeId,
+                        CategoryName = x.CatalogType!.Type,
                         Description = x.Description,
                         ImageUrl = x.ImageUrl,
                         Stock = x.AvailableStock

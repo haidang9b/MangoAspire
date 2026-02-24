@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using Mango.Core.Auth;
 using Mango.Infrastructure.Auth;
+using Mango.Infrastructure.ExceptionHandlers;
 using Mango.Infrastructure.Middlewares;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -80,6 +81,13 @@ public static class IServiceCollectionExtensions
 
         services.AddTransient<CurrentUserContextMiddleware>();
 
+        return services;
+    }
+
+    public static IServiceCollection AddGlobalExceptionHandler(this IServiceCollection services)
+    {
+        services.AddExceptionHandler<GlobalExceptionHandler>();
+        services.AddProblemDetails();
         return services;
     }
 }

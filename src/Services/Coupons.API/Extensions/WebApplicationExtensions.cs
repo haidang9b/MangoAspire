@@ -1,4 +1,5 @@
 ﻿using Coupons.API.Routes;
+using Mango.Infrastructure.Extensions;
 using Mango.ServiceDefaults;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,6 +9,8 @@ public static class WebApplicationExtensions
 {
     public static WebApplication UseApiPipeline(this WebApplication app)
     {
+        app.UseGlobalExceptionHandler();
+
         if (app.Environment.IsDevelopment())
         {
             app.UseSwagger();

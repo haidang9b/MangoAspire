@@ -12,6 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Shared\Mango.Infrastructure\Mango.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Shared\Mango.ServiceDefaults\Mango.ServiceDefaults.csproj" />
   </ItemGroup>
 

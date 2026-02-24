@@ -10,6 +10,7 @@ export interface Product {
     description: string;
     imageUrl: string;
     catalogTypeId: number;
+    categoryName?: string;
     catalogType?: CatalogType;
     stock: number;
 }

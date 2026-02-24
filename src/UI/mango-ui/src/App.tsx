@@ -3,10 +3,12 @@ import { AuthProvider } from './auth/AuthContext';
 import { AuthCallback } from './auth/AuthCallback';
 import { SilentCallback } from './auth/SilentCallback';
 import { ProtectedRoute } from './auth/ProtectedRoute';
+import { AdminRoute } from './auth/AdminRoute';
 import { CartProvider } from './context/CartContext';
 import { Navbar } from './components/Navbar';
 import { ChatPopup } from './components/ChatPopup';
 import {
+  AdminProductsPage,
   ProductsPage,
   CartPage,
   ProductDetailsPage,
@@ -71,6 +73,14 @@ function App() {
                       <ProtectedRoute>
                         <OrderDetailsPage />
                       </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/products"
+                    element={
+                      <AdminRoute>
+                        <AdminProductsPage />
+                      </AdminRoute>
                     }
                   />
                 </Routes>

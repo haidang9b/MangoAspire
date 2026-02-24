@@ -1,0 +1,169 @@
+import { useState } from 'react';
+import { useApi } from '../../hooks/useApi';
+import type { Product, CatalogType } from '../../types/product';
+import type { CreateProductRequest, UpdateProductRequest } from '../../api/productsApi';
+
+// ─── helpers ─────────────────────────────────────────────────────────────────
+
+export interface FormState {
+    name: string;
+    price: string;
+    description: string;
+    categoryName: string;
+    catalogTypeId: string;
+    imageUrl: string;
+    stock: string;
+}
+
+export const EMPTY_FORM: FormState = {
+    name: '',
+    price: '',
+    description: '',
+    categoryName: '',
+    catalogTypeId: '',
+    imageUrl: '',
+    stock: '0',
+};
+
+function stripHtml(html: string) {
+    const div = document.createElement('div');
+    div.innerHTML = html;
+    return div.textContent || '';
+}
+
+export function productToForm(p: Product): FormState {
+    return {
+        name: p.name,
+        price: String(p.price),
+        description: stripHtml(p.description),
+        categoryName: p.catalogType?.type ?? '',
+        catalogTypeId: p.catalogTypeId ? String(p.catalogTypeId) : '',
+        imageUrl: p.imageUrl ?? '',
+        stock: String(p.stock),
+    };
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
+export interface ProductFormModalProps {
+    editing: Product | null;
+    catalogTypes: CatalogType[];
+    onClose: () => void;
+    onSaved: () => void;
+}
+
+export function ProductFormModal({ editing, catalogTypes, onClose, onSaved }: ProductFormModalProps) {
+    const { products: productsService } = useApi();
+    const [form, setForm] = useState<FormState>(editing ? productToForm(editing) : EMPTY_FORM);
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const set = (field: keyof FormState) => (
+        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    ) => setForm(prev => ({ ...prev, [field]: e.target.value }));
+
+    const handleCatalogTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const val = e.target.value;
+        const type = catalogTypes.find(ct => String(ct.id) === val);
+        setForm(prev => ({
+            ...prev,
+            catalogTypeId: val,
+            categoryName: type?.type ?? prev.categoryName,
+        }));
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setSaving(true);
+        setError(null);
+
+        const base: CreateProductRequest = {
+            name: form.name.trim(),
+            price: parseFloat(form.price),
+            description: form.description.trim(),
+            categoryName: form.categoryName.trim(),
+            catalogTypeId: form.catalogTypeId ? parseInt(form.catalogTypeId) : undefined,
+            imageUrl: form.imageUrl.trim(),
+            stock: parseInt(form.stock),
+        };
+
+        try {
+            let result;
+            if (editing) {
+                const payload: UpdateProductRequest = { ...base, id: editing.id };
+                result = await productsService.updateProduct(payload);
+            } else {
+                result = await productsService.createProduct(base);
+            }
+
+            if (result.isError) {
+                setError(result.errorMessage ?? 'An error occurred.');
+            } else {
+                onSaved();
+            }
+        } catch {
+            setError('Could not connect to the server.');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    return (
+        <div className="modal-overlay" onClick={onClose}>
+            <div className="modal" onClick={e => e.stopPropagation()}>
+                <div className="modal__header">
+                    <h2>{editing ? 'Edit Product' : 'New Product'}</h2>
+                    <button className="modal__close" onClick={onClose} aria-label="Close">✕</button>
+                </div>
+
+                <form className="modal__form" onSubmit={handleSubmit}>
+                    <div className="form-row">
+                        <div className="form-group">
+                            <label htmlFor="pm-name">Name *</label>
+                            <input id="pm-name" value={form.name} onChange={set('name')} required />
+                        </div>
+                        <div className="form-group">
+                            <label htmlFor="pm-price">Price *</label>
+                            <input id="pm-price" type="number" step="0.01" min="0.01" value={form.price} onChange={set('price')} required />
+                        </div>
+                    </div>
+
+                    <div className="form-row">
+                        <div className="form-group">
+                            <label htmlFor="pm-type">Category</label>
+                            <select id="pm-type" value={form.catalogTypeId} onChange={handleCatalogTypeChange}>
+                                <option value="">— select —</option>
+                                {catalogTypes.map(ct => (
+                                    <option key={ct.id} value={ct.id}>{ct.type}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="form-group">
+                            <label htmlFor="pm-stock">Stock *</label>
+                            <input id="pm-stock" type="number" min="0" value={form.stock} onChange={set('stock')} required />
+                        </div>
+                    </div>
+
+                    <div className="form-group">
+                        <label htmlFor="pm-imageUrl">Image URL *</label>
+                        <input id="pm-imageUrl" value={form.imageUrl} onChange={set('imageUrl')} required />
+                    </div>
+
+                    <div className="form-group">
+                        <label htmlFor="pm-description">Description *</label>
+                        <textarea id="pm-description" rows={4} value={form.description} onChange={set('description')} required />
+                    </div>
+
+                    {error && <p className="form-error">⚠️ {error}</p>}
+
+                    <div className="modal__actions">
+                        <button type="button" className="btn-secondary" onClick={onClose}>Cancel</button>
+                        <button type="submit" className="btn-primary" disabled={saving}>
+                            {saving ? 'Saving…' : editing ? 'Save Changes' : 'Create Product'}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+}

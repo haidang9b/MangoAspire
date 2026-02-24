@@ -3,7 +3,6 @@ using ChatAgent.App.Data;
 using ChatAgent.App.Plugins;
 using Mango.Core.Options;
 using Mango.Infrastructure.Behaviors;
-using Mango.Infrastructure.ExceptionHandlers;
 using Mango.Infrastructure.Extensions;
 using Mango.Infrastructure.Interceptors;
 using Mediator.Abstractions;
@@ -44,8 +43,7 @@ public static class IServiceCollectionExtensions
 
         services.AddEndpointsApiExplorer();
 
-        services.AddExceptionHandler<GlobalExceptionHandler>();
-        services.AddProblemDetails();
+        services.AddGlobalExceptionHandler();
 
         services.AddScoped<IAgentService, AgentService>();
 

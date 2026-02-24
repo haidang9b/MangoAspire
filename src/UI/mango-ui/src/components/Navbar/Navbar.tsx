@@ -2,6 +2,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useTheme } from '../../context/ThemeContext';
+import { Roles, hasRole } from '../../constants/roles';
 import './Navbar.css';
 
 export function Navbar() {
@@ -36,6 +37,11 @@ export function Navbar() {
                             <Link to="/orders" className="navbar__link" style={{ marginRight: '15px' }}>
                                 My Orders
                             </Link>
+                            {hasRole(userInfo?.role, Roles.Admin) && (
+                                <Link to="/admin/products" className="navbar__link" style={{ marginRight: '15px' }}>
+                                    ⚙️ Manage Products
+                                </Link>
+                            )}
                             <span className="navbar__user-name">
                                 {userInfo?.given_name || userInfo?.name || user.profile.name || user.profile.email || 'User'}
                             </span>

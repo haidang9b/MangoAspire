@@ -1,6 +1,5 @@
 ﻿using Mango.Core.Options;
 using Mango.Infrastructure.Behaviors;
-using Mango.Infrastructure.ExceptionHandlers;
 using Mango.Infrastructure.Extensions;
 using Mango.Infrastructure.Interceptors;
 using Mango.Infrastructure.ProcessedMessages;
@@ -45,8 +44,7 @@ public static class IServiceCollectionExtensions
 
         services.AddEndpointsApiExplorer();
 
-        services.AddExceptionHandler<GlobalExceptionHandler>();
-        services.AddProblemDetails();
+        services.AddGlobalExceptionHandler();
 
         services.AddDocumentApi("Orders API", "v1", "Orders API");
 

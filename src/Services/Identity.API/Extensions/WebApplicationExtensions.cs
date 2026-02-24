@@ -41,7 +41,6 @@ public static class WebApplicationExtensions
             .GetRequiredService<IDBInitializer>();
         await initializer.InitializesAsync();
 
-
         return app;
     }
 }
