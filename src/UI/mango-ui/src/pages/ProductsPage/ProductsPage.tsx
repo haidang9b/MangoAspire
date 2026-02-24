@@ -1,5 +1,6 @@
 import { useApi, useFetch, useProducts, useProductsSearchParams } from '../../hooks';
 import { ProductCard, SearchBox, PageMetadata, Pagination } from '../../components';
+import { CACHE_KEYS, PAGE_SIZE_OPTIONS } from '../../constants';
 import type { CatalogType } from '../../types';
 import './ProductsPage.css';
 
@@ -21,7 +22,7 @@ export function ProductsPage() {
     });
 
     const { data: catalogTypes } = useFetch<CatalogType[]>(
-        'catalog-types',
+        CACHE_KEYS.CATALOG_TYPES,
         async () => {
             const result = await productsService.fetchCatalogTypes();
             if (result.isError || !result.data) throw new Error('Failed to load categories.');
@@ -109,7 +110,7 @@ export function ProductsPage() {
                 onPageChange={(page) => updateParams({ page })}
                 pageSize={pageSize}
                 onPageSizeChange={(size) => updateParams({ size, page: 1 })}
-                pageSizeOptions={[10, 20, 50]}
+                pageSizeOptions={PAGE_SIZE_OPTIONS}
                 className="products-page__pagination"
             />
         </div>

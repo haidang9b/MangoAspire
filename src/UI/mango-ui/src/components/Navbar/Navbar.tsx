@@ -2,6 +2,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../auth';
 import { useCart } from '../../context/CartContext';
 import { useTheme } from '../../context/ThemeContext';
+import { ROUTES } from '../../constants';
 import { Roles, hasRole } from '../../constants/roles';
 import './Navbar.css';
 
@@ -28,17 +29,17 @@ export function Navbar() {
                 {!isLoading && (
                     user ? (
                         <div className="navbar__user">
-                            <Link to="/cart" className="navbar__cart" style={{ cursor: 'pointer', position: 'relative', marginRight: '20px', textDecoration: 'none' }}>
+                            <Link to={ROUTES.CART} className="navbar__cart" style={{ cursor: 'pointer', position: 'relative', marginRight: '20px', textDecoration: 'none' }}>
                                 <span style={{ fontSize: '1.4rem' }}>🛒</span>
                                 {cartCount > 0 && (
                                     <span className="navbar__cart-count">{cartCount}</span>
                                 )}
                             </Link>
-                            <Link to="/orders" className="navbar__link" style={{ marginRight: '15px' }}>
+                            <Link to={ROUTES.ORDERS} className="navbar__link" style={{ marginRight: '15px' }}>
                                 My Orders
                             </Link>
                             {hasRole(userInfo?.role, Roles.Admin) && (
-                                <Link to="/admin/products" className="navbar__link" style={{ marginRight: '15px' }}>
+                                <Link to={ROUTES.ADMIN_PRODUCTS} className="navbar__link" style={{ marginRight: '15px' }}>
                                     ⚙️ Manage Products
                                 </Link>
                             )}

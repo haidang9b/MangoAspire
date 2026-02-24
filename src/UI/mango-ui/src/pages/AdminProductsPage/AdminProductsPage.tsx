@@ -7,10 +7,9 @@ import { DeleteDialog } from './DeleteDialog';
 import type { Product, CatalogType } from '../../types/product';
 import type { PaginatedItems } from '../../types/api';
 import { useProductsSearchParams } from '../../hooks';
+import { CACHE_KEYS, PAGE_SIZE_OPTIONS } from '../../constants';
 
 import './AdminProductsPage.css';
-
-const CACHE_TYPES = 'catalog-types';
 
 export function AdminProductsPage() {
     const { selectedType,
@@ -38,7 +37,7 @@ export function AdminProductsPage() {
     );
 
     const { data: catalogTypes } = useFetch<CatalogType[]>(
-        CACHE_TYPES,
+        CACHE_KEYS.CATALOG_TYPES,
         async () => {
             const result = await productsService.fetchCatalogTypes();
             if (result.isError || !result.data) throw new Error('Failed to load categories.');
@@ -176,7 +175,7 @@ export function AdminProductsPage() {
                         onPageChange={(page) => updateParams({ page })}
                         pageSize={pageSize}
                         onPageSizeChange={(size) => updateParams({ size, page: 1 })}
-                        pageSizeOptions={[10, 20, 50]}
+                        pageSizeOptions={PAGE_SIZE_OPTIONS}
                         className="admin-pagination"
                     />
                 </>

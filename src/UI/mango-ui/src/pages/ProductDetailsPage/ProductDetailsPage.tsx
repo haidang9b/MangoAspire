@@ -4,6 +4,7 @@ import { useApi, useFetch } from '../../hooks';
 import { useAuth } from '../../auth/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { PageMetadata } from '../../components';
+import { CACHE_KEYS, ROUTES } from '../../constants';
 import type { Product } from '../../types';
 import './ProductDetailsPage.css';
 
@@ -18,7 +19,7 @@ export function ProductDetailsPage() {
     const [adding, setAdding] = useState(false);
 
     const { data: product, isLoading, error } = useFetch<Product>(
-        `product-${id}`,
+        `${CACHE_KEYS.PRODUCTS}-${id}`,
         async () => {
             const result = await productsService.fetchProductById(id!);
             if (result.isError || !result.data) throw new Error(result.errorMessage ?? 'Product not found.');
@@ -47,7 +48,7 @@ export function ProductDetailsPage() {
         return (
             <div className="product-details-page product-details-page--error">
                 <p>⚠️ {error || 'Product not found'}</p>
-                <button onClick={() => navigate('/')}>Back to Shop</button>
+                <button onClick={() => navigate(ROUTES.HOME)}>Back to Shop</button>
             </div>
         );
     }
@@ -61,7 +62,7 @@ export function ProductDetailsPage() {
                 description={product.description?.replace(/<[^>]*>/g, '').slice(0, 160) || `Buy ${product.name} at Mango Store.`}
             />
             <div className="product-details__back">
-                <Link to="/" className="back-link">← Back to Products</Link>
+                <Link to={ROUTES.HOME} className="back-link">← Back to Products</Link>
             </div>
 
             <div className="product-details__container">
@@ -109,7 +110,7 @@ export function ProductDetailsPage() {
                             </div>
 
                             <div className="product-details__btns">
-                                <Link to="/" className="btn-secondary">Back to List</Link>
+                                <Link to={ROUTES.HOME} className="btn-secondary">Back to List</Link>
                                 <button
                                     className="btn-primary"
                                     onClick={handleAddToCart}

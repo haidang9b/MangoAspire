@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import { PageMetadata } from '../../components/PageMetadata';
+import { ROUTES } from '../../constants';
 import './CartPage.css';
 
 export function CartPage() {
@@ -30,7 +31,7 @@ export function CartPage() {
                     <span style={{ fontSize: '4rem' }}>🛒</span>
                     <h2>Your cart is empty</h2>
                     <p>Go add some delicious mangoes!</p>
-                    <Link to="/" className="cart-page__btn" style={{ textDecoration: 'none', display: 'block', textAlign: 'center' }}>
+                    <Link to={ROUTES.HOME} className="cart-page__btn" style={{ textDecoration: 'none', display: 'block', textAlign: 'center' }}>
                         Back to Shop
                     </Link>
                 </div>
@@ -109,7 +110,7 @@ export function CartPage() {
                             )}
                         </div>
 
-                        <Link to="/checkout" className="cart-page__btn cart-page__btn--checkout" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Link to={ROUTES.CHECKOUT} className="cart-page__btn cart-page__btn--checkout" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             Checkout
                         </Link>
                     </div>

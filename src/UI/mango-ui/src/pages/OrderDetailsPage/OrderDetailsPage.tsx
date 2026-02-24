@@ -1,5 +1,6 @@
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useApi, useFetch } from '../../hooks';
+import { CACHE_KEYS, ROUTES } from '../../constants';
 import type { OrderDetailDto } from '../../types';
 import './OrderDetailsPage.css';
 
@@ -9,7 +10,7 @@ export function OrderDetailsPage() {
     const { orders: ordersService } = useApi();
 
     const { data: order, isLoading, error } = useFetch<OrderDetailDto>(
-        `order-detail-${id}`,
+        `${CACHE_KEYS.ORDER_DETAILS}-${id}`,
         async () => {
             const result = await ordersService.fetchOrderById(id!);
             if (result.isError) throw new Error(result.errorMessage || 'Failed to load order details');
@@ -22,14 +23,14 @@ export function OrderDetailsPage() {
     if (error || !order) return (
         <div className="container py-5 text-center">
             <div className="error-banner mb-4">{error || 'Order not found'}</div>
-            <button onClick={() => navigate('/orders')} className="btn btn-primary">Back to Orders</button>
+            <button onClick={() => navigate(ROUTES.ORDERS)} className="btn btn-primary">Back to Orders</button>
         </div>
     );
 
     return (
         <div className="order-details-page container py-5">
             <div className="page-nav mb-4">
-                <Link to="/orders" className="back-link">← Back to My Orders</Link>
+                <Link to={ROUTES.ORDERS} className="back-link">← Back to My Orders</Link>
             </div>
 
             <div className="details-header mb-5">

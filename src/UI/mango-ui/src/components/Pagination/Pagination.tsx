@@ -1,3 +1,4 @@
+import { PAGE_SIZE_OPTIONS } from '../../constants';
 import './Pagination.css';
 
 interface PaginationProps {
@@ -16,7 +17,7 @@ export const Pagination = ({
     onPageChange,
     pageSize,
     onPageSizeChange,
-    pageSizeOptions = [10, 20, 50],
+    pageSizeOptions = PAGE_SIZE_OPTIONS,
     className = ''
 }: PaginationProps) => {
     if (totalPages === 0 && !onPageSizeChange) return null;

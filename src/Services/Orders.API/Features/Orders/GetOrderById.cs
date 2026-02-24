@@ -9,6 +9,7 @@ public class GetOrderById
     public class Query : IQuery<OrderDetailDto>
     {
         public Guid OrderId { get; set; }
+
         public required string UserId { get; set; }
 
         internal class Handler(OrdersDbContext dbContext) : IRequestHandler<Query, ResultModel<OrderDetailDto>>

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useApi, useFetch } from '../../hooks';
 import { PageMetadata, Pagination } from '../../components';
+import { CACHE_KEYS, ORDER_STATUS, PAGE_SIZE_OPTIONS, ROUTES } from '../../constants';
 import type { OrderDto, PaginatedItems } from '../../types';
 import './OrdersPage.css';
 
@@ -11,7 +12,7 @@ export function OrdersPage() {
     const [pageSize, setPageSize] = useState(10);
 
     const { data: orders, isLoading, error } = useFetch<PaginatedItems<OrderDto>>(
-        `orders-list-${pageIndex}-${pageSize}`,
+        `${CACHE_KEYS.ORDERS}-${pageIndex}-${pageSize}`,
         async () => {
             const result = await ordersService.fetchOrders(pageIndex, pageSize);
             if (result.isError) throw new Error(result.errorMessage || 'Failed to load orders');
@@ -24,10 +25,10 @@ export function OrdersPage() {
 
     const getStatusColor = (status: string) => {
         switch (status.toLowerCase()) {
-            case 'pending': return 'var(--status-pending)';
-            case 'completed': return 'var(--status-success)';
-            case 'cancelled': return 'var(--status-error)';
-            case 'shipped': return 'var(--status-info)';
+            case ORDER_STATUS.PENDING.toLowerCase(): return 'var(--status-pending)';
+            case ORDER_STATUS.COMPLETED.toLowerCase(): return 'var(--status-success)';
+            case ORDER_STATUS.CANCELLED.toLowerCase(): return 'var(--status-error)';
+            case ORDER_STATUS.SHIPPED.toLowerCase(): return 'var(--status-info)';
             default: return 'var(--text-sub)';
         }
     };
@@ -57,7 +58,7 @@ export function OrdersPage() {
                     <div className="empty-state__icon">📦</div>
                     <h2>No orders found</h2>
                     <p>It looks like you haven't placed any orders yet.</p>
-                    <Link to="/" className="btn btn-primary mt-3">Start Shopping</Link>
+                    <Link to={ROUTES.HOME} className="btn btn-primary mt-3">Start Shopping</Link>
                 </div>
             ) : (
                 <>
@@ -88,7 +89,7 @@ export function OrdersPage() {
                                     </div>
                                 </div>
                                 <div className="order-card__footer">
-                                    <Link to={`/orders/${order.id}`} className="btn btn-outline btn-block">
+                                    <Link to={`${ROUTES.ORDERS}/${order.id}`} className="btn btn-outline btn-block">
                                         View Details
                                     </Link>
                                 </div>
@@ -102,7 +103,7 @@ export function OrdersPage() {
                         onPageChange={setPageIndex}
                         pageSize={pageSize}
                         onPageSizeChange={handlePageSizeChange}
-                        pageSizeOptions={[10, 20, 50]}
+                        pageSizeOptions={PAGE_SIZE_OPTIONS}
                         className="orders-pagination"
                     />
                 </>

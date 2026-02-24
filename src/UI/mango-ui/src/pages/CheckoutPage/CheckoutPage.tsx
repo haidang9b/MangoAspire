@@ -5,6 +5,7 @@ import { useAuth } from '../../auth/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useApi } from '../../hooks';
 import { PageMetadata, TextBox } from '../../components';
+import { ROUTES } from '../../constants';
 import type { CheckoutRequest } from '../../types';
 import './CheckoutPage.css';
 
@@ -51,7 +52,7 @@ export function CheckoutPage() {
                 <div className="empty-msg">
                     <h2>Your cart is empty</h2>
                     <p>Add some delicious items before checking out!</p>
-                    <button className="btn-primary" onClick={() => navigate('/')}>Back to Shop</button>
+                    <button className="btn-primary" onClick={() => navigate(ROUTES.HOME)}>Back to Shop</button>
                 </div>
             </div>
         );
@@ -73,7 +74,7 @@ export function CheckoutPage() {
             const result = await cartService.checkout(request);
 
             if (!result.isError) {
-                navigate('/confirmation');
+                navigate(ROUTES.CONFIRMATION);
             } else {
                 setSubmitError(result.errorMessage || 'Failed to place order.');
             }
