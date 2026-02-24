@@ -52,6 +52,8 @@ export interface ProductFormModalProps {
     onSaved: () => void;
 }
 
+import { TextBox, SelectBox, Modal } from '../../components';
+
 export function ProductFormModal({ editing, catalogTypes, onClose, onSaved }: ProductFormModalProps) {
     const { products: productsService } = useApi();
     const [form, setForm] = useState<FormState>(editing ? productToForm(editing) : EMPTY_FORM);
@@ -109,61 +111,86 @@ export function ProductFormModal({ editing, catalogTypes, onClose, onSaved }: Pr
     };
 
     return (
-        <div className="modal-overlay" onClick={onClose}>
-            <div className="modal" onClick={e => e.stopPropagation()}>
-                <div className="modal__header">
-                    <h2>{editing ? 'Edit Product' : 'New Product'}</h2>
-                    <button className="modal__close" onClick={onClose} aria-label="Close">✕</button>
+        <Modal
+            title={editing ? 'Edit Product' : 'New Product'}
+            isOpen={true}
+            onClose={onClose}
+            footer={
+                <>
+                    <button type="button" className="btn-secondary" onClick={onClose}>Cancel</button>
+                    <button type="submit" form="product-form" className="btn-primary" disabled={saving}>
+                        {saving ? 'Saving…' : editing ? 'Save Changes' : 'Create Product'}
+                    </button>
+                </>
+            }
+        >
+            <form id="product-form" className="modal__form" onSubmit={handleSubmit}>
+                <div className="form-row">
+                    <TextBox
+                        id="pm-name"
+                        label="Name *"
+                        value={form.name}
+                        onChange={set('name')}
+                        required
+                    />
+                    <TextBox
+                        id="pm-price"
+                        label="Price *"
+                        type="number"
+                        step="0.01"
+                        min="0.01"
+                        value={form.price}
+                        onChange={set('price')}
+                        required
+                    />
                 </div>
 
-                <form className="modal__form" onSubmit={handleSubmit}>
-                    <div className="form-row">
-                        <div className="form-group">
-                            <label htmlFor="pm-name">Name *</label>
-                            <input id="pm-name" value={form.name} onChange={set('name')} required />
-                        </div>
-                        <div className="form-group">
-                            <label htmlFor="pm-price">Price *</label>
-                            <input id="pm-price" type="number" step="0.01" min="0.01" value={form.price} onChange={set('price')} required />
-                        </div>
-                    </div>
+                <div className="form-row">
+                    <SelectBox
+                        id="pm-type"
+                        label="Category"
+                        value={form.catalogTypeId}
+                        onChange={handleCatalogTypeChange}
+                    >
+                        <option value="">— select —</option>
+                        {catalogTypes.map(ct => (
+                            <option key={ct.id} value={ct.id}>{ct.type}</option>
+                        ))}
+                    </SelectBox>
 
-                    <div className="form-row">
-                        <div className="form-group">
-                            <label htmlFor="pm-type">Category</label>
-                            <select id="pm-type" value={form.catalogTypeId} onChange={handleCatalogTypeChange}>
-                                <option value="">— select —</option>
-                                {catalogTypes.map(ct => (
-                                    <option key={ct.id} value={ct.id}>{ct.type}</option>
-                                ))}
-                            </select>
-                        </div>
-                        <div className="form-group">
-                            <label htmlFor="pm-stock">Stock *</label>
-                            <input id="pm-stock" type="number" min="0" value={form.stock} onChange={set('stock')} required />
-                        </div>
-                    </div>
+                    <TextBox
+                        id="pm-stock"
+                        label="Stock *"
+                        type="number"
+                        min="0"
+                        value={form.stock}
+                        onChange={set('stock')}
+                        required
+                    />
+                </div>
 
-                    <div className="form-group">
-                        <label htmlFor="pm-imageUrl">Image URL *</label>
-                        <input id="pm-imageUrl" value={form.imageUrl} onChange={set('imageUrl')} required />
-                    </div>
+                <TextBox
+                    id="pm-imageUrl"
+                    label="Image URL *"
+                    value={form.imageUrl}
+                    onChange={set('imageUrl')}
+                    required
+                />
 
-                    <div className="form-group">
-                        <label htmlFor="pm-description">Description *</label>
-                        <textarea id="pm-description" rows={4} value={form.description} onChange={set('description')} required />
-                    </div>
+                <div className="form-group">
+                    <label htmlFor="pm-description">Description *</label>
+                    <textarea
+                        id="pm-description"
+                        className="form-control"
+                        rows={4}
+                        value={form.description}
+                        onChange={set('description')}
+                        required
+                    />
+                </div>
 
-                    {error && <p className="form-error">⚠️ {error}</p>}
-
-                    <div className="modal__actions">
-                        <button type="button" className="btn-secondary" onClick={onClose}>Cancel</button>
-                        <button type="submit" className="btn-primary" disabled={saving}>
-                            {saving ? 'Saving…' : editing ? 'Save Changes' : 'Create Product'}
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+                {error && <p className="form-error">⚠️ {error}</p>}
+            </form>
+        </Modal>
     );
 }

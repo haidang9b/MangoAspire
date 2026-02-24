@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { useAuth } from '../../auth/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useApi } from '../../hooks';
-import { PageMetadata } from '../../components';
+import { PageMetadata, TextBox } from '../../components';
 import type { CheckoutRequest } from '../../types';
 import './CheckoutPage.css';
 
@@ -99,122 +99,102 @@ export function CheckoutPage() {
                     <div className="checkout-section">
                         <h3>Personal Details</h3>
                         <div className="form-grid">
-                            <div className="form-field">
-                                <label htmlFor="firstName">First Name</label>
-                                <input id="firstName" type="text" {...register('firstName', { required: 'Required' })} />
-                                {errors.firstName && <span className="error-text">{errors.firstName.message}</span>}
-                            </div>
-                            <div className="form-field">
-                                <label htmlFor="lastName">Last Name</label>
-                                <input id="lastName" type="text" {...register('lastName', { required: 'Required' })} />
-                                {errors.lastName && <span className="error-text">{errors.lastName.message}</span>}
-                            </div>
-                            <div className="form-field">
-                                <label htmlFor="email">Email</label>
-                                <input
-                                    id="email"
-                                    type="email"
-                                    {...register('email', {
-                                        required: 'Required',
-                                        pattern: {
-                                            value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                                            message: 'Invalid email address'
-                                        }
-                                    })}
-                                />
-                                {errors.email && <span className="error-text">{errors.email.message}</span>}
-                            </div>
-                            <div className="form-field">
-                                <label htmlFor="phone">Phone</label>
-                                <input
-                                    id="phone"
-                                    type="tel"
-                                    {...register('phone', {
-                                        required: 'Required',
-                                        pattern: {
-                                            value: /^\d{10,15}$/,
-                                            message: '10-15 digits required'
-                                        }
-                                    })}
-                                />
-                                {errors.phone && <span className="error-text">{errors.phone.message}</span>}
-                            </div>
+                            <TextBox
+                                label="First Name"
+                                error={errors.firstName?.message}
+                                {...register('firstName', { required: 'Required' })}
+                            />
+                            <TextBox
+                                label="Last Name"
+                                error={errors.lastName?.message}
+                                {...register('lastName', { required: 'Required' })}
+                            />
+                            <TextBox
+                                label="Email"
+                                type="email"
+                                error={errors.email?.message}
+                                {...register('email', {
+                                    required: 'Required',
+                                    pattern: {
+                                        value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                                        message: 'Invalid email address'
+                                    }
+                                })}
+                            />
+                            <TextBox
+                                label="Phone"
+                                type="tel"
+                                error={errors.phone?.message}
+                                {...register('phone', {
+                                    required: 'Required',
+                                    pattern: {
+                                        value: /^\d{10,15}$/,
+                                        message: '10-15 digits required'
+                                    }
+                                })}
+                            />
                         </div>
                     </div>
 
                     <div className="checkout-section">
                         <h3>Delivery Information</h3>
-                        <div className="form-field">
-                            <label htmlFor="pickupDate">Pickup Time (Min 1hr from now)</label>
-                            <input
-                                id="pickupDate"
-                                type="datetime-local"
-                                {...register('pickupDate', {
-                                    required: 'Required',
-                                    validate: (value) => {
-                                        const pickup = new Date(value);
-                                        const minTime = new Date(Date.now() + 3500000); // ~1 hour buffer
-                                        return pickup > minTime || 'Pickup must be at least 1 hour from now';
-                                    }
-                                })}
-                            />
-                            {errors.pickupDate && <span className="error-text">{errors.pickupDate.message}</span>}
-                        </div>
+                        <TextBox
+                            label="Pickup Time (Min 1hr from now)"
+                            type="datetime-local"
+                            error={errors.pickupDate?.message}
+                            {...register('pickupDate', {
+                                required: 'Required',
+                                validate: (value) => {
+                                    const pickup = new Date(value);
+                                    const minTime = new Date(Date.now() + 3500000); // ~1 hour buffer
+                                    return pickup > minTime || 'Pickup must be at least 1 hour from now';
+                                }
+                            })}
+                        />
                     </div>
 
                     <div className="checkout-section">
                         <h3>Payment Details</h3>
                         <div className="form-grid">
-                            <div className="form-field form-field--wide">
-                                <label htmlFor="cardNumber">Card Number</label>
-                                <input
-                                    id="cardNumber"
-                                    type="text"
-                                    placeholder="0000 0000 0000 0000"
-                                    {...register('cardNumber', {
-                                        required: 'Required',
-                                        pattern: {
-                                            value: /^\d{16}$/,
-                                            message: '16 digits required'
-                                        }
-                                    })}
-                                />
-                                {errors.cardNumber && <span className="error-text">{errors.cardNumber.message}</span>}
-                            </div>
-                            <div className="form-field">
-                                <label htmlFor="cvv">CVV</label>
-                                <input
-                                    id="cvv"
-                                    type="text"
-                                    placeholder="123"
-                                    maxLength={4}
-                                    {...register('cvv', {
-                                        required: 'Required',
-                                        pattern: {
-                                            value: /^\d{3,4}$/,
-                                            message: '3-4 digits required'
-                                        }
-                                    })}
-                                />
-                                {errors.cvv && <span className="error-text">{errors.cvv.message}</span>}
-                            </div>
-                            <div className="form-field">
-                                <label htmlFor="expiryMonthYear">Expiry (MMYY)</label>
-                                <input
-                                    id="expiryMonthYear"
-                                    type="text"
-                                    placeholder="MMYY"
-                                    maxLength={4}
-                                    {...register('expiryMonthYear', {
-                                        required: 'Required',
-                                        pattern: {
-                                            value: /^(0[1-9]|1[0-2])\d{2}$/,
-                                            message: 'Use MMYY format'
-                                        }
-                                    })}
-                                />
-                                {errors.expiryMonthYear && <span className="error-text">{errors.expiryMonthYear.message}</span>}
-                            </div>
+                            <TextBox
+                                label="Card Number"
+                                placeholder="0000 0000 0000 0000"
+                                containerClassName="form-field--wide"
+                                error={errors.cardNumber?.message}
+                                {...register('cardNumber', {
+                                    required: 'Required',
+                                    pattern: {
+                                        value: /^\d{16}$/,
+                                        message: '16 digits required'
+                                    }
+                                })}
+                            />
+                            <TextBox
+                                label="CVV"
+                                placeholder="123"
+                                maxLength={4}
+                                error={errors.cvv?.message}
+                                {...register('cvv', {
+                                    required: 'Required',
+                                    pattern: {
+                                        value: /^\d{3,4}$/,
+                                        message: '3-4 digits required'
+                                    }
+                                })}
+                            />
+                            <TextBox
+                                label="Expiry (MMYY)"
+                                placeholder="MMYY"
+                                maxLength={4}
+                                error={errors.expiryMonthYear?.message}
+                                {...register('expiryMonthYear', {
+                                    required: 'Required',
+                                    pattern: {
+                                        value: /^(0[1-9]|1[0-2])\d{2}$/,
+                                        message: 'Use MMYY format'
+                                    }
+                                })}
+                            />
                         </div>
                     </div>
                 </section>

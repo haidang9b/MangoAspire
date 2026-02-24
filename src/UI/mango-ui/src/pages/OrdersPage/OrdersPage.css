@@ -128,6 +128,11 @@
     font-style: italic;
 }
 
+
+.orders-pagination {
+    margin-top: 3rem;
+}
+
 @media (max-width: 600px) {
     .orders-grid {
         grid-template-columns: 1fr;

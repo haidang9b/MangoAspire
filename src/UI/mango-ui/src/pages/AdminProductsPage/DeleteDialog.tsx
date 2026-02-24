@@ -8,6 +8,8 @@ export interface DeleteDialogProps {
     onDeleted: () => void;
 }
 
+import { Modal } from '../../components';
+
 export function DeleteDialog({ product, onCancel, onDeleted }: DeleteDialogProps) {
     const { products: productsService } = useApi();
     const [deleting, setDeleting] = useState(false);
@@ -27,23 +29,24 @@ export function DeleteDialog({ product, onCancel, onDeleted }: DeleteDialogProps
     };
 
     return (
-        <div className="modal-overlay" onClick={onCancel}>
-            <div className="modal modal--sm" onClick={e => e.stopPropagation()}>
-                <div className="modal__header">
-                    <h2>Delete Product</h2>
-                    <button className="modal__close" onClick={onCancel} aria-label="Close">✕</button>
-                </div>
-                <p className="delete-confirm__msg">
-                    Are you sure you want to delete <strong>{product.name}</strong>? This cannot be undone.
-                </p>
-                {error && <p className="form-error">⚠️ {error}</p>}
-                <div className="modal__actions">
+        <Modal
+            title="Delete Product"
+            isOpen={true}
+            onClose={onCancel}
+            size="sm"
+            footer={
+                <>
                     <button className="btn-secondary" onClick={onCancel}>Cancel</button>
                     <button className="btn-danger" onClick={handleDelete} disabled={deleting}>
                         {deleting ? 'Deleting…' : 'Delete'}
                     </button>
-                </div>
-            </div>
-        </div>
+                </>
+            }
+        >
+            <p className="delete-confirm__msg">
+                Are you sure you want to delete <strong>{product.name}</strong>? This cannot be undone.
+            </p>
+            {error && <p className="form-error">⚠️ {error}</p>}
+        </Modal>
     );
 }

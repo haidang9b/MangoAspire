@@ -1,5 +1,5 @@
 import { useApi, useFetch, useProducts, useProductsSearchParams } from '../../hooks';
-import { ProductCard, SearchBox, PageMetadata } from '../../components';
+import { ProductCard, SearchBox, PageMetadata, Pagination } from '../../components';
 import type { CatalogType } from '../../types';
 import './ProductsPage.css';
 
@@ -103,27 +103,15 @@ export function ProductsPage() {
             </main>
 
             {/* Pagination */}
-            {totalPages > 1 && (
-                <nav className="products-page__pagination">
-                    <button
-                        className="pagination-btn"
-                        disabled={pageIndex <= 1}
-                        onClick={() => updateParams({ page: pageIndex - 1 })}
-                    >
-                        ← Prev
-                    </button>
-                    <span className="pagination-info">
-                        Page {pageIndex} of {totalPages}
-                    </span>
-                    <button
-                        className="pagination-btn"
-                        disabled={pageIndex >= totalPages}
-                        onClick={() => updateParams({ page: pageIndex + 1 })}
-                    >
-                        Next →
-                    </button>
-                </nav>
-            )}
+            <Pagination
+                currentPage={pageIndex}
+                totalPages={totalPages}
+                onPageChange={(page) => updateParams({ page })}
+                pageSize={pageSize}
+                onPageSizeChange={(size) => updateParams({ size, page: 1 })}
+                pageSizeOptions={[10, 20, 50]}
+                className="products-page__pagination"
+            />
         </div>
     );
 }

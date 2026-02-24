@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useApi } from '../../hooks/useApi';
 import { useFetch } from '../../hooks/useFetch';
-import { PageMetadata, SearchBox } from '../../components';
+import { PageMetadata, SearchBox, SelectBox, Pagination } from '../../components';
 import { ProductFormModal } from './ProductFormModal';
 import { DeleteDialog } from './DeleteDialog';
 import type { Product, CatalogType } from '../../types/product';
@@ -11,7 +11,6 @@ import { useProductsSearchParams } from '../../hooks';
 import './AdminProductsPage.css';
 
 const CACHE_TYPES = 'catalog-types';
-
 
 export function AdminProductsPage() {
     const { selectedType,
@@ -87,7 +86,7 @@ export function AdminProductsPage() {
                     className="admin-search-wrapper"
                 />
 
-                <select
+                <SelectBox
                     className="admin-filter"
                     value={selectedType ?? ''}
                     onChange={e => handleTypeChange(e.target.value ? Number(e.target.value) : undefined)}
@@ -96,7 +95,7 @@ export function AdminProductsPage() {
                     {catalogTypes?.map(t => (
                         <option key={t.id} value={t.id}>{t.type}</option>
                     ))}
-                </select>
+                </SelectBox>
             </div>
 
             {isLoading && (
@@ -171,25 +170,15 @@ export function AdminProductsPage() {
                         </table>
                     </div>
 
-                    {totalPages > 1 && (
-                        <nav className="admin-pagination">
-                            <button
-                                className="pagination-btn"
-                                disabled={pageIndex <= 1}
-                                onClick={() => updateParams({ page: pageIndex - 1 })}
-                            >
-                                ← Prev
-                            </button>
-                            <span className="pagination-info">Page {pageIndex} of {totalPages}</span>
-                            <button
-                                className="pagination-btn"
-                                disabled={pageIndex >= totalPages}
-                                onClick={() => updateParams({ page: pageIndex + 1 })}
-                            >
-                                Next →
-                            </button>
-                        </nav>
-                    )}
+                    <Pagination
+                        currentPage={pageIndex}
+                        totalPages={totalPages}
+                        onPageChange={(page) => updateParams({ page })}
+                        pageSize={pageSize}
+                        onPageSizeChange={(size) => updateParams({ size, page: 1 })}
+                        pageSizeOptions={[10, 20, 50]}
+                        className="admin-pagination"
+                    />
                 </>
             )}
 
