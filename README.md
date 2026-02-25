@@ -38,6 +38,7 @@ The project follows a microservices architecture, leveraging .NET Aspire to simp
 - **Patterns**: MediatR (CQRS), FluentValidation, Result Pattern, Vertical Slice Architecture
 - **Observability**: OpenTelemetry (Metrics, Tracing, Logging)
 - **CDC**: [Debezium](https://debezium.io/)
+- **Containerization**: Optimized **Alpine-based** Docker images for reduced size and enhanced security.
 
 ---
 
@@ -96,7 +97,14 @@ MangoAspire/
      dotnet run --project src/Mango.AppHost/Mango.AppHost.csproj
      ```
 
-3. **Access the Dashboard**:
+3. **Run via Docker Compose**:
+   - Use the root-level `launchSettings.json` profiles to debug via Docker Compose.
+   - Run:
+     ```bash
+     docker-compose up -d
+     ```
+
+4. **Access the Dashboard**:
    Once running, the .NET Aspire Dashboard URL will be printed in the console. Open it to monitor services, logs, and traces.
 
 ---

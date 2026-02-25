@@ -5,7 +5,7 @@
       "commandVersion": "1.0",
       "serviceActions": {
         "mango.gateway": "StartDebugging",
-        "chatagent.app": "StartDebugging",
+        "chatagent.app": "StartDebugging"
       }
     }
   }

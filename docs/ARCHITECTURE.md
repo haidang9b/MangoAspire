@@ -111,3 +111,8 @@ graph TD
 ## Project Structure (Vertical Slice)
 
 Services follow the **Vertical Slice Architecture**, grouping code by feature (e.g., `CreateOrder`, `GetProduct`) rather than technical layers. This ensures high cohesion and low coupling.
+
+## Containerization
+
+- **Alpine Linux**: All microservices use **Alpine-based** Docker images (`aspnet:10.0-alpine`) to minimize footprint and reduce vulnerability surface area.
+- **Multi-Stage Builds**: Dockerfiles are optimized using multi-stage builds to separate build-time dependencies from the runtime environment.
