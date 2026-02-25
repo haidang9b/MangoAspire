@@ -47,35 +47,8 @@
     gap: 20px;
 }
 
-.form-field {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
 .form-field--wide {
     grid-column: span 2;
-}
-
-.form-field label {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: var(--text-sub);
-}
-
-.form-field input {
-    background: var(--input-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 12px;
-    color: var(--text-main);
-    font-size: 1rem;
-    transition: border-color 0.2s;
-}
-
-.form-field input:focus {
-    outline: none;
-    border-color: var(--accent-blue);
 }
 
 /* Summary Box */
@@ -169,10 +142,4 @@
 .empty-msg p {
     color: var(--text-sub);
     margin-bottom: 32px;
-}
-
-.error-text {
-    color: var(--accent-red);
-    font-size: 0.8rem;
-    font-weight: 600;
 }

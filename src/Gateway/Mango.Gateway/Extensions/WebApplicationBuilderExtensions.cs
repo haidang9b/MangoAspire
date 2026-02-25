@@ -1,4 +1,4 @@
-using Mango.ServiceDefaults;
+﻿using Mango.ServiceDefaults;
 
 namespace Mango.Gateway.Extensions;
 

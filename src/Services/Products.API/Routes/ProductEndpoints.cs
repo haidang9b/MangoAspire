@@ -1,4 +1,5 @@
-﻿using Products.API.Features.Products;
+﻿using Products.API.Dtos;
+using Products.API.Features.Products;
 
 namespace Products.API.Routes;
 
@@ -11,13 +12,11 @@ public static class ProductEndpoints
             var group = routeGroupBuilder.MapGroup("/api/products")
                 .WithTags("Products");
 
-            group.MapGet("/", async (int pageIndex, int pageSize, int? catalogTypeId, ISender sender) =>
+            group.MapGet("/", async (int pageIndex, [AsParameters] ProductSearchRequestDto options, ISender sender) =>
             {
                 var result = await sender.SendAsync(new GetProducts.Query
                 {
-                    PageIndex = pageIndex,
-                    PageSize = pageSize,
-                    CatalogTypeId = catalogTypeId
+                    Options = options
                 });
                 return Results.Ok(result);
             });

@@ -1,31 +1,41 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useApi } from '../../hooks/useApi';
-import { useFetch } from '../../hooks/useFetch';
-import { PageMetadata } from '../../components/PageMetadata';
-import type { OrderDto } from '../../types/order';
-import type { PaginatedItems } from '../../types/api';
+import { useApi, useFetch } from '../../hooks';
+import { PageMetadata, Pagination } from '../../components';
+import { CACHE_KEYS, ORDER_STATUS, PAGE_SIZE_OPTIONS, ROUTES } from '../../constants';
+import type { OrderDto, PaginatedItems } from '../../types';
 import './OrdersPage.css';
 
 export function OrdersPage() {
     const { orders: ordersService } = useApi();
+    const [pageIndex, setPageIndex] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
 
     const { data: orders, isLoading, error } = useFetch<PaginatedItems<OrderDto>>(
-        'orders-list',
+        `${CACHE_KEYS.ORDERS}-${pageIndex}-${pageSize}`,
         async () => {
-            const result = await ordersService.fetchOrders();
+            const result = await ordersService.fetchOrders(pageIndex, pageSize);
             if (result.isError) throw new Error(result.errorMessage || 'Failed to load orders');
             return result.data;
         }
     );
 
+    const totalCount = orders?.count ?? 0;
+    const totalPages = Math.ceil(totalCount / pageSize);
+
     const getStatusColor = (status: string) => {
         switch (status.toLowerCase()) {
-            case 'pending': return 'var(--status-pending)';
-            case 'completed': return 'var(--status-success)';
-            case 'cancelled': return 'var(--status-error)';
-            case 'shipped': return 'var(--status-info)';
+            case ORDER_STATUS.PENDING.toLowerCase(): return 'var(--status-pending)';
+            case ORDER_STATUS.COMPLETED.toLowerCase(): return 'var(--status-success)';
+            case ORDER_STATUS.CANCELLED.toLowerCase(): return 'var(--status-error)';
+            case ORDER_STATUS.SHIPPED.toLowerCase(): return 'var(--status-info)';
             default: return 'var(--text-sub)';
         }
+    };
+
+    const handlePageSizeChange = (size: number) => {
+        setPageSize(size);
+        setPageIndex(1);
     };
 
     if (isLoading) return <div className="page-loading">Loading order history...</div>;
@@ -48,43 +58,55 @@ export function OrdersPage() {
                     <div className="empty-state__icon">📦</div>
                     <h2>No orders found</h2>
                     <p>It looks like you haven't placed any orders yet.</p>
-                    <Link to="/" className="btn btn-primary mt-3">Start Shopping</Link>
+                    <Link to={ROUTES.HOME} className="btn btn-primary mt-3">Start Shopping</Link>
                 </div>
             ) : (
-                <div className="orders-grid">
-                    {orders.data.map((order) => (
-                        <div key={order.id} className="order-card">
-                            <div className="order-card__header">
-                                <span className="order-card__id">Order #{order.id.split('-')[0].toUpperCase()}</span>
-                                <span
-                                    className="order-card__status"
-                                    style={{ '--status-color': getStatusColor(order.status) } as React.CSSProperties}
-                                >
-                                    {order.status}
-                                </span>
-                            </div>
-                            <div className="order-card__body">
-                                <div className="order-card__row">
-                                    <span className="label">Date</span>
-                                    <span className="value">{new Date(order.orderTime).toLocaleDateString()}</span>
+                <>
+                    <div className="orders-grid">
+                        {orders.data.map((order) => (
+                            <div key={order.id} className="order-card">
+                                <div className="order-card__header">
+                                    <span className="order-card__id">Order #{order.id.split('-')[0].toUpperCase()}</span>
+                                    <span
+                                        className="order-card__status"
+                                        style={{ '--status-color': getStatusColor(order.status) } as React.CSSProperties}
+                                    >
+                                        {order.status}
+                                    </span>
                                 </div>
-                                <div className="order-card__row">
-                                    <span className="label">Items</span>
-                                    <span className="value">{order.itemCount} item(s)</span>
+                                <div className="order-card__body">
+                                    <div className="order-card__row">
+                                        <span className="label">Date</span>
+                                        <span className="value">{new Date(order.orderTime).toLocaleDateString()}</span>
+                                    </div>
+                                    <div className="order-card__row">
+                                        <span className="label">Items</span>
+                                        <span className="value">{order.itemCount} item(s)</span>
+                                    </div>
+                                    <div className="order-card__row">
+                                        <span className="label">Total</span>
+                                        <span className="value value--total">${order.orderTotal.toFixed(2)}</span>
+                                    </div>
                                 </div>
-                                <div className="order-card__row">
-                                    <span className="label">Total</span>
-                                    <span className="value value--total">${order.orderTotal.toFixed(2)}</span>
+                                <div className="order-card__footer">
+                                    <Link to={`${ROUTES.ORDERS}/${order.id}`} className="btn btn-outline btn-block">
+                                        View Details
+                                    </Link>
                                 </div>
                             </div>
-                            <div className="order-card__footer">
-                                <Link to={`/orders/${order.id}`} className="btn btn-outline btn-block">
-                                    View Details
-                                </Link>
-                            </div>
-                        </div>
-                    ))}
-                </div>
+                        ))}
+                    </div>
+
+                    <Pagination
+                        currentPage={pageIndex}
+                        totalPages={totalPages}
+                        onPageChange={setPageIndex}
+                        pageSize={pageSize}
+                        onPageSizeChange={handlePageSizeChange}
+                        pageSizeOptions={PAGE_SIZE_OPTIONS}
+                        className="orders-pagination"
+                    />
+                </>
             )}
         </div>
     );

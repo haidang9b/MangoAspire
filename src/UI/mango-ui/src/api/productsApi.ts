@@ -1,16 +1,30 @@
-import type { ResultModel } from '../types/api';
-import type { PaginatedItems } from '../types/api';
-import type { Product, CatalogType } from '../types/product';
 import type { AxiosInstance } from 'axios';
+import type { ResultModel, PaginatedItems, Product, CatalogType } from '../types';
+
+export interface CreateProductRequest {
+    name: string;
+    price: number;
+    description: string;
+    categoryName: string;
+    catalogTypeId?: number;
+    imageUrl: string;
+    stock: number;
+}
+
+export interface UpdateProductRequest extends CreateProductRequest {
+    id: string;
+}
 
 export const productsApi = (apiClient: AxiosInstance) => ({
     async fetchProducts(
-        pageIndex = 0,
+        pageIndex = 1,
         pageSize = 12,
-        catalogTypeId?: number
+        catalogTypeId?: number,
+        search?: string
     ): Promise<ResultModel<PaginatedItems<Product>>> {
         const params: Record<string, string | number> = { pageIndex, pageSize };
         if (catalogTypeId != null) params.catalogTypeId = catalogTypeId;
+        if (search) params.search = search;
 
         const { data } = await apiClient.get<ResultModel<PaginatedItems<Product>>>(
             '/api/products',
@@ -27,5 +41,20 @@ export const productsApi = (apiClient: AxiosInstance) => ({
     async fetchProductById(id: string): Promise<ResultModel<Product>> {
         const { data } = await apiClient.get<ResultModel<Product>>(`/api/products/${id}`);
         return data;
-    }
+    },
+
+    async createProduct(payload: CreateProductRequest): Promise<ResultModel<string>> {
+        const { data } = await apiClient.post<ResultModel<string>>('/api/products', payload);
+        return data;
+    },
+
+    async updateProduct(payload: UpdateProductRequest): Promise<ResultModel<boolean>> {
+        const { data } = await apiClient.put<ResultModel<boolean>>('/api/products', payload);
+        return data;
+    },
+
+    async deleteProduct(id: string): Promise<ResultModel<boolean>> {
+        const { data } = await apiClient.delete<ResultModel<boolean>>(`/api/products/${id}`);
+        return data;
+    },
 });

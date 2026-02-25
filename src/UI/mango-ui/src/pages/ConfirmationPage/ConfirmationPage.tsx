@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '../../constants';
 import './ConfirmationPage.css';
 
 export function ConfirmationPage() {
@@ -11,8 +12,8 @@ export function ConfirmationPage() {
                 <h1>Order Confirmed!</h1>
                 <p>Thank you for your order. We've received it and will start preparing it soon.</p>
                 <div className="confirmation-actions">
-                    <button className="btn-primary" onClick={() => navigate('/')}>Continue Shopping</button>
-                    <button className="btn-secondary" onClick={() => navigate('/orders')}>View My Orders</button>
+                    <button className="btn-primary" onClick={() => navigate(ROUTES.HOME)}>Continue Shopping</button>
+                    <button className="btn-secondary" onClick={() => navigate(ROUTES.ORDERS)}>View My Orders</button>
                 </div>
             </div>
         </div>

@@ -9,6 +9,8 @@ public static class WebApplicationExtensions
 {
     public static WebApplication UseApiPipeline(this WebApplication app)
     {
+        app.UseGlobalExceptionHandler();
+
         if (app.Environment.IsDevelopment())
         {
             app.UseSwagger();

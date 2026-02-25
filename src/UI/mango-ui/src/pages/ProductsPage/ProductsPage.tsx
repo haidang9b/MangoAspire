@@ -1,31 +1,28 @@
-import { useSearchParams } from 'react-router-dom';
-import { useApi } from '../../hooks/useApi';
-import { useProducts } from '../../hooks/useProducts';
-import { useFetch } from '../../hooks/useFetch';
-import { ProductCard } from '../../components/ProductCard';
-import { PageMetadata } from '../../components/PageMetadata';
-import type { CatalogType } from '../../types/product';
+import { useApi, useFetch, useProducts, useProductsSearchParams } from '../../hooks';
+import { ProductCard, SearchBox, PageMetadata, Pagination } from '../../components';
+import { CACHE_KEYS, PAGE_SIZE_OPTIONS } from '../../constants';
+import type { CatalogType } from '../../types';
 import './ProductsPage.css';
-
-const DEFAULT_PAGE_SIZE = 12;
 
 export function ProductsPage() {
     const { products: productsService } = useApi();
-    const [searchParams, setSearchParams] = useSearchParams();
-
-    // State derived from URL
-    const selectedType = searchParams.get('type') ? Number(searchParams.get('type')) : undefined;
-    const pageIndex = Math.max(0, (Number(searchParams.get('page')) || 1) - 1);
-    const pageSize = Number(searchParams.get('size')) || DEFAULT_PAGE_SIZE;
+    const { selectedType,
+        pageIndex,
+        pageSize,
+        search,
+        updateParams,
+        handleTypeChange,
+        handleSearch } = useProductsSearchParams();
 
     const { products, totalCount, isLoading, error, reload } = useProducts({
         pageIndex,
         pageSize,
         catalogTypeId: selectedType,
+        search,
     });
 
     const { data: catalogTypes } = useFetch<CatalogType[]>(
-        'catalog-types',
+        CACHE_KEYS.CATALOG_TYPES,
         async () => {
             const result = await productsService.fetchCatalogTypes();
             if (result.isError || !result.data) throw new Error('Failed to load categories.');
@@ -35,24 +32,6 @@ export function ProductsPage() {
 
     const totalPages = Math.ceil(totalCount / pageSize);
 
-    const updateParams = (updates: Record<string, string | number | undefined>) => {
-        setSearchParams(prev => {
-            const next = new URLSearchParams(prev);
-            Object.entries(updates).forEach(([key, value]) => {
-                if (value === undefined || value === '' || (key === 'page' && value === 1) || (key === 'size' && value === DEFAULT_PAGE_SIZE)) {
-                    next.delete(key);
-                } else {
-                    next.set(key, String(value));
-                }
-            });
-            return next;
-        }, { replace: true });
-    };
-
-    const handleTypeChange = (typeId?: number) => {
-        updateParams({ type: typeId, page: 1 });
-    };
-
     return (
         <div className="products-page">
             <PageMetadata
@@ -61,6 +40,13 @@ export function ProductsPage() {
             />
             {/* Controls */}
             <div className="products-page__controls">
+                <div className="products-page__search-bar">
+                    <SearchBox
+                        placeholder="Search products..."
+                        value={search}
+                        onChange={handleSearch}
+                    />
+                </div>
                 <div className="products-page__filter-group">
                     <button
                         className={`filter-chip ${selectedType == null ? 'filter-chip--active' : ''}`}
@@ -118,27 +104,15 @@ export function ProductsPage() {
             </main>
 
             {/* Pagination */}
-            {totalPages > 1 && (
-                <nav className="products-page__pagination">
-                    <button
-                        className="pagination-btn"
-                        disabled={pageIndex === 0}
-                        onClick={() => updateParams({ page: pageIndex })}
-                    >
-                        ← Prev
-                    </button>
-                    <span className="pagination-info">
-                        Page {pageIndex + 1} of {totalPages}
-                    </span>
-                    <button
-                        className="pagination-btn"
-                        disabled={pageIndex >= totalPages - 1}
-                        onClick={() => updateParams({ page: pageIndex + 2 })}
-                    >
-                        Next →
-                    </button>
-                </nav>
-            )}
+            <Pagination
+                currentPage={pageIndex}
+                totalPages={totalPages}
+                onPageChange={(page) => updateParams({ page })}
+                pageSize={pageSize}
+                onPageSizeChange={(size) => updateParams({ size, page: 1 })}
+                pageSizeOptions={PAGE_SIZE_OPTIONS}
+                className="products-page__pagination"
+            />
         </div>
     );
 }

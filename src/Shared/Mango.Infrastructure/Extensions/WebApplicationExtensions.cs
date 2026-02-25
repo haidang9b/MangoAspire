@@ -31,5 +31,11 @@ public static class WebApplicationExtensions
             app.UseMiddleware<CurrentUserContextMiddleware>();
             return app;
         }
+
+        public WebApplication UseGlobalExceptionHandler()
+        {
+            app.UseExceptionHandler();
+            return app;
+        }
     }
 }

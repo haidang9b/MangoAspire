@@ -1,7 +1,5 @@
 import {
-    createContext,
     useCallback,
-    useContext,
     useEffect,
     useState,
     type ReactNode,
@@ -9,17 +7,8 @@ import {
 import type { User } from 'oidc-client-ts';
 import { userManager } from './authConfig';
 import { userApi } from '../api/userApi';
-import type { UserInfo } from '../types/user';
-
-interface AuthContextValue {
-    user: User | null;
-    userInfo: UserInfo | null;
-    isLoading: boolean;
-    login: () => Promise<void>;
-    logout: () => Promise<void>;
-}
-
-const AuthContext = createContext<AuthContextValue | null>(null);
+import { AuthContext } from './AuthContextObject';
+import type { UserInfo } from '../types';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
@@ -38,11 +27,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         // Load existing session from storage
-        userManager.getUser().then((u) => {
-            setUser(u);
-            if (u) fetchUserInfo(u);
-            setIsLoading(false);
-        });
+        const init = async () => {
+            try {
+                const u = await userManager.getUser();
+                setUser(u);
+                if (u) {
+                    await fetchUserInfo(u);
+                }
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        init();
 
         // Keep state in sync with token renewals / expirations
         const onUserLoaded = (u: User) => {
@@ -78,10 +75,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             {children}
         </AuthContext.Provider>
     );
-}
-
-export function useAuth(): AuthContextValue {
-    const ctx = useContext(AuthContext);
-    if (!ctx) throw new Error('useAuth must be used inside <AuthProvider>');
-    return ctx;
 }

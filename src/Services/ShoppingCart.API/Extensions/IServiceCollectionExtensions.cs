@@ -1,6 +1,5 @@
 ﻿using Mango.Core.Options;
 using Mango.Infrastructure.Behaviors;
-using Mango.Infrastructure.ExceptionHandlers;
 using Mango.Infrastructure.Extensions;
 using Mango.Infrastructure.Interceptors;
 using Mediator.Extensions;
@@ -43,8 +42,7 @@ public static class IServiceCollectionExtensions
 
             services.AddEndpointsApiExplorer();
 
-            services.AddExceptionHandler<GlobalExceptionHandler>();
-            services.AddProblemDetails();
+            services.AddGlobalExceptionHandler();
 
             services.AddDocumentApi("ShoppingCart API", "v1", "ShoppingCart API");
 

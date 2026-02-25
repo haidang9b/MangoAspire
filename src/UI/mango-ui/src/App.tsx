@@ -1,12 +1,11 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './auth/AuthContext';
-import { AuthCallback } from './auth/AuthCallback';
-import { SilentCallback } from './auth/SilentCallback';
-import { ProtectedRoute } from './auth/ProtectedRoute';
+import { AuthProvider, AuthCallback, SilentCallback, ProtectedRoute, AdminRoute } from './auth';
 import { CartProvider } from './context/CartContext';
 import { Navbar } from './components/Navbar';
 import { ChatPopup } from './components/ChatPopup';
+import { ROUTES } from './constants';
 import {
+  AdminProductsPage,
   ProductsPage,
   CartPage,
   ProductDetailsPage,
@@ -29,20 +28,20 @@ function App() {
               <Navbar />
               <main className="main-content">
                 <Routes>
-                  <Route path="/callback" element={<AuthCallback />} />
-                  <Route path="/silent-callback" element={<SilentCallback />} />
-                  <Route path="/" element={<ProductsPage />} />
+                  <Route path={ROUTES.CALLBACK} element={<AuthCallback />} />
+                  <Route path={ROUTES.SILENT_CALLBACK} element={<SilentCallback />} />
+                  <Route path={ROUTES.HOME} element={<ProductsPage />} />
                   <Route
-                    path="/cart"
+                    path={ROUTES.CART}
                     element={
                       <ProtectedRoute>
                         <CartPage />
                       </ProtectedRoute>
                     }
                   />
-                  <Route path="/product/:id" element={<ProductDetailsPage />} />
+                  <Route path={ROUTES.PRODUCT_DETAILS} element={<ProductDetailsPage />} />
                   <Route
-                    path="/checkout"
+                    path={ROUTES.CHECKOUT}
                     element={
                       <ProtectedRoute>
                         <CheckoutPage />
@@ -50,7 +49,7 @@ function App() {
                     }
                   />
                   <Route
-                    path="/confirmation"
+                    path={ROUTES.CONFIRMATION}
                     element={
                       <ProtectedRoute>
                         <ConfirmationPage />
@@ -58,7 +57,7 @@ function App() {
                     }
                   />
                   <Route
-                    path="/orders"
+                    path={ROUTES.ORDERS}
                     element={
                       <ProtectedRoute>
                         <OrdersPage />
@@ -66,11 +65,19 @@ function App() {
                     }
                   />
                   <Route
-                    path="/orders/:id"
+                    path={ROUTES.ORDER_DETAILS}
                     element={
                       <ProtectedRoute>
                         <OrderDetailsPage />
                       </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path={ROUTES.ADMIN_PRODUCTS}
+                    element={
+                      <AdminRoute>
+                        <AdminProductsPage />
+                      </AdminRoute>
                     }
                   />
                 </Routes>

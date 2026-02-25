@@ -10,7 +10,7 @@ public record ProductDto
 
     public required string Description { get; set; }
 
-    public required string CategoryName { get; set; }
+    public string? CategoryName { get; set; }
 
     public int? CatalogTypeId { get; set; }
 

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { UserInfo } from '../types/user';
+import type { UserInfo } from '../types';
 
 const IDENTITY_URL = import.meta.env.VITE_IDENTITY_URL ?? 'https://localhost:8080';
 

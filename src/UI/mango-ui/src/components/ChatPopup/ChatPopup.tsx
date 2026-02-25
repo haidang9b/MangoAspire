@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useApi } from '../../hooks/useApi';
-import { useAuth } from '../../auth/AuthContext';
+import { useAuth } from '../../hooks';
 import type { ChatMessage } from '../../types/chat';
 import './ChatPopup.css';
 
@@ -19,16 +19,7 @@ export function ChatPopup() {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     };
 
-    useEffect(() => {
-        if (isOpen) {
-            scrollToBottom();
-            if (isAuthenticated && messages.length === 0) {
-                loadHistory();
-            }
-        }
-    }, [isOpen, messages]);
-
-    const loadHistory = async () => {
+    const loadHistory = useCallback(async () => {
         setHistoryLoading(true);
         const result = await chatService.fetchChatHistory();
         if (!result.isError && result.data) {
@@ -39,7 +30,21 @@ export function ChatPopup() {
             setMessages(sorted);
         }
         setHistoryLoading(false);
-    };
+    }, [chatService]);
+
+    useEffect(() => {
+        if (isOpen) {
+            scrollToBottom();
+        }
+    }, [isOpen, messages]);
+
+    useEffect(() => {
+        if (isOpen && isAuthenticated && messages.length === 0) {
+            setTimeout(() => {
+                loadHistory();
+            }, 0);
+        }
+    }, [isOpen, isAuthenticated, messages.length, loadHistory]);
 
     const handleSend = async (e: React.FormEvent) => {
         e.preventDefault();

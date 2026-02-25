@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
-import { useCart } from '../../context/CartContext';
+import { useCart } from '../../hooks';
 import { PageMetadata } from '../../components/PageMetadata';
+import { ROUTES } from '../../constants';
+import type { CartDetails } from '../../types';
 import './CartPage.css';
 
 export function CartPage() {
@@ -30,7 +32,7 @@ export function CartPage() {
                     <span style={{ fontSize: '4rem' }}>🛒</span>
                     <h2>Your cart is empty</h2>
                     <p>Go add some delicious mangoes!</p>
-                    <Link to="/" className="cart-page__btn" style={{ textDecoration: 'none', display: 'block', textAlign: 'center' }}>
+                    <Link to={ROUTES.HOME} className="cart-page__btn" style={{ textDecoration: 'none', display: 'block', textAlign: 'center' }}>
                         Back to Shop
                     </Link>
                 </div>
@@ -48,7 +50,7 @@ export function CartPage() {
 
             <div className="cart-page__container">
                 <div className="cart-page__items">
-                    {cart.cartDetails.map((item) => (
+                    {cart.cartDetails.map((item: CartDetails) => (
                         <div key={item.id} className="cart-item">
                             <div className="cart-item__image">
                                 <img src={item.product?.imageUrl || 'https://placehold.co/100x100/1e1e2e/a6adc8?text=Mango'} alt={item.product?.name} />
@@ -109,7 +111,7 @@ export function CartPage() {
                             )}
                         </div>
 
-                        <Link to="/checkout" className="cart-page__btn cart-page__btn--checkout" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Link to={ROUTES.CHECKOUT} className="cart-page__btn cart-page__btn--checkout" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             Checkout
                         </Link>
                     </div>
