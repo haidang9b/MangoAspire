@@ -1,0 +1,109 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+  
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+
+  debezium:
+    image: debezium/server:2.7.3.Final
+    depends_on:
+      - postgres
+      - rabbitmq
+
+  identity.api:
+    image: ${DOCKER_REGISTRY-}identityapi
+    build:
+      context: src
+      dockerfile: Services/Identity.API/Dockerfile
+    depends_on:
+      - postgres
+
+  products.api:
+    image: ${DOCKER_REGISTRY-}productsapi
+    build:
+      context: src
+      dockerfile: Services/Products.API/Dockerfile
+    depends_on:
+      - postgres
+      - rabbitmq
+
+  coupons.api:
+    image: ${DOCKER_REGISTRY-}couponsapi
+    build:
+      context: src
+      dockerfile: Services/Coupons.API/Dockerfile
+    depends_on:
+      - postgres
+
+  shoppingcart.api:
+    image: ${DOCKER_REGISTRY-}shoppingcartapi
+    build:
+      context: src
+      dockerfile: Services/ShoppingCart.API/Dockerfile
+    depends_on:
+      - postgres
+      - rabbitmq
+
+  orders.api:
+    image: ${DOCKER_REGISTRY-}ordersapi
+    build:
+      context: src
+      dockerfile: Services/Orders.API/Dockerfile
+    depends_on:
+      - postgres
+      - rabbitmq
+
+  payments.api:
+    image: ${DOCKER_REGISTRY-}paymentsapi
+    build:
+      context: src
+      dockerfile: Services/Payments.API/Dockerfile
+    depends_on:
+      - rabbitmq
+
+  chatagent.app:
+    image: ${DOCKER_REGISTRY-}chatagentapp
+    build:
+      context: src
+      dockerfile: Services/ChatAgent.App/Dockerfile
+    depends_on:
+      - postgres
+
+  saga.orchestrators:
+    image: ${DOCKER_REGISTRY-}sagaorchestrators
+    build:
+      context: src
+      dockerfile: Services/Mango.Orchestrators/Dockerfile
+    depends_on:
+      - postgres
+      - rabbitmq
+
+  mango.gateway:
+    image: ${DOCKER_REGISTRY-}mangogateway
+    build:
+      context: src
+      dockerfile: Gateway/Mango.Gateway/Dockerfile
+    depends_on:
+      - products.api
+      - orders.api
+      - shoppingcart.api
+      - coupons.api
+      - chatagent.app
+
+  mango.web:
+    image: ${DOCKER_REGISTRY-}mangoweb
+    build:
+      context: src
+      dockerfile: UI/Mango.Web/Dockerfile
+    depends_on:
+      - identity.api
+      - mango.gateway
+
+  mango-ui:
+    image: ${DOCKER_REGISTRY-}mangoui
+    build:
+      context: src/UI/mango-ui
+      dockerfile: Dockerfile
+    depends_on:
+      - mango.gateway
