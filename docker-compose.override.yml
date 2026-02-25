@@ -1,0 +1,132 @@
+services:
+  postgres:
+    environment:
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5435:5432"
+    volumes:
+      - ./src/Mango.AppHost/init-scripts/productdb:/docker-entrypoint-initdb.d
+      - postgres-data:/var/lib/postgresql/data
+
+  rabbitmq:
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=YourSecretPassword
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  debezium:
+    ports:
+      - "8083:8083"
+    volumes:
+      - ./src/Mango.AppHost/init-configs/products/application.properties:/debezium/conf/application.properties
+      - debezium-data:/debezium/data
+    environment:
+      - DEBEZIUM_SOURCE_DATABASE_HOSTNAME=postgres
+      - DEBEZIUM_SOURCE_DATABASE_PORT=5432
+      - DEBEZIUM_SOURCE_DATABASE_USER=postgres
+      - DEBEZIUM_SOURCE_DATABASE_PASSWORD=postgres
+      - DEBEZIUM_SOURCE_DATABASE_DBNAME=productdb
+      - DEBEZIUM_SINK_RABBITMQ_CONNECTION_HOST=rabbitmq
+      - DEBEZIUM_SINK_RABBITMQ_CONNECTION_PORT=5672
+      - DEBEZIUM_SINK_RABBITMQ_CONNECTION_USERNAME=guest
+      - DEBEZIUM_SINK_RABBITMQ_CONNECTION_PASSWORD=YourSecretPassword
+
+  identity.api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__identitydb=Host=postgres;Database=identitydb;Username=postgres;Password=postgres
+    ports:
+      - "8080:8080"
+
+  products.api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__productdb=Host=postgres;Database=productdb;Username=postgres;Password=postgres
+      - ConnectionStrings__eventbus=rabbitmq
+    ports:
+      - "7001:8080"
+
+  coupons.api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__coupondb=Host=postgres;Database=coupondb;Username=postgres;Password=postgres
+    ports:
+      - "7002:8080"
+
+  shoppingcart.api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__shoppingcartdb=Host=postgres;Database=shoppingcartdb;Username=postgres;Password=postgres
+      - ConnectionStrings__eventbus=rabbitmq
+      - ServiceUrls__IdentityApp=http://identity.api:8080
+      - ServiceUrls__CouponsApi=http://coupons.api:8080
+    ports:
+      - "7003:8080"
+
+  orders.api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__orderdb=Host=postgres;Database=orderdb;Username=postgres;Password=postgres
+      - ConnectionStrings__eventbus=rabbitmq
+      - ServiceUrls__IdentityApp=http://identity.api:8080
+    ports:
+      - "7005:8080"
+
+  payments.api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__eventbus=rabbitmq
+    ports:
+      - "7004:8080"
+
+  chatagent.app:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__chatagentdb=Host=postgres;Database=chatagentdb;Username=postgres;Password=postgres
+      - ServiceUrls__IdentityApp=http://identity.api:8080
+    ports:
+      - "7007:8080"
+
+  saga.orchestrators:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__sagaorchestratorsdb=Host=postgres;Database=sagaorchestratorsdb;Username=postgres;Password=postgres
+      - ConnectionStrings__eventbus=rabbitmq
+    ports:
+      - "7006:8080"
+
+  mango.gateway:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ReverseProxy__Clusters__products-cluster__Destinations__products-api__Address=http://products.api:8080
+      - ReverseProxy__Clusters__orders-cluster__Destinations__orders-api__Address=http://orders.api:8080
+      - ReverseProxy__Clusters__shoppingcart-cluster__Destinations__shoppingcart-api__Address=http://shoppingcart.api:8080
+      - ReverseProxy__Clusters__coupons-cluster__Destinations__coupons-api__Address=http://coupons.api:8080
+      - ReverseProxy__Clusters__chatagent-cluster__Destinations__chatagent-app__Address=http://chatagent.app:8080
+    ports:
+      - "7000:8080"
+
+  mango.web:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ServiceUrls__IdentityApp=http://identity.api:8080
+      - ServiceUrls__ProductsApi=http://mango.gateway:8080
+      - ServiceUrls__ShoppingCartApi=http://mango.gateway:8080
+      - ServiceUrls__CouponsApi=http://mango.gateway:8080
+      - ServiceUrls__OrdersApi=http://mango.gateway:8080
+      - OpenIdConnect__Authority=http://identity.api:8080
+    ports:
+      - "7188:8080"
+
+  mango-ui:
+    environment:
+      - PORT=80
+      - GATEWAY_URL=http://mango.gateway:8080
+    ports:
+      - "5173:80"
+
+volumes:
+  postgres-data:
+  debezium-data:
