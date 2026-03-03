@@ -1,7 +1,7 @@
-import { useApi, useFetch, useProducts, useProductsSearchParams } from '../../hooks';
-import { ProductCard, SearchBox, PageMetadata, Pagination } from '../../components';
-import { CACHE_KEYS, PAGE_SIZE_OPTIONS } from '../../constants';
-import type { CatalogType } from '../../types';
+import { useApi, useFetch, useProducts, useProductsSearchParams } from '@/hooks';
+import { ProductCard, SearchBox, PageMetadata, Pagination } from '@/components';
+import { CACHE_KEYS, PAGE_SIZE_OPTIONS } from '@/constants';
+import type { CatalogType } from '@/types';
 import './ProductsPage.css';
 
 export function ProductsPage() {

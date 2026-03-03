@@ -1,7 +1,7 @@
 import { useFetch } from './useFetch';
 import { useApi } from './useApi';
-import type { PaginatedItems } from '../types/api';
-import type { Product } from '../types/product';
+import type { PaginatedItems } from '@/types/api';
+import type { Product } from '@/types/product';
 
 interface UseProductsOptions {
     pageIndex: number;

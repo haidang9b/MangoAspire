@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { useApi } from '../../hooks/useApi';
-import { TextBox, SelectBox, Modal } from '../../components';
+import { useApi } from '@/hooks/useApi';
+import { TextBox, SelectBox, Modal } from '@/components';
 import { EMPTY_FORM, productToForm, type FormState } from './ProductFormHelpers';
-import type { Product, CatalogType } from '../../types/product';
-import type { CreateProductRequest, UpdateProductRequest } from '../../api/productsApi';
+import type { Product, CatalogType } from '@/types/product';
+import type { CreateProductRequest, UpdateProductRequest } from '@/api/productsApi';
 
 export interface ProductFormModalProps {
     editing: Product | null;

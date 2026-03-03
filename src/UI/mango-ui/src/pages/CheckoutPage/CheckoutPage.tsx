@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { useAuth, useCart, useApi } from '../../hooks';
-import { PageMetadata, TextBox } from '../../components';
-import { ROUTES } from '../../constants';
-import type { CheckoutRequest, CartDetails } from '../../types';
+import { useAuth, useCart, useApi } from '@/hooks';
+import { PageMetadata, TextBox } from '@/components';
+import { ROUTES } from '@/constants';
+import type { CheckoutRequest, CartDetails } from '@/types';
 import './CheckoutPage.css';
 
 interface CheckoutFormData {

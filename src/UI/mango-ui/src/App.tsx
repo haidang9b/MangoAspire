@@ -1,9 +1,9 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { AuthProvider, AuthCallback, SilentCallback, ProtectedRoute, AdminRoute } from './auth';
-import { CartProvider } from './context/CartContext';
-import { Navbar } from './components/Navbar';
-import { ChatPopup } from './components/ChatPopup';
-import { ROUTES } from './constants';
+import { AuthProvider, AuthCallback, SilentCallback, ProtectedRoute, AdminRoute } from '@/auth';
+import { CartProvider } from '@/context/CartContext';
+import { Navbar } from '@/components/Navbar';
+import { ChatPopup } from '@/components/ChatPopup';
+import { ROUTES } from '@/constants';
 import {
   AdminProductsPage,
   ProductsPage,
@@ -13,8 +13,8 @@ import {
   ConfirmationPage,
   OrdersPage,
   OrderDetailsPage
-} from './pages';
-import { ThemeProvider } from './context/ThemeContext';
+} from '@/pages';
+import { ThemeProvider } from '@/context/ThemeContext';
 import './index.css';
 import './App.css';
 

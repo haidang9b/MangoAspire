@@ -1,5 +1,5 @@
 import type { AxiosInstance } from 'axios';
-import type { ResultModel, PaginatedItems, OrderDto, OrderDetailDto } from '../types';
+import type { ResultModel, PaginatedItems, OrderDto, OrderDetailDto } from '@/types';
 
 export const ordersApi = (apiClient: AxiosInstance) => ({
     async fetchOrders(pageIndex = 1, pageSize = 10): Promise<ResultModel<PaginatedItems<OrderDto>>> {

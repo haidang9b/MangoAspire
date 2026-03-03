@@ -1,6 +1,6 @@
 import { createContext } from 'react';
 import type { User } from 'oidc-client-ts';
-import type { UserInfo } from '../types';
+import type { UserInfo } from '@/types';
 
 export interface AuthContextValue {
     user: User | null;

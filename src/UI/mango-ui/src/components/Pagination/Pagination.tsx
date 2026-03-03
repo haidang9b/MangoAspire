@@ -1,4 +1,4 @@
-import { PAGE_SIZE_OPTIONS } from '../../constants';
+import { PAGE_SIZE_OPTIONS } from '@/constants';
 import './Pagination.css';
 
 interface PaginationProps {

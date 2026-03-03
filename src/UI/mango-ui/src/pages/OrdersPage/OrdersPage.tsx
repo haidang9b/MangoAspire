@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useApi, useFetch } from '../../hooks';
-import { PageMetadata, Pagination } from '../../components';
-import { CACHE_KEYS, ORDER_STATUS, PAGE_SIZE_OPTIONS, ROUTES } from '../../constants';
-import type { OrderDto, PaginatedItems } from '../../types';
+import { useApi, useFetch } from '@/hooks';
+import { PageMetadata, Pagination } from '@/components';
+import { CACHE_KEYS, ORDER_STATUS, PAGE_SIZE_OPTIONS, ROUTES } from '@/constants';
+import type { OrderDto, PaginatedItems } from '@/types';
 import './OrdersPage.css';
 
 export function OrdersPage() {

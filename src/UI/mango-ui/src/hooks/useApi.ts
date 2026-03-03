@@ -1,10 +1,10 @@
 import { useMemo } from 'react';
 import { useApiClient } from './useApiClient';
-import { productsApi } from '../api/productsApi';
-import { cartApi } from '../api/cartApi';
-import { couponsApi } from '../api/couponsApi';
-import { createChatApi } from '../api/chat';
-import { ordersApi } from '../api/ordersApi';
+import { productsApi } from '@/api/productsApi';
+import { cartApi } from '@/api/cartApi';
+import { couponsApi } from '@/api/couponsApi';
+import { createChatApi } from '@/api/chat';
+import { ordersApi } from '@/api/ordersApi';
 
 export function useApi() {
     const apiClient = useApiClient();

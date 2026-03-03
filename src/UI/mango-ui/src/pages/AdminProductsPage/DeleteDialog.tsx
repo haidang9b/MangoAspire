@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useApi } from '../../hooks/useApi';
-import type { Product } from '../../types/product';
+import { useApi } from '@/hooks/useApi';
+import type { Product } from '@/types/product';
 
 export interface DeleteDialogProps {
     product: Product;
@@ -8,7 +8,7 @@ export interface DeleteDialogProps {
     onDeleted: () => void;
 }
 
-import { Modal } from '../../components';
+import { Modal } from '@/components';
 
 export function DeleteDialog({ product, onCancel, onDeleted }: DeleteDialogProps) {
     const { products: productsService } = useApi();

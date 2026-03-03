@@ -6,9 +6,9 @@ import {
 } from 'react';
 import type { User } from 'oidc-client-ts';
 import { userManager } from './authConfig';
-import { userApi } from '../api/userApi';
+import { userApi } from '@/api/userApi';
 import { AuthContext } from './AuthContextObject';
-import type { UserInfo } from '../types';
+import type { UserInfo } from '@/types';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(null);

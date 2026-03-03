@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useApi } from '../../hooks/useApi';
-import { useAuth } from '../../hooks';
-import type { ChatMessage } from '../../types/chat';
+import { useApi } from '@/hooks/useApi';
+import { useAuth } from '@/hooks';
+import type { ChatMessage } from '@/types/chat';
 import './ChatPopup.css';
 
 export function ChatPopup() {

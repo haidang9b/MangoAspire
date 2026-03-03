@@ -1,13 +1,13 @@
 import { useState } from 'react';
-import { useApi } from '../../hooks/useApi';
-import { useFetch } from '../../hooks/useFetch';
-import { PageMetadata, SearchBox, SelectBox, Pagination } from '../../components';
+import { useApi } from '@/hooks/useApi';
+import { useFetch } from '@/hooks/useFetch';
+import { PageMetadata, SearchBox, SelectBox, Pagination } from '@/components';
 import { ProductFormModal } from './ProductFormModal';
 import { DeleteDialog } from './DeleteDialog';
-import type { Product, CatalogType } from '../../types/product';
-import type { PaginatedItems } from '../../types/api';
-import { useProductsSearchParams } from '../../hooks';
-import { CACHE_KEYS, PAGE_SIZE_OPTIONS } from '../../constants';
+import type { Product, CatalogType } from '@/types/product';
+import type { PaginatedItems } from '@/types/api';
+import { useProductsSearchParams } from '@/hooks';
+import { CACHE_KEYS, PAGE_SIZE_OPTIONS } from '@/constants';
 
 import './AdminProductsPage.css';
 
