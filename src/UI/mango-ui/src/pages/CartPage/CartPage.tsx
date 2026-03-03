@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom';
-import { useCart } from '../../hooks';
-import { PageMetadata } from '../../components/PageMetadata';
-import { ROUTES } from '../../constants';
-import type { CartDetails } from '../../types';
+import { useCart } from '@/hooks';
+import { PageMetadata } from '@/components/PageMetadata';
+import { ROUTES } from '@/constants';
+import type { CartDetails } from '@/types';
 import './CartPage.css';
 
 export function CartPage() {

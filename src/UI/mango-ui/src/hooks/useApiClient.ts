@@ -1,6 +1,6 @@
 import axios, { type AxiosInstance } from 'axios';
 import { useMemo } from 'react';
-import { userManager } from '../auth/authConfig';
+import { userManager } from '@/auth/authConfig';
 
 const BASE_URL = import.meta.env.VITE_GATEWAY_URL ?? 'https://localhost:7000';
 

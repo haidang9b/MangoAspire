@@ -4,8 +4,8 @@ import {
     useCallback,
     type ReactNode,
 } from 'react';
-import type { Cart } from '../types';
-import { useApi, useAuth } from '../hooks';
+import type { Cart } from '@/types';
+import { useApi, useAuth } from '@/hooks';
 import { CartContext } from './CartContextObject';
 
 export function CartProvider({ children }: { children: ReactNode }) {

@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { useApi, useFetch, useAuth, useCart } from '../../hooks';
-import { PageMetadata } from '../../components';
-import { CACHE_KEYS, ROUTES } from '../../constants';
-import type { Product } from '../../types';
+import { useApi, useFetch, useAuth, useCart } from '@/hooks';
+import { PageMetadata } from '@/components';
+import { CACHE_KEYS, ROUTES } from '@/constants';
+import type { Product } from '@/types';
 import './ProductDetailsPage.css';
 
 export function ProductDetailsPage() {

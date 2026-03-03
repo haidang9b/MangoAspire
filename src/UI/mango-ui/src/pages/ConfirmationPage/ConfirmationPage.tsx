@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { ROUTES } from '../../constants';
+import { ROUTES } from '@/constants';
 import './ConfirmationPage.css';
 
 export function ConfirmationPage() {

@@ -1,7 +1,7 @@
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth, useCart, useTheme } from '../../hooks';
-import { ROUTES } from '../../constants';
-import { Roles, hasRole } from '../../constants/roles';
+import { useAuth, useCart, useTheme } from '@/hooks';
+import { ROUTES } from '@/constants';
+import { Roles, hasRole } from '@/constants/roles';
 import './Navbar.css';
 
 export function Navbar() {

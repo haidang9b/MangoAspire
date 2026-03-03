@@ -1,5 +1,5 @@
 import { useSearchParams } from "react-router-dom";
-import { DEFAULT_PAGE_SIZE } from '../constants';
+import { DEFAULT_PAGE_SIZE } from '@/constants';
 
 export const useProductsSearchParams = () => {
     const [searchParams, setSearchParams] = useSearchParams();
