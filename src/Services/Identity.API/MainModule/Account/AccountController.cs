@@ -60,7 +60,6 @@ public class AccountController : Controller
         _roleManager = roleManager;
         _userManager = userManager;
         _handlerProvider = handlerProvider;
-        _handlerProvider = handlerProvider;
 
     }
 
@@ -465,7 +464,7 @@ public class AccountController : Controller
     {
         var vm = new LogoutViewModel { LogoutId = logoutId, ShowLogoutPrompt = AccountOptions.ShowLogoutPrompt };
 
-        if (User?.Identity.IsAuthenticated != true)
+        if (User?.Identity?.IsAuthenticated != true)
         {
             // if the user is not authenticated, then just show logged out page
             vm.ShowLogoutPrompt = false;
@@ -499,7 +498,7 @@ public class AccountController : Controller
             LogoutId = logoutId
         };
 
-        if (User?.Identity.IsAuthenticated == true)
+        if (User?.Identity?.IsAuthenticated == true)
         {
             var idp = User.FindFirst(JwtClaimTypes.IdentityProvider)?.Value;
             if (idp != null && idp != IdentityServerConstants.LocalIdentityProvider)

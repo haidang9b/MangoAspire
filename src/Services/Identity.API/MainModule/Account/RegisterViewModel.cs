@@ -5,17 +5,17 @@ namespace Identity.API.MainModule.Account;
 public class RegisterViewModel
 {
     [Required]
-    public string Username { get; set; }
+    public string Username { get; set; } = string.Empty;
 
     [Required]
-    public string Email { get; set; }
-    public string FirstName { get; set; }
-    public string LastName { get; set; }
+    public string Email { get; set; } = string.Empty;
+    public string? FirstName { get; set; }
+    public string? LastName { get; set; }
     [Required]
-    public string Password { get; set; }
+    public string Password { get; set; } = string.Empty;
 
-    public string ReturnUrl { get; set; }
-    public string RoleName { get; set; }
+    public string? ReturnUrl { get; set; }
+    public string? RoleName { get; set; }
 
     public bool AllowRememberLogin { get; set; } = true;
     public bool EnableLocalLogin { get; set; } = true;
@@ -24,7 +24,7 @@ public class RegisterViewModel
     public IEnumerable<ExternalProvider> VisibleExternalProviders => ExternalProviders.Where(x => !String.IsNullOrWhiteSpace(x.DisplayName));
 
     public bool IsExternalLoginOnly => EnableLocalLogin == false && ExternalProviders?.Count() == 1;
-    public string ExternalLoginScheme => IsExternalLoginOnly ? ExternalProviders?.SingleOrDefault()?.AuthenticationScheme : null;
+    public string? ExternalLoginScheme => IsExternalLoginOnly ? ExternalProviders?.SingleOrDefault()?.AuthenticationScheme : null;
 
 
 }
