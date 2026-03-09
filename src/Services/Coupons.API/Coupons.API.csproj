@@ -22,4 +22,8 @@
     <ProjectReference Include="..\..\Shared\Mango.ServiceDefaults\Mango.ServiceDefaults.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="$(MSBuildProjectName).Tests" />
+  </ItemGroup>
+
 </Project>

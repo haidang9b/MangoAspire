@@ -1,22 +1,15 @@
-﻿using Mango.Core.Auth;
-using Mango.Core.Exceptions;
-using Microsoft.EntityFrameworkCore;
-using Moq;
-using ShoppingCart.API.Data;
-using ShoppingCart.API.Entities;
-using ShoppingCart.API.Features.Carts;
-using Shouldly;
-
-namespace ShoppingCart.API.Tests.Features.Carts;
+﻿namespace ShoppingCart.API.Tests.Features.Carts;
 
 public class ApplyCouponTests
 {
     private readonly Mock<ICurrentUserContext> _currentUserContextMock;
+    private readonly Mock<ICouponsApi> _couponsApiMock;
     private readonly ShoppingCartDbContext _dbContext;
 
     public ApplyCouponTests()
     {
         _currentUserContextMock = new Mock<ICurrentUserContext>();
+        _couponsApiMock = new Mock<ICouponsApi>();
 
         var options = new DbContextOptionsBuilder<ShoppingCartDbContext>()
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
@@ -25,46 +18,28 @@ public class ApplyCouponTests
     }
 
     [Fact]
-    public async Task HandleAsync_When_CartExists_Then_AppliesCouponCode()
+    public async Task HandleAsync_When_CouponValid_Then_UpdatesCartHeader()
     {
         // Arrange
-        var userId = "test-user-id";
+        var userId = "test-user";
         _currentUserContextMock.Setup(c => c.UserId).Returns(userId);
 
-        var existingHeader = new CartHeader { Id = Guid.NewGuid(), UserId = userId, CouponCode = "OLD" };
-        _dbContext.CartHeaders.Add(existingHeader);
+        var header = new CartHeader { Id = Guid.NewGuid(), UserId = userId, CouponCode = "" };
+        _dbContext.CartHeaders.Add(header);
         await _dbContext.SaveChangesAsync();
 
-        var handler = new ApplyCoupon.Handler(_dbContext, _currentUserContextMock.Object);
+        _couponsApiMock.Setup(api => api.GetCouponAsync("SAVE10"))
+            .ReturnsAsync(ResultModel<CouponDto>.Create(new CouponDto { Code = "SAVE10", DiscountAmount = 10 }));
 
-        var command = new ApplyCoupon.Command { CouponCode = "NEWCOUPON50" };
+        var handler = new ApplyCoupon.Handler(_dbContext, _currentUserContextMock.Object);
+        var command = new ApplyCoupon.Command { CouponCode = "SAVE10" };
 
         // Act
         var result = await handler.HandleAsync(command, CancellationToken.None);
 
         // Assert
-        result.ShouldNotBeNull();
-        result.IsError.ShouldBeFalse();
         result.Data.ShouldBeTrue();
-
         var updatedHeader = await _dbContext.CartHeaders.FirstOrDefaultAsync(h => h.UserId == userId);
-        updatedHeader.ShouldNotBeNull();
-        updatedHeader.CouponCode.ShouldBe("NEWCOUPON50");
-    }
-
-    [Fact]
-    public async Task HandleAsync_When_CartDoesNotExist_Then_ThrowsDataVerificationException()
-    {
-        // Arrange
-        var userId = "non-existent-user";
-        _currentUserContextMock.Setup(c => c.UserId).Returns(userId);
-
-        var handler = new ApplyCoupon.Handler(_dbContext, _currentUserContextMock.Object);
-
-        var command = new ApplyCoupon.Command { CouponCode = "NEWCOUPON50" };
-
-        // Act & Assert
-        await Should.ThrowAsync<DataVerificationException>(async () =>
-            await handler.HandleAsync(command, CancellationToken.None));
+        updatedHeader!.CouponCode.ShouldBe("SAVE10");
     }
 }

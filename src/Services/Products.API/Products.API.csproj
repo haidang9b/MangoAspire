@@ -25,4 +25,9 @@
     <ProjectReference Include="..\..\Shared\Mango.ServiceDefaults\Mango.ServiceDefaults.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="$(MSBuildProjectName).Tests" />
+    <InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
+  </ItemGroup>
+
 </Project>

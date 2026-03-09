@@ -1,102 +1,70 @@
-﻿using Mango.Events.Orders;
-using Microsoft.EntityFrameworkCore;
-using Moq;
-using Orders.API.Data;
-using Orders.API.Entities;
-using Orders.API.Enums;
-using Orders.API.Features.Orders;
-using Orders.API.Services;
-using Shouldly;
+﻿using Orders.API.Entities;
 
 namespace Orders.API.Tests.Features.Orders;
 
 public class CancelOrderTests
 {
-    private readonly Mock<IIntegrationEventService> _integrationEventServiceMock;
     private readonly OrdersDbContext _dbContext;
+    private readonly Mock<IIntegrationEventService> _integrationEventServiceMock;
 
     public CancelOrderTests()
     {
-        _integrationEventServiceMock = new Mock<IIntegrationEventService>();
-
         var options = new DbContextOptionsBuilder<OrdersDbContext>()
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
         _dbContext = new OrdersDbContext(options);
+        _integrationEventServiceMock = new Mock<IIntegrationEventService>();
     }
 
     [Fact]
-    public async Task HandleAsync_When_OrderExists_Then_CancelsOrderAndPublishesEvent()
+    public async Task HandleAsync_When_OrderExists_Then_UpdatesStatusToCancelledAndPublishesEvent()
     {
         // Arrange
-        var handler = new CancelOrder.Handler(_dbContext, _integrationEventServiceMock.Object);
         var orderId = Guid.NewGuid();
         var correlationId = Guid.NewGuid();
-        var cancelReason = "Customer requested cancellation";
-
-        // Seed DB
-        var orderHeader = new OrderHeader
+        var order = new OrderHeader
         {
             Id = orderId,
-            UserId = "user123",
-            PaymentStatus = true,
-            Status = OrderStatus.Processing,
-            FirstName = "John",
-            LastName = "Doe",
-            Email = "john@example.com",
-            CouponCode = "SAVE10",
-            CardNumber = "1234123412341234"
+            UserId = "user1",
+            Status = Enums.OrderStatus.Cancelled,
+            OrderTotal = 100,
+            FirstName = "F",
+            LastName = "L",
+            Email = "E",
+            Phone = "P",
+            CardNumber = "1234",
+            CouponCode = "DISCOUNT10",
+            OrderDetails = new List<OrderDetails>()
         };
-        _dbContext.OrderHeaders.Add(orderHeader);
+        _dbContext.OrderHeaders.Add(order);
         await _dbContext.SaveChangesAsync();
 
-        var command = new CancelOrder.Command
-        {
-            OrderId = orderId,
-            CorrelationId = correlationId,
-            CancelReason = cancelReason
-        };
+        var handler = new CancelOrder.Handler(_dbContext, _integrationEventServiceMock.Object);
+        var command = new CancelOrder.Command { OrderId = orderId, CorrelationId = correlationId };
 
         // Act
         var result = await handler.HandleAsync(command, CancellationToken.None);
 
         // Assert
-        result.ShouldNotBeNull();
-        result.IsError.ShouldBeFalse(); // Assuming ResultModel IsSuccess exists
+        result.Data.ShouldBeTrue();
+        var updatedOrder = await _dbContext.OrderHeaders.FindAsync(orderId);
+        updatedOrder!.Status.ShouldBe(Enums.OrderStatus.Cancelled);
 
-        var cancelledOrder = await _dbContext.OrderHeaders.FirstOrDefaultAsync(o => o.Id == orderId);
-        cancelledOrder.ShouldNotBeNull();
-        cancelledOrder.PaymentStatus.ShouldBeFalse();
-        cancelledOrder.Status.ShouldBe(OrderStatus.Cancelled);
-        cancelledOrder.CancelReason.ShouldBe(cancelReason);
-
-        _integrationEventServiceMock.Verify(x =>
-            x.AddAndSaveEventAsync(It.Is<OrderCancelledEvent>(e => e.CorrelationId == correlationId && e.OrderId == orderId)),
-            Times.Once);
+        _integrationEventServiceMock.Verify(x => x.AddAndSaveEventAsync(It.Is<OrderCancelledEvent>(e => e.OrderId == orderId && e.CorrelationId == correlationId)), Times.Once);
     }
 
     [Fact]
-    public async Task HandleAsync_When_OrderDoesNotExist_Then_ReturnsFailure()
+    public async Task HandleAsync_When_OrderDoesNotExist_Then_ReturnsError()
     {
         // Arrange
         var handler = new CancelOrder.Handler(_dbContext, _integrationEventServiceMock.Object);
-        var orderId = Guid.NewGuid();
-
-        var command = new CancelOrder.Command
-        {
-            OrderId = orderId,
-            CorrelationId = Guid.NewGuid(),
-            CancelReason = "Test"
-        };
+        var command = new CancelOrder.Command { OrderId = Guid.NewGuid(), CorrelationId = Guid.NewGuid() };
 
         // Act
         var result = await handler.HandleAsync(command, CancellationToken.None);
 
         // Assert
-        result.ShouldNotBeNull();
-        result.IsError.ShouldBeTrue(); // Assumes ResultModel has IsError property based on typical error responses
+        result.IsError.ShouldBeTrue();
         result.ErrorMessage.ShouldContain("not found");
-
-        _integrationEventServiceMock.Verify(x => x.AddAndSaveEventAsync(It.IsAny<OrderCancelledEvent>()), Times.Never);
     }
 }

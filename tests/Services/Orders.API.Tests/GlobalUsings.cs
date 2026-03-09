@@ -1,0 +1,9 @@
+﻿global using Mango.Events.Orders;
+global using Microsoft.EntityFrameworkCore;
+global using Microsoft.Extensions.Logging;
+global using Microsoft.Extensions.Logging.Abstractions;
+global using Moq;
+global using Orders.API.Data;
+global using Orders.API.Features.Orders;
+global using Orders.API.Services;
+global using Shouldly;

@@ -1,17 +1,4 @@
-﻿using EventBus.Abstractions;
-using Mango.Core.Auth;
-using Mango.Core.Domain;
-using Mango.Core.Exceptions;
-using Mango.Events.Orders;
-using Mango.RestApis.Requests;
-using Microsoft.EntityFrameworkCore;
-using Moq;
-using ShoppingCart.API.Data;
-using ShoppingCart.API.Dtos;
-using ShoppingCart.API.Entities;
-using ShoppingCart.API.Features.Carts.Checkout;
-using ShoppingCart.API.Services;
-using Shouldly;
+﻿using ShoppingCart.API.Features.Carts.Checkout;
 
 namespace ShoppingCart.API.Tests.Features.Carts;
 
@@ -127,7 +114,7 @@ public class CheckoutHandlerTests
                 CouponCode = "SAVE10",
                 CardNumber = "4321432143214321",
                 CVV = "321",
-                DiscountTotal = 10m, // Matches coupon
+                DiscountTotal = 10m,
                 ExpiryMonthYear = "11/25",
                 OrderTotal = 90.00m,
                 PickupDate = DateTime.Now.AddDays(2)
@@ -178,7 +165,7 @@ public class CheckoutHandlerTests
                 CVV = "1",
                 ExpiryMonthYear = "1",
                 CouponCode = "SAVE10",
-                DiscountTotal = 10m // User submitted 10m, but API says 15m
+                DiscountTotal = 10m
             }
         };
 

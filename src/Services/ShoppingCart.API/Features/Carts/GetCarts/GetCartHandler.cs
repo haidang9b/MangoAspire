@@ -17,49 +17,44 @@ public class GetCartHandler
     {
         public async Task<ResultModel<GetCardResponse>> HandleAsync(GetCardQuery request, CancellationToken cancellationToken)
         {
-            var cartHeaderDto = await dbContext.CartHeaders
+            var cartDto = await dbContext.CartHeaders
                 .AsNoTracking()
                 .Where(u => u.UserId == request.UserId)
-                .Select(u => new GetCardResponse.CartHeaderResponseDto
+                .Select(u => new GetCardResponse
                 {
-                    Id = u.Id,
-                    UserId = u.UserId,
-                    CouponCode = u.CouponCode
-                })
+                    CartHeader = new GetCardResponse.CartHeaderResponseDto
+                    {
+                        Id = u.Id,
+                        UserId = u.UserId,
+                        CouponCode = u.CouponCode
+                    },
+                    CartDetails = u.CartDetails.Select(d => new GetCardResponse.CartDetailsResponseDto
+                    {
+
+                        Id = d.Id,
+                        CartHeaderId = d.CartHeaderId,
+                        ProductId = d.ProductId,
+                        Count = d.Count,
+                        Product = new GetCardResponse.ProductResponseDto
+                        {
+                            Id = d.Product.Id,
+                            Name = d.Product.Name,
+                            Price = d.Product.Price,
+                            Description = d.Product.Description,
+                            CategoryName = d.Product.CategoryName,
+                            ImageUrl = d.Product.ImageUrl
+                        },
+                        CartHeader = null!
+                    }).ToList()
+                }
+                )
                 .FirstOrDefaultAsync(cancellationToken);
 
-            if (cartHeaderDto == null)
+            if (cartDto == null)
             {
                 return ResultModel<GetCardResponse>.Create(null);
             }
 
-            var cartDetailsDto = await dbContext.CartDetails
-               .AsNoTracking()
-               .Where(u => u.CartHeaderId == cartHeaderDto.Id)
-               .Select(d => new GetCardResponse.CartDetailsResponseDto
-               {
-                   Id = d.Id,
-                   CartHeaderId = d.CartHeaderId,
-                   ProductId = d.ProductId,
-                   Count = d.Count,
-                   Product = new GetCardResponse.ProductResponseDto
-                   {
-                       Id = d.Product.Id,
-                       Name = d.Product.Name,
-                       Price = d.Product.Price,
-                       Description = d.Product.Description,
-                       CategoryName = d.Product.CategoryName,
-                       ImageUrl = d.Product.ImageUrl
-                   },
-                   CartHeader = null!
-               })
-               .ToListAsync(cancellationToken);
-
-            var cartDto = new GetCardResponse
-            {
-                CartHeader = cartHeaderDto,
-                CartDetails = cartDetailsDto
-            };
 
             return ResultModel<GetCardResponse>.Create(cartDto);
         }

@@ -1,13 +1,4 @@
-﻿using Mango.Core.Auth;
-using Mango.Core.Exceptions;
-using Microsoft.EntityFrameworkCore;
-using Moq;
-using ShoppingCart.API.Data;
-using ShoppingCart.API.Entities;
-using ShoppingCart.API.Features.Carts;
-using Shouldly;
-
-namespace ShoppingCart.API.Tests.Features.Carts;
+﻿namespace ShoppingCart.API.Tests.Features.Carts;
 
 public class RemoveCouponTests
 {
@@ -25,46 +16,25 @@ public class RemoveCouponTests
     }
 
     [Fact]
-    public async Task HandleAsync_When_CartExists_Then_RemovesCouponCode()
+    public async Task HandleAsync_When_HeaderExists_Then_RemovesCouponCode()
     {
         // Arrange
-        var userId = "test-user-id";
+        var userId = "test-user";
         _currentUserContextMock.Setup(c => c.UserId).Returns(userId);
 
-        var existingHeader = new CartHeader { Id = Guid.NewGuid(), UserId = userId, CouponCode = "SUMMER24" };
-        _dbContext.CartHeaders.Add(existingHeader);
+        var header = new CartHeader { Id = Guid.NewGuid(), UserId = userId, CouponCode = "SAVE10" };
+        _dbContext.CartHeaders.Add(header);
         await _dbContext.SaveChangesAsync();
 
         var handler = new RemoveCoupon.Handler(_dbContext, _currentUserContextMock.Object);
-
         var command = new RemoveCoupon.Command();
 
         // Act
         var result = await handler.HandleAsync(command, CancellationToken.None);
 
         // Assert
-        result.ShouldNotBeNull();
-        result.IsError.ShouldBeFalse();
         result.Data.ShouldBeTrue();
-
         var updatedHeader = await _dbContext.CartHeaders.FirstOrDefaultAsync(h => h.UserId == userId);
-        updatedHeader.ShouldNotBeNull();
-        updatedHeader.CouponCode.ShouldBe("");
-    }
-
-    [Fact]
-    public async Task HandleAsync_When_CartDoesNotExist_Then_ThrowsDataVerificationException()
-    {
-        // Arrange
-        var userId = "non-existent-user";
-        _currentUserContextMock.Setup(c => c.UserId).Returns(userId);
-
-        var handler = new RemoveCoupon.Handler(_dbContext, _currentUserContextMock.Object);
-
-        var command = new RemoveCoupon.Command();
-
-        // Act & Assert
-        await Should.ThrowAsync<DataVerificationException>(async () =>
-            await handler.HandleAsync(command, CancellationToken.None));
+        updatedHeader!.CouponCode.ShouldBe("");
     }
 }

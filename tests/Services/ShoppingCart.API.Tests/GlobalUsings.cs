@@ -1,0 +1,14 @@
+﻿global using EventBus.Abstractions;
+global using Mango.Core.Auth;
+global using Mango.Core.Domain;
+global using Mango.Core.Exceptions;
+global using Mango.Events.Orders;
+global using Mango.RestApis.Requests;
+global using Microsoft.EntityFrameworkCore;
+global using Moq;
+global using ShoppingCart.API.Data;
+global using ShoppingCart.API.Dtos;
+global using ShoppingCart.API.Entities;
+global using ShoppingCart.API.Features.Carts;
+global using ShoppingCart.API.Services;
+global using Shouldly;

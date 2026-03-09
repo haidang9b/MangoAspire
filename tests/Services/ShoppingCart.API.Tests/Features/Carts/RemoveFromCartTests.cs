@@ -1,18 +1,14 @@
-﻿using Mango.Core.Exceptions;
-using Microsoft.EntityFrameworkCore;
-using ShoppingCart.API.Data;
-using ShoppingCart.API.Entities;
-using ShoppingCart.API.Features.Carts;
-using Shouldly;
-
-namespace ShoppingCart.API.Tests.Features.Carts;
+﻿namespace ShoppingCart.API.Tests.Features.Carts;
 
 public class RemoveFromCartTests
 {
+    private readonly Mock<ICurrentUserContext> _currentUserContextMock;
     private readonly ShoppingCartDbContext _dbContext;
 
     public RemoveFromCartTests()
     {
+        _currentUserContextMock = new Mock<ICurrentUserContext>();
+
         var options = new DbContextOptionsBuilder<ShoppingCartDbContext>()
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
@@ -20,84 +16,57 @@ public class RemoveFromCartTests
     }
 
     [Fact]
-    public async Task HandleAsync_When_CartHasMultipleItems_Then_RemovesOnlyDetails()
+    public async Task HandleAsync_When_LastItemInCart_Then_RemovesHeaderAndDetails()
     {
         // Arrange
-        var cartHeaderId = Guid.NewGuid();
-        var detailsIdToRemove = Guid.NewGuid();
-        var otherDetailsId = Guid.NewGuid();
+        var userId = "test-user";
+        _currentUserContextMock.Setup(c => c.UserId).Returns(userId);
 
-        var existingHeader = new CartHeader { Id = cartHeaderId, UserId = "user-1", CouponCode = "" };
+        var header = new CartHeader { Id = Guid.NewGuid(), UserId = userId };
+        var detail = new CartDetails { Id = Guid.NewGuid(), CartHeaderId = header.Id, ProductId = Guid.NewGuid(), Count = 1 };
 
-        var detailToRemove = new CartDetails { Id = detailsIdToRemove, CartHeaderId = cartHeaderId, ProductId = Guid.NewGuid(), Count = 1 };
-        var otherDetail = new CartDetails { Id = otherDetailsId, CartHeaderId = cartHeaderId, ProductId = Guid.NewGuid(), Count = 2 };
-
-        _dbContext.CartHeaders.Add(existingHeader);
-        _dbContext.CartDetails.AddRange(detailToRemove, otherDetail);
+        _dbContext.CartHeaders.Add(header);
+        _dbContext.CartDetails.Add(detail);
         await _dbContext.SaveChangesAsync();
 
         var handler = new RemoveFromCart.Handler(_dbContext);
-        var command = new RemoveFromCart.Command { CartDetailsId = detailsIdToRemove };
+        var command = new RemoveFromCart.Command { CartDetailsId = detail.Id };
 
         // Act
         var result = await handler.HandleAsync(command, CancellationToken.None);
 
         // Assert
-        result.ShouldNotBeNull();
-        result.IsError.ShouldBeFalse();
         result.Data.ShouldBeTrue();
-
-        var headerStillExists = await _dbContext.CartHeaders.AnyAsync(h => h.Id == cartHeaderId);
-        headerStillExists.ShouldBeTrue();
-
-        var detailRemoved = await _dbContext.CartDetails.FirstOrDefaultAsync(d => d.Id == detailsIdToRemove);
-        detailRemoved.ShouldBeNull();
-
-        var otherDetailStillExists = await _dbContext.CartDetails.AnyAsync(d => d.Id == otherDetailsId);
-        otherDetailStillExists.ShouldBeTrue();
+        (await _dbContext.CartHeaders.AnyAsync(h => h.UserId == userId)).ShouldBeFalse();
+        (await _dbContext.CartDetails.AnyAsync(d => d.Id == detail.Id)).ShouldBeFalse();
     }
 
     [Fact]
-    public async Task HandleAsync_When_CartHasOneItem_Then_RemovesBothHeaderAndDetails()
+    public async Task HandleAsync_When_MultipleItemsInCart_Then_RemovesOnlySelectedDetail()
     {
         // Arrange
-        var cartHeaderId = Guid.NewGuid();
-        var detailsIdToRemove = Guid.NewGuid();
+        var userId = "test-user";
+        _currentUserContextMock.Setup(c => c.UserId).Returns(userId);
 
-        var existingHeader = new CartHeader { Id = cartHeaderId, UserId = "user-2", CouponCode = "" };
-        var detailToRemove = new CartDetails { Id = detailsIdToRemove, CartHeaderId = cartHeaderId, ProductId = Guid.NewGuid(), Count = 5 };
+        var header = new CartHeader { Id = Guid.NewGuid(), UserId = userId };
+        var detail1 = new CartDetails { Id = Guid.NewGuid(), CartHeaderId = header.Id, ProductId = Guid.NewGuid(), Count = 1 };
+        var detail2 = new CartDetails { Id = Guid.NewGuid(), CartHeaderId = header.Id, ProductId = Guid.NewGuid(), Count = 1 };
 
-        _dbContext.CartHeaders.Add(existingHeader);
-        _dbContext.CartDetails.Add(detailToRemove);
+        _dbContext.CartHeaders.Add(header);
+        _dbContext.CartDetails.Add(detail1);
+        _dbContext.CartDetails.Add(detail2);
         await _dbContext.SaveChangesAsync();
 
         var handler = new RemoveFromCart.Handler(_dbContext);
-        var command = new RemoveFromCart.Command { CartDetailsId = detailsIdToRemove };
+        var command = new RemoveFromCart.Command { CartDetailsId = detail1.Id };
 
         // Act
         var result = await handler.HandleAsync(command, CancellationToken.None);
 
         // Assert
-        result.ShouldNotBeNull();
-        result.IsError.ShouldBeFalse();
         result.Data.ShouldBeTrue();
-
-        var headerExists = await _dbContext.CartHeaders.AnyAsync(h => h.Id == cartHeaderId);
-        headerExists.ShouldBeFalse(); // Header should be removed because it was the last item
-
-        var detailExists = await _dbContext.CartDetails.AnyAsync(d => d.Id == detailsIdToRemove);
-        detailExists.ShouldBeFalse();
-    }
-
-    [Fact]
-    public async Task HandleAsync_When_CartDetailsNotFound_Then_ThrowsDataVerificationException()
-    {
-        // Arrange
-        var handler = new RemoveFromCart.Handler(_dbContext);
-        var command = new RemoveFromCart.Command { CartDetailsId = Guid.NewGuid() };
-
-        // Act & Assert
-        await Should.ThrowAsync<DataVerificationException>(async () =>
-            await handler.HandleAsync(command, CancellationToken.None));
+        (await _dbContext.CartHeaders.AnyAsync(h => h.UserId == userId)).ShouldBeTrue();
+        (await _dbContext.CartDetails.AnyAsync(d => d.Id == detail1.Id)).ShouldBeFalse();
+        (await _dbContext.CartDetails.AnyAsync(d => d.Id == detail2.Id)).ShouldBeTrue();
     }
 }

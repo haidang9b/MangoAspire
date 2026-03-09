@@ -1,11 +1,3 @@
-using Mango.Events.Orders;
-using Microsoft.EntityFrameworkCore;
-using Moq;
-using Orders.API.Data;
-using Orders.API.Features.Orders;
-using Orders.API.Services;
-using Shouldly;
-
 namespace Orders.API.Tests.Features.Orders;
 
 public class CreateOrderTests
@@ -45,7 +37,7 @@ public class CreateOrderTests
             ExpiryMonthYear = "12/25",
             Phone = "1234567890",
             PickupDate = DateTime.Now.AddDays(1),
-            CartDetails = new System.Collections.Generic.List<CartCheckedOutEvent.CartDetailsDto>
+            CartDetails = new List<CartCheckedOutEvent.CartDetailsDto>
             {
                 new CartCheckedOutEvent.CartDetailsDto { ProductId = Guid.NewGuid(), Count = 2 }
             }
@@ -62,8 +54,8 @@ public class CreateOrderTests
 
         // Assert
         result.ShouldNotBeNull();
-        result.IsError.ShouldBeFalse(); // Assumes ResultModel has IsSuccess
-        result.Data.ShouldNotBe(Guid.Empty); // Assumes ResultModel holds Data in Value
+        result.IsError.ShouldBeFalse();
+        result.Data.ShouldNotBe(Guid.Empty);
 
         var savedOrder = await _dbContext.OrderHeaders.Include(x => x.OrderDetails).FirstOrDefaultAsync(x => x.Id == result.Data);
         savedOrder.ShouldNotBeNull();

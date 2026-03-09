@@ -1,0 +1,12 @@
+﻿global using EventBus.Abstractions;
+global using Mango.Events.Orders;
+global using Microsoft.EntityFrameworkCore;
+global using Microsoft.Extensions.Caching.Memory;
+global using Microsoft.Extensions.Logging;
+global using Microsoft.Extensions.Logging.Abstractions;
+global using Moq;
+global using Products.API.Data;
+global using Products.API.Dtos;
+global using Products.API.Entities;
+global using Products.API.Features.Products;
+global using Shouldly;

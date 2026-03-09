@@ -1,13 +1,4 @@
-﻿using Mango.Core.Auth;
-using Mango.RestApis.Requests;
-using Microsoft.EntityFrameworkCore;
-using Moq;
-using ShoppingCart.API.Data;
-using ShoppingCart.API.Entities;
-using ShoppingCart.API.Features.Carts;
-using Shouldly;
-
-namespace ShoppingCart.API.Tests.Features.Carts;
+﻿namespace ShoppingCart.API.Tests.Features.Carts;
 
 public class UpsertCartTests
 {
@@ -46,7 +37,7 @@ public class UpsertCartTests
 
         // Assert
         result.ShouldNotBeNull();
-        result.IsError.ShouldBeFalse(); // Assumes ResultModel has IsError
+        result.IsError.ShouldBeFalse();
         result.Data.ShouldBeTrue();
 
         var savedHeader = await _dbContext.CartHeaders.FirstOrDefaultAsync(h => h.UserId == userId);
