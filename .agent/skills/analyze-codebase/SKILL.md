@@ -17,7 +17,7 @@ description: Analyzes the .NET 10 backend and React frontend to provide a techni
 
 4. **Summarize Patterns:**
    - What is the error handling strategy? (e.g., Result Pattern, Global Exception Middleware).
-   - What is the testing strategy? (xUnit, Vitest).
+   - What is the testing strategy? (xUnit).
 
 # Output Format
 - **Architecture Overview:** High-level summary of the folder structure.
