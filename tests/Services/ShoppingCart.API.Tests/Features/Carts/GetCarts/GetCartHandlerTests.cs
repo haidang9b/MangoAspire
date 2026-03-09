@@ -1,8 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using ShoppingCart.API.Data;
-using ShoppingCart.API.Entities;
-using ShoppingCart.API.Features.Carts.GetCarts;
-using Shouldly;
+﻿using ShoppingCart.API.Features.Carts.GetCarts;
 
 namespace ShoppingCart.API.Tests.Features.Carts;
 
@@ -43,7 +39,7 @@ public class GetCartHandlerTests
         _dbContext.CartDetails.Add(existingDetail);
         await _dbContext.SaveChangesAsync();
 
-        var handler = new GetCartHandler.Handler(_dbContext);
+        var handler = new GetCartHandler(_dbContext);
         var query = new GetCardQuery(userId);
 
         // Act
@@ -74,7 +70,7 @@ public class GetCartHandlerTests
     public async Task HandleAsync_When_CartDoesNotExist_Then_ReturnsNull()
     {
         // Arrange
-        var handler = new GetCartHandler.Handler(_dbContext);
+        var handler = new GetCartHandler(_dbContext);
         var query = new GetCardQuery("nonexistent-user");
 
         // Act
