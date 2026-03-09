@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="Moq" />
+    <PackageReference Include="Shouldly" />
+    <PackageReference Include="MockQueryable.Moq" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\Services\ShoppingCart.API\ShoppingCart.API.csproj" />
+    <ProjectReference Include="..\..\..\src\Shared\Mango.RestApis\Mango.RestApis.csproj" />
+    <ProjectReference Include="..\..\..\src\EventBus\EventBus.csproj" />
+    <ProjectReference Include="..\..\..\src\Shared\Mango.Events\Mango.Events.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Features\Carts\GetCarts\" />
+  </ItemGroup>
+
+</Project>
