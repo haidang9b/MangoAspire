@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useApi, useFetch } from '@/hooks';
+import { useQuery } from '@tanstack/react-query';
+import { useApi } from '@/hooks';
 import { PageMetadata, Pagination } from '@/components';
-import { CACHE_KEYS, ORDER_STATUS, PAGE_SIZE_OPTIONS, ROUTES } from '@/constants';
+import { QUERY_KEYS, ORDER_STATUS, PAGE_SIZE_OPTIONS, ROUTES } from '@/constants';
 import type { OrderDto, PaginatedItems } from '@/types';
 import './OrdersPage.css';
 
@@ -11,14 +12,14 @@ export function OrdersPage() {
     const [pageIndex, setPageIndex] = useState(1);
     const [pageSize, setPageSize] = useState(10);
 
-    const { data: orders, isLoading, error } = useFetch<PaginatedItems<OrderDto>>(
-        `${CACHE_KEYS.ORDERS}-${pageIndex}-${pageSize}`,
-        async () => {
+    const { data: orders, isPending: isLoading, error } = useQuery<PaginatedItems<OrderDto>>({
+        queryKey: QUERY_KEYS.orders({ pageIndex, pageSize }),
+        queryFn: async () => {
             const result = await ordersService.fetchOrders(pageIndex, pageSize);
             if (result.isError) throw new Error(result.errorMessage || 'Failed to load orders');
             return result.data;
-        }
-    );
+        },
+    });
 
     const totalCount = orders?.count ?? 0;
     const totalPages = Math.ceil(totalCount / pageSize);
@@ -51,7 +52,7 @@ export function OrdersPage() {
                 <p className="page-subtitle">Track and manage your order history</p>
             </header>
 
-            {error && <div className="error-banner mb-4">{error}</div>}
+            {error && <div className="error-banner mb-4">{error.message}</div>}
 
             {!orders || orders.data.length === 0 ? (
                 <div className="empty-state">

@@ -1,11 +1,9 @@
-import { useApi, useFetch, useProducts, useProductsSearchParams } from '@/hooks';
+import { useProducts, useProductsSearchParams, useCatalogTypes } from '@/hooks';
 import { ProductCard, SearchBox, PageMetadata, Pagination } from '@/components';
-import { CACHE_KEYS, PAGE_SIZE_OPTIONS } from '@/constants';
-import type { CatalogType } from '@/types';
+import { PAGE_SIZE_OPTIONS } from '@/constants';
 import './ProductsPage.css';
 
 export function ProductsPage() {
-    const { products: productsService } = useApi();
     const { selectedType,
         pageIndex,
         pageSize,
@@ -14,23 +12,17 @@ export function ProductsPage() {
         handleTypeChange,
         handleSearch } = useProductsSearchParams();
 
-    const { products, totalCount, isLoading, error, reload } = useProducts({
+    const { products, totalCount, isLoading, error, refetch } = useProducts({
         pageIndex,
         pageSize,
         catalogTypeId: selectedType,
         search,
     });
 
-    const { data: catalogTypes } = useFetch<CatalogType[]>(
-        CACHE_KEYS.CATALOG_TYPES,
-        async () => {
-            const result = await productsService.fetchCatalogTypes();
-            if (result.isError || !result.data) throw new Error('Failed to load categories.');
-            return result.data;
-        }
-    );
+    const { catalogTypes } = useCatalogTypes();
 
     const totalPages = Math.ceil(totalCount / pageSize);
+
 
     return (
         <div className="products-page">
@@ -54,7 +46,7 @@ export function ProductsPage() {
                     >
                         All
                     </button>
-                    {(catalogTypes ?? []).map((ct) => (
+                    {catalogTypes.map((ct) => (
                         <button
                             key={ct.id}
                             className={`filter-chip ${selectedType === ct.id ? 'filter-chip--active' : ''}`}
@@ -83,7 +75,7 @@ export function ProductsPage() {
                     <div className="products-page__error">
                         <span>⚠️</span>
                         <p>{error}</p>
-                        <button onClick={reload}>Retry</button>
+                        <button onClick={() => refetch()}>Retry</button>
                     </div>
                 )}
 

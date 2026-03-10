@@ -10,6 +10,10 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
+    // Force a single React instance — prevents "Invalid hook call" errors
+    // that occur when pnpm symlinks cause packages to resolve React from
+    // different node_modules paths (e.g. @tanstack/react-query-devtools).
+    dedupe: ['react', 'react-dom'],
   },
   server: {
     port: parseInt(process.env.PORT ?? '5173'),
@@ -25,3 +29,4 @@ export default defineConfig({
     },
   },
 })
+

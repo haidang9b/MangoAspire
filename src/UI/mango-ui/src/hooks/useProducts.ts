@@ -1,6 +1,6 @@
-import { useFetch } from './useFetch';
+import { useQuery } from '@tanstack/react-query';
 import { useApi } from './useApi';
-import type { PaginatedItems } from '@/types/api';
+import { QUERY_KEYS } from '@/constants';
 import type { Product } from '@/types/product';
 
 interface UseProductsOptions {
@@ -14,34 +14,34 @@ interface UseProductsResult {
     products: Product[];
     totalCount: number;
     isLoading: boolean;
+    isError: boolean;
     error: string | null;
-    reload: () => void;
+    refetch: () => Promise<unknown>;
 }
 
 export function useProducts({
     pageIndex,
     pageSize = 12,
     catalogTypeId,
-    search
+    search,
 }: UseProductsOptions): UseProductsResult {
     const { products: productsService } = useApi();
 
-    const cacheKey = `products-${pageIndex}-${pageSize}-${catalogTypeId ?? 'all'}-${search ?? ''}`;
-
-    const { data, isLoading, error, reload } = useFetch<PaginatedItems<Product>>(
-        cacheKey,
-        async () => {
+    const { data, isPending, error, refetch } = useQuery({
+        queryKey: QUERY_KEYS.products({ pageIndex, pageSize, catalogTypeId, search }),
+        queryFn: async () => {
             const result = await productsService.fetchProducts(pageIndex, pageSize, catalogTypeId, search);
             if (result.isError || !result.data) throw new Error(result.errorMessage ?? 'Failed to load products.');
             return result.data;
-        }
-    );
+        },
+    });
 
     return {
         products: data?.data ?? [],
         totalCount: data?.count ?? 0,
-        isLoading,
-        error,
-        reload,
+        isLoading: isPending,
+        isError: !!error,
+        error: error ? error.message : null,
+        refetch,
     };
 }

@@ -8,6 +8,7 @@ export interface PagedModel<T> {
     pageIndex: number;
     pageSize: number;
     count: number;
+    hasNextPage: boolean;
     data: T[];
 }
 

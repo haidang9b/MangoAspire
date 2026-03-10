@@ -1,6 +1,7 @@
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { useApi, useFetch } from '@/hooks';
-import { CACHE_KEYS, ROUTES } from '@/constants';
+import { useQuery } from '@tanstack/react-query';
+import { useApi } from '@/hooks';
+import { QUERY_KEYS, ROUTES } from '@/constants';
 import type { OrderDetailDto } from '@/types';
 import './OrderDetailsPage.css';
 
@@ -9,20 +10,20 @@ export function OrderDetailsPage() {
     const navigate = useNavigate();
     const { orders: ordersService } = useApi();
 
-    const { data: order, isLoading, error } = useFetch<OrderDetailDto>(
-        `${CACHE_KEYS.ORDER_DETAILS}-${id}`,
-        async () => {
+    const { data: order, isPending: isLoading, error } = useQuery<OrderDetailDto>({
+        queryKey: QUERY_KEYS.orderDetail(id),
+        queryFn: async () => {
             const result = await ordersService.fetchOrderById(id!);
             if (result.isError) throw new Error(result.errorMessage || 'Failed to load order details');
             return result.data;
         },
-        { enabled: !!id }
-    );
+        enabled: !!id,
+    });
 
     if (isLoading) return <div className="page-loading">Fetching details...</div>;
     if (error || !order) return (
         <div className="container py-5 text-center">
-            <div className="error-banner mb-4">{error || 'Order not found'}</div>
+            <div className="error-banner mb-4">{error?.message || 'Order not found'}</div>
             <button onClick={() => navigate(ROUTES.ORDERS)} className="btn btn-primary">Back to Orders</button>
         </div>
     );

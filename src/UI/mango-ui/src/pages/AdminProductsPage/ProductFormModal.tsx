@@ -1,3 +1,4 @@
+import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useApi } from '@/hooks/useApi';
 import { TextBox, SelectBox, Modal } from '@/components';
@@ -15,12 +16,10 @@ export interface ProductFormModalProps {
 export function ProductFormModal({ editing, catalogTypes, onClose, onSaved }: ProductFormModalProps) {
     const { products: productsService } = useApi();
     const [form, setForm] = useState<FormState>(editing ? productToForm(editing) : EMPTY_FORM);
-    const [saving, setSaving] = useState(false);
-    const [error, setError] = useState<string | null>(null);
 
-    const set = (field: keyof FormState) => (
-        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-    ) => setForm(prev => ({ ...prev, [field]: e.target.value }));
+    const set = (field: keyof FormState) =>
+        (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
+            setForm(prev => ({ ...prev, [field]: e.target.value }));
 
     const handleCatalogTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const val = e.target.value;
@@ -32,40 +31,30 @@ export function ProductFormModal({ editing, catalogTypes, onClose, onSaved }: Pr
         }));
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const { mutate: save, isPending: saving, error: mutationError } = useMutation({
+        mutationFn: async () => {
+            const base: CreateProductRequest = {
+                name: form.name.trim(),
+                price: parseFloat(form.price),
+                description: form.description.trim(),
+                categoryName: form.categoryName.trim(),
+                catalogTypeId: form.catalogTypeId ? parseInt(form.catalogTypeId) : undefined,
+                imageUrl: form.imageUrl.trim(),
+                stock: parseInt(form.stock),
+            };
+
+            const result = editing
+                ? await productsService.updateProduct({ ...base, id: editing.id } as UpdateProductRequest)
+                : await productsService.createProduct(base);
+
+            if (result.isError) throw new Error(result.errorMessage ?? 'An error occurred.');
+        },
+        onSuccess: onSaved,
+    });
+
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        setSaving(true);
-        setError(null);
-
-        const base: CreateProductRequest = {
-            name: form.name.trim(),
-            price: parseFloat(form.price),
-            description: form.description.trim(),
-            categoryName: form.categoryName.trim(),
-            catalogTypeId: form.catalogTypeId ? parseInt(form.catalogTypeId) : undefined,
-            imageUrl: form.imageUrl.trim(),
-            stock: parseInt(form.stock),
-        };
-
-        try {
-            let result;
-            if (editing) {
-                const payload: UpdateProductRequest = { ...base, id: editing.id };
-                result = await productsService.updateProduct(payload);
-            } else {
-                result = await productsService.createProduct(base);
-            }
-
-            if (result.isError) {
-                setError(result.errorMessage ?? 'An error occurred.');
-            } else {
-                onSaved();
-            }
-        } catch {
-            setError('Could not connect to the server.');
-        } finally {
-            setSaving(false);
-        }
+        save();
     };
 
     return (
@@ -84,56 +73,21 @@ export function ProductFormModal({ editing, catalogTypes, onClose, onSaved }: Pr
         >
             <form id="product-form" className="modal__form" onSubmit={handleSubmit}>
                 <div className="form-row">
-                    <TextBox
-                        id="pm-name"
-                        label="Name *"
-                        value={form.name}
-                        onChange={set('name')}
-                        required
-                    />
-                    <TextBox
-                        id="pm-price"
-                        label="Price *"
-                        type="number"
-                        step="0.01"
-                        min="0.01"
-                        value={form.price}
-                        onChange={set('price')}
-                        required
-                    />
+                    <TextBox id="pm-name" label="Name *" value={form.name} onChange={set('name')} required />
+                    <TextBox id="pm-price" label="Price *" type="number" step="0.01" min="0.01" value={form.price} onChange={set('price')} required />
                 </div>
 
                 <div className="form-row">
-                    <SelectBox
-                        id="pm-type"
-                        label="Category"
-                        value={form.catalogTypeId}
-                        onChange={handleCatalogTypeChange}
-                    >
+                    <SelectBox id="pm-type" label="Category" value={form.catalogTypeId} onChange={handleCatalogTypeChange}>
                         <option value="">— select —</option>
                         {catalogTypes.map(ct => (
                             <option key={ct.id} value={ct.id}>{ct.type}</option>
                         ))}
                     </SelectBox>
-
-                    <TextBox
-                        id="pm-stock"
-                        label="Stock *"
-                        type="number"
-                        min="0"
-                        value={form.stock}
-                        onChange={set('stock')}
-                        required
-                    />
+                    <TextBox id="pm-stock" label="Stock *" type="number" min="0" value={form.stock} onChange={set('stock')} required />
                 </div>
 
-                <TextBox
-                    id="pm-imageUrl"
-                    label="Image URL *"
-                    value={form.imageUrl}
-                    onChange={set('imageUrl')}
-                    required
-                />
+                <TextBox id="pm-imageUrl" label="Image URL *" value={form.imageUrl} onChange={set('imageUrl')} required />
 
                 <div className="form-group">
                     <label htmlFor="pm-description">Description *</label>
@@ -147,7 +101,7 @@ export function ProductFormModal({ editing, catalogTypes, onClose, onSaved }: Pr
                     />
                 </div>
 
-                {error && <p className="form-error">⚠️ {error}</p>}
+                {mutationError && <p className="form-error">⚠️ {mutationError.message}</p>}
             </form>
         </Modal>
     );

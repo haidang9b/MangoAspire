@@ -84,8 +84,96 @@
 
 ---
 
+## React Frontend — Data Fetching (added: 2026-03-10, ticket: UI-REDESIGN-002)
+
+### Library
+- **TanStack Query v5** (`@tanstack/react-query`) — replaces custom `useFetch` hook
+- `useFetch.ts` is **kept** in `src/hooks/` for potential future use but no longer used by any page
+
+### QueryClient Setup
+- Singleton defined in `src/lib/queryClient.ts`
+- Defaults: `staleTime: 60_000`, `retry: 1`, `refetchOnWindowFocus: true`
+- `QueryClientProvider` wraps `<App />` in `main.tsx`
+
+### Query Key Conventions — `QUERY_KEYS` in `src/constants/cacheKeys.ts`
+- All keys are **typed tuple factory functions** (not plain strings)
+- Hierarchical structure: base key → derived keys → enables partial invalidation
+  ```ts
+  productsAll:   ()        => ['products']
+  products:      (filters) => [...productsAll(), filters]
+  productDetail: (id)      => [...productsAll(), 'detail', id]
+  ```
+- **Never use magic strings** in `invalidateQueries` — always use `QUERY_KEYS.*`
+- Broad invalidation after mutations: `queryClient.invalidateQueries({ queryKey: QUERY_KEYS.productsAll() })`
+
+### Domain Hooks Pattern
+- Wrap repeated `useQuery` calls in named domain hooks (same pattern as `useProducts`):
+  - `useProducts(filters)` — paginated product list
+  - `useCatalogTypes()` — shared between `ProductsPage` and `AdminProductsPage`; TanStack deduplicates the network request automatically
+- Return `{ data, isLoading, error, refetch }` — keep surface stable
+
+### `reload` → `refetch`
+- All hooks now return `refetch` (not `reload`) to match TanStack Query conventions
+
+### AdminProductsPage — Mutation + Invalidation
+- **Old pattern (removed):** `tick` state + manual `reload()` call after save/delete — caused double-fetch
+- **New pattern:** `await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.productsAll() })` — automatically refetches all active product queries
+
+### Vite Config Gotcha — pnpm + React
+- Add `resolve.dedupe: ['react', 'react-dom']` to `vite.config.ts`
+- **Without this**, pnpm's symlink isolation can cause Vite to bundle two React instances → "Invalid hook call" runtime crash
+
+### DevTools Warning
+- `@tanstack/react-query-devtools` **cannot be used** with this pnpm setup
+- It bundles its own copy of `@tanstack/react-query`, causing a context mismatch ("No QueryClient set")
+- Package has been removed from `package.json`
+
+---
+
+## App.tsx Structure (added: 2026-03-10)
+
+`App.tsx` is split into three focused files:
+- `src/router/AppRouter.tsx` — all `<Routes>` definitions, grouped by access level (public / protected / admin)
+- `src/providers/AppProviders.tsx` — context provider composition: `ThemeProvider → AuthProvider → CartProvider`
+- `App.tsx` — slim shell combining `AppProviders + BrowserRouter + AppRouter`
+
+---
+
+## ChatAgent API & ChatPopup (added: 2026-03-10)
+
+### API Response Shape
+- `GET /api/chat-histories?pageSize=5&pageIndex=1` — implemented in `ChatRoute.cs`
+- Returns **`PaginatedItems<ChatMessageDto>` directly** (`Results.Ok(result)`) — **NOT wrapped in `ResultModel`**
+- Use `PagedModel<ChatMessage>` as the Axios response type, **not** `ResultModel<PagedModel<ChatMessage>>`
+- `ChatMessageDto` fields are PascalCase from C#: `Id`, `Role` (enum: 0=System, 1=User, 2=Assistant), `Content`, `CreatedAt`
+- `PagedModel<T>` has: `pageIndex`, `pageSize`, `count`, `hasNextPage` (authoritative — use directly, don't recompute), `data: T[]`
+
+### `src/types/api.ts` — `PagedModel<T>`
+```ts
+interface PagedModel<T> { pageIndex; pageSize; count; hasNextPage: boolean; data: T[]; }
+type PaginatedItems<T> = PagedModel<T>;  // alias kept for compatibility
+```
+
+### `src/api/chat.ts`
+- Default `pageSize = 5` (set by user)
+- `mapRole()` converts numeric enum (0/1/2) or string → `ChatMessageRole`
+- `normalizeMessage()` typed as `ChatMessage → ChatMessage` (no `Record<string,unknown>`)
+- `hasMore` in `ChatHistoryPage` = `paged.hasNextPage` (straight from BE)
+- `sendMessage()` uses raw `fetch` (not Axios) for SSE/streaming with `IAsyncEnumerable<PromptResponseDto>`
+
+### ChatPopup infinite scroll pattern
+- **Scroll up** triggers load of older messages (higher `pageIndex`)
+- `IntersectionObserver` watches a `topSentinelRef` div at the top of `.chat-messages`
+- Scroll position preserved after prepend: `container.scrollTop = container.scrollHeight - prevScrollHeight`
+- State fully resets when popup is closed (`initialLoadDone` ref prevents double-load)
+- Error state exposed in UI (`historyError`) — no silent failures
+- Typing indicator: `isStreamingPlaceholder = isSending && role === 'Assistant' && content === ''`
+
+---
+
 ## Tickets Completed
 
 | Ticket | Title | Date |
 |---|---|---|
 | UI-REDESIGN-001 | Emerald Calm UI Redesign — Identity.API & Mango.Web | 2026-03-10 |
+| UI-REDESIGN-002 | Migrate useFetch → TanStack Query (React frontend) | 2026-03-10 |

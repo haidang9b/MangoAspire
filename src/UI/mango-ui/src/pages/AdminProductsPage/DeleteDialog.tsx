@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
 import { useApi } from '@/hooks/useApi';
+import { Modal } from '@/components';
 import type { Product } from '@/types/product';
 
 export interface DeleteDialogProps {
@@ -8,25 +9,16 @@ export interface DeleteDialogProps {
     onDeleted: () => void;
 }
 
-import { Modal } from '@/components';
-
 export function DeleteDialog({ product, onCancel, onDeleted }: DeleteDialogProps) {
     const { products: productsService } = useApi();
-    const [deleting, setDeleting] = useState(false);
-    const [error, setError] = useState<string | null>(null);
 
-    const handleDelete = async () => {
-        setDeleting(true);
-        try {
+    const { mutate: doDelete, isPending: deleting, error } = useMutation({
+        mutationFn: async () => {
             const result = await productsService.deleteProduct(product.id);
-            if (result.isError) setError(result.errorMessage ?? 'Failed to delete.');
-            else onDeleted();
-        } catch {
-            setError('Could not connect to the server.');
-        } finally {
-            setDeleting(false);
-        }
-    };
+            if (result.isError) throw new Error(result.errorMessage ?? 'Failed to delete.');
+        },
+        onSuccess: onDeleted,
+    });
 
     return (
         <Modal
@@ -37,7 +29,7 @@ export function DeleteDialog({ product, onCancel, onDeleted }: DeleteDialogProps
             footer={
                 <>
                     <button className="btn-secondary" onClick={onCancel}>Cancel</button>
-                    <button className="btn-danger" onClick={handleDelete} disabled={deleting}>
+                    <button className="btn-danger" onClick={() => doDelete()} disabled={deleting}>
                         {deleting ? 'Deleting…' : 'Delete'}
                     </button>
                 </>
@@ -46,7 +38,7 @@ export function DeleteDialog({ product, onCancel, onDeleted }: DeleteDialogProps
             <p className="delete-confirm__msg">
                 Are you sure you want to delete <strong>{product.name}</strong>? This cannot be undone.
             </p>
-            {error && <p className="form-error">⚠️ {error}</p>}
+            {error && <p className="form-error">⚠️ {error.message}</p>}
         </Modal>
     );
 }

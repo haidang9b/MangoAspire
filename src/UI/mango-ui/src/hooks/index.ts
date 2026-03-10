@@ -2,6 +2,7 @@ export { useApi } from './useApi';
 export { useApiClient } from './useApiClient';
 export { useFetch } from './useFetch';
 export { useProducts } from './useProducts';
+export { useCatalogTypes } from './useCatalogTypes';
 export { useProductsSearchParams } from './useProductsSearchParams';
 export { useTheme } from './useTheme';
 export { useCart } from './useCart';

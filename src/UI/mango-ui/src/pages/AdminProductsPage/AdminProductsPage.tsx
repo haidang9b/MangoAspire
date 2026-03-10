@@ -1,13 +1,13 @@
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useApi } from '@/hooks/useApi';
-import { useFetch } from '@/hooks/useFetch';
+import { useCatalogTypes, useProductsSearchParams } from '@/hooks';
 import { PageMetadata, SearchBox, SelectBox, Pagination } from '@/components';
 import { ProductFormModal } from './ProductFormModal';
 import { DeleteDialog } from './DeleteDialog';
-import type { Product, CatalogType } from '@/types/product';
+import type { Product } from '@/types/product';
 import type { PaginatedItems } from '@/types/api';
-import { useProductsSearchParams } from '@/hooks';
-import { CACHE_KEYS, PAGE_SIZE_OPTIONS } from '@/constants';
+import { QUERY_KEYS, PAGE_SIZE_OPTIONS } from '@/constants';
 
 import './AdminProductsPage.css';
 
@@ -20,46 +20,40 @@ export function AdminProductsPage() {
         handleTypeChange,
         handleSearch } = useProductsSearchParams();
     const { products: productsService } = useApi();
-    const [tick, setTick] = useState(0);
+    const queryClient = useQueryClient();
+
     const [showForm, setShowForm] = useState(false);
     const [editing, setEditing] = useState<Product | null>(null);
     const [deleting, setDeleting] = useState<Product | null>(null);
 
-    const cacheKey = `admin-products-${pageIndex}-${pageSize}-${selectedType}-${search}-${tick}`;
-
-    const { data: productPage, isLoading, error, reload } = useFetch<PaginatedItems<Product>>(
-        cacheKey,
-        async () => {
+    const { data: productPage, isPending: isLoading, error, refetch } = useQuery<PaginatedItems<Product>>({
+        queryKey: QUERY_KEYS.products({ pageIndex, pageSize, catalogTypeId: selectedType, search }),
+        queryFn: async () => {
             const result = await productsService.fetchProducts(pageIndex, pageSize, selectedType, search);
             if (result.isError || !result.data) throw new Error(result.errorMessage ?? 'Failed to load products.');
             return result.data;
-        }
-    );
+        },
+    });
 
-    const { data: catalogTypes } = useFetch<CatalogType[]>(
-        CACHE_KEYS.CATALOG_TYPES,
-        async () => {
-            const result = await productsService.fetchCatalogTypes();
-            if (result.isError || !result.data) throw new Error('Failed to load categories.');
-            return result.data;
-        }
-    );
+    const { catalogTypes } = useCatalogTypes();
 
     const allProducts = productPage?.data ?? [];
     const totalCount = productPage?.count ?? 0;
     const totalPages = Math.ceil(totalCount / pageSize);
 
-    const handleSaved = () => {
+    // After a mutation, invalidate all product queries using the typed base key
+    const invalidateProducts = () =>
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.productsAll() });
+
+    const handleSaved = async () => {
         setShowForm(false);
         setEditing(null);
-        setTick(t => t + 1);
-        reload();
+        await invalidateProducts();
     };
 
-    const handleDeleted = () => {
+    const handleDeleted = async () => {
         setDeleting(null);
-        setTick(t => t + 1);
-        reload();
+        await invalidateProducts();
     };
 
     const openCreate = () => { setEditing(null); setShowForm(true); };
@@ -108,8 +102,8 @@ export function AdminProductsPage() {
             {!isLoading && error && (
                 <div className="admin-error">
                     <span>⚠️</span>
-                    <p>{error}</p>
-                    <button className="btn-secondary" onClick={reload}>Retry</button>
+                    <p>{error.message}</p>
+                    <button className="btn-secondary" onClick={() => refetch()}>Retry</button>
                 </div>
             )}
 

@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { useApi, useFetch, useAuth, useCart } from '@/hooks';
+import { useQuery } from '@tanstack/react-query';
+import { useApi, useAuth, useCart } from '@/hooks';
 import { PageMetadata } from '@/components';
-import { CACHE_KEYS, ROUTES } from '@/constants';
+import { QUERY_KEYS, ROUTES } from '@/constants';
 import type { Product } from '@/types';
 import './ProductDetailsPage.css';
 
@@ -16,15 +17,15 @@ export function ProductDetailsPage() {
     const [quantity, setQuantity] = useState(1);
     const [adding, setAdding] = useState(false);
 
-    const { data: product, isLoading, error } = useFetch<Product>(
-        `${CACHE_KEYS.PRODUCTS}-${id}`,
-        async () => {
+    const { data: product, isPending: isLoading, error } = useQuery<Product>({
+        queryKey: QUERY_KEYS.productDetail(id),
+        queryFn: async () => {
             const result = await productsService.fetchProductById(id!);
             if (result.isError || !result.data) throw new Error(result.errorMessage ?? 'Product not found.');
             return result.data;
         },
-        { enabled: !!id }
-    );
+        enabled: !!id,
+    });
 
     const handleAddToCart = async () => {
         if (!product) return;
@@ -45,7 +46,7 @@ export function ProductDetailsPage() {
     if (error || !product) {
         return (
             <div className="product-details-page product-details-page--error">
-                <p>⚠️ {error || 'Product not found'}</p>
+                <p>⚠️ {error?.message || 'Product not found'}</p>
                 <button onClick={() => navigate(ROUTES.HOME)}>Back to Shop</button>
             </div>
         );
