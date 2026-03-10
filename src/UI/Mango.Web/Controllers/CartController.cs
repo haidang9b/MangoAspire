@@ -78,6 +78,18 @@ public class CartController : Controller
     [Authorize]
     public async Task<IActionResult> Checkout(CartDto cartDto)
     {
+        // Server-side guard: pick-up time must be in the future
+        if (cartDto.CartHeader.PickupDateTime <= DateTime.Now)
+        {
+            ModelState.AddModelError(
+                "CartHeader.PickupDateTime",
+                "Pick-up time must be a future date and time.");
+            TempData["Error"] = "Please select a valid future pick-up time.";
+            var freshCart = await LoadCartDtoBasedOnLoggedInUser();
+            freshCart.CartHeader.PickupDateTime = cartDto.CartHeader.PickupDateTime;
+            return View(freshCart);
+        }
+
         try
         {
             var response = await _cartApi.CheckoutAsync(new CheckoutRequestDto
@@ -95,7 +107,6 @@ public class CartController : Controller
                 DiscountTotal = cartDto.CartHeader.DiscountTotal,
                 Phone = cartDto.CartHeader.Phone
             });
-
 
             if (response.IsError)
             {

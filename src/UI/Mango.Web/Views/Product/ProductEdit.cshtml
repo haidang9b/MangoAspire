@@ -1,82 +1,90 @@
 ﻿@model Mango.Web.Models.ProductDto
 
+@{
+    ViewData["Title"] = "Edit Product";
+}
 
-<form asp-action="ProductEdit">
-    <input asp-for="Id" hidden/>
-    <br />
-    <div class="container border p-3">
-        <h1 class="text-info">Edit Product</h1>
-
-        <hr />
-        <div class="row">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="col-2">
-                <label asp-for="Name" class="control-label pt-2" style="font-size:20px;"></label>
-            </div>
-            <div class="col-10 pb-3">
-                <input asp-for="Name" class="form-control" />
-                <span asp-validation-for="Name" class="text-danger"></span>
-            </div>
-            <div class="col-2">
-                <label asp-for="CatalogTypeId" class="control-label pt-2" style="font-size:20px;"></label>
-            </div>
-            <div class="col-10 pb-3">
-                <select asp-for="CatalogTypeId" asp-items="ViewBag.CatalogTypes" class="form-select">
-                    <option value="">-- Select Category --</option>
-                </select>
-                <span asp-validation-for="CatalogTypeId" class="text-danger"></span>
-            </div>
-            <div class="col-2">
-                <label asp-for="CategoryName" class="control-label pt-2" style="font-size:20px;"></label>
-            </div>
-            <div class="col-10 pb-3">
-                <input asp-for="CategoryName" class="form-control" />
-                <span asp-validation-for="CategoryName" class="text-danger"></span>
-            </div>
-            <div class="col-2">
-                <label asp-for="Description" class="control-label pt-2" style="font-size:20px;"></label>
-            </div>
-            <div class="col-10 pb-3">
-                <textarea asp-for="Description" class="form-control" rows="5"></textarea>
-                <span asp-validation-for="Description" class="text-danger"></span>
-            </div>
-            <div class="col-2">
-                <label asp-for="ImageUrl" class="control-label pt-2" style="font-size:20px;"></label>
-            </div>
-            <div class="col-10 pb-3">
-                <input asp-for="ImageUrl" class="form-control" />
-                <span asp-validation-for="ImageUrl" class="text-danger"></span>
-            </div>
-            <div class="col-2">
-                <label asp-for="Price" class="control-label pt-2" style="font-size:20px;"></label>
-            </div>
-            <div class="col-10 pb-3">
-                <input asp-for="Price" class="form-control" />
-                <span asp-validation-for="Price" class="text-danger"></span>
-            </div>
-            <div class="col-2">
-                <label asp-for="Stock" class="control-label pt-2" style="font-size:20px;"></label>
-            </div>
-            <div class="col-10 pb-3">
-                <input asp-for="Stock" type="number" min="0" class="form-control" />
-                <span asp-validation-for="Stock" class="text-danger"></span>
-            </div>
-
-            <div class="col-5 offset-2">
-
-                <a asp-action="ProductIndex" class="btn-primary btn form-control ">Back to List</a>
-            </div>
-            <div class="col-5">
-                <input type="submit" value="Update" class="btn btn-info form-control" />
-
-            </div>
-
-        </div>
-
-        <div>
-        </div>
+<div class="mango-page-header mango-fade-in">
+    <h1 class="mango-page-header__title">Edit Product</h1>
+    <div class="mango-page-header__actions">
+        <a asp-action="ProductIndex" class="mango-btn mango-btn--secondary mango-btn--sm">
+            <i class="fa-solid fa-arrow-left"></i> Back to List
+        </a>
     </div>
-</form>
+</div>
+
+<div class="form-card mango-fade-in">
+    <div class="form-card__header">
+        <h2 class="form-card__title"><i class="fa-solid fa-pen-to-square ec-text-primary"></i> Edit Details</h2>
+    </div>
+    <div class="form-card__body">
+        <form asp-action="ProductEdit" novalidate>
+            <input asp-for="Id" hidden />
+            <div asp-validation-summary="ModelOnly" class="mango-alert mango-alert--danger mb-3" role="alert"></div>
+
+            <div class="mango-form__group">
+                <label class="mango-form__label" asp-for="Name">Product Name</label>
+                <input asp-for="Name" class="mango-form__input" />
+                <span asp-validation-for="Name" class="text-danger" style="font-size:0.8rem;"></span>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="mango-form__group">
+                        <label class="mango-form__label" asp-for="CatalogTypeId">Category</label>
+                        <select asp-for="CatalogTypeId" asp-items="ViewBag.CatalogTypes" class="mango-form__select">
+                            <option value="">-- Select Category --</option>
+                        </select>
+                        <span asp-validation-for="CatalogTypeId" class="text-danger" style="font-size:0.8rem;"></span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mango-form__group">
+                        <label class="mango-form__label" asp-for="CategoryName">Category Display Name</label>
+                        <input asp-for="CategoryName" class="mango-form__input" />
+                        <span asp-validation-for="CategoryName" class="text-danger" style="font-size:0.8rem;"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mango-form__group">
+                <label class="mango-form__label" asp-for="Description">Description</label>
+                <textarea asp-for="Description" class="mango-form__textarea" rows="4"></textarea>
+                <span asp-validation-for="Description" class="text-danger" style="font-size:0.8rem;"></span>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="mango-form__group">
+                        <label class="mango-form__label" asp-for="Price">Price</label>
+                        <input asp-for="Price" class="mango-form__input" />
+                        <span asp-validation-for="Price" class="text-danger" style="font-size:0.8rem;"></span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mango-form__group">
+                        <label class="mango-form__label" asp-for="Stock">Stock</label>
+                        <input asp-for="Stock" type="number" min="0" class="mango-form__input" />
+                        <span asp-validation-for="Stock" class="text-danger" style="font-size:0.8rem;"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mango-form__group">
+                <label class="mango-form__label" asp-for="ImageUrl">Image URL</label>
+                <input asp-for="ImageUrl" class="mango-form__input" />
+                <span asp-validation-for="ImageUrl" class="text-danger" style="font-size:0.8rem;"></span>
+            </div>
+
+            <div class="form-card__footer">
+                <button type="submit" class="mango-btn mango-btn--primary">
+                    <i class="fa-solid fa-floppy-disk"></i> Save Changes
+                </button>
+                <a asp-action="ProductIndex" class="mango-btn mango-btn--secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

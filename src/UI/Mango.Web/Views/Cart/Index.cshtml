@@ -1,107 +1,126 @@
 ﻿@model CartDto
+
+@{
+    ViewData["Title"] = "Shopping Cart";
+}
+
 @if (Model != null && Model.CartHeader != null && Model.CartDetails.Any())
 {
     <form method="post">
-        <br />
         <input asp-for="CartHeader.UserId" hidden />
         <input asp-for="CartHeader.Id" hidden />
-        <div class="">
-            <div class="card border mt-4 container">
-                <div class="card-header bg-dark text-light ml-0 row ">
-                    <div class="col-6">
-                        <i class="fa fa-shopping-cart"></i> &nbsp;
-                        Shopping Cart
-                    </div>
-                    <div class="col-6 text-end">
-                        <a asp-action="Index" asp-controller="Home" class="btn btn-outline-warning btn-sm">Continue Shopping</a>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class=" d-none d-lg-block">
-                        <div class="row text-info">
-                            <div class="col-lg-2">
-                            </div>
-                            <div class="col-lg-5">
-                                Product Details
-                            </div>
-                            <div class="col-lg-2">
-                                Price
-                            </div>
-                            <div class="col-lg-2">
-                                Count
-                            </div>
-                            <div class="col-lg-1">
-                            </div>
-                        </div>
-                    </div>
 
-                    <hr />
-                    @foreach(var cartObj in Model.CartDetails)
+        <div class="mango-page-header mango-fade-in">
+            <h1 class="mango-page-header__title">
+                <i class="fa-solid fa-cart-shopping"></i> Shopping Cart
+            </h1>
+            <div class="mango-page-header__actions">
+                <a asp-action="Index" asp-controller="Home" class="mango-btn mango-btn--secondary mango-btn--sm">
+                    <i class="fa-solid fa-arrow-left"></i> Continue Shopping
+                </a>
+            </div>
+        </div>
+
+        <div class="mango-table-wrapper mango-fade-in">
+            <table class="mango-table" aria-label="Shopping cart">
+                <thead>
+                    <tr>
+                        <th style="width:80px;"></th>
+                        <th>Product</th>
+                        <th>Price</th>
+                        <th>Qty</th>
+                        <th style="width:80px;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var cartObj in Model.CartDetails)
                     {
-                        <div class="row h-100">
-                            <div class="col-4 col-md-2 text-center py-2">
-                                <img src="@cartObj.Product.ImageUrl" class="rounded" width="100%" />
-                            </div>
-                            <div class="col-8 col-md-5">
-                                <h5>@cartObj.Product.Name</h5>
-                                <div style="font-size:11px;">@Html.Raw(cartObj.Product.Description)</div>
-                            </div>
-                            <div class="col-3 col-md-2 pt-md-4" style="font-size:11px;">
-                                <span style="font-size:17px;">@string.Format("{0:c}", cartObj.Product.Price)</span>
-                            </div>
-                            <div class="col-3 col-md-2 pt-md-4" style="font-size:11px;">
-                                <span style="font-size:17px;">@cartObj.Count</span>
-                            </div>
-                            <div class="col-2 col-lg-1 p-0 pt-lg-4 text-center">
-                                <a asp-action="Remove" asp-controller="Cart" asp-route-cartDetailsId="@cartObj.Id" class="btn btn-outline-danger">
-                                    <i class="fas fa-trash"></i>
+                        <tr>
+                            <td>
+                                <img src="@cartObj.Product.ImageUrl"
+                                     alt="@cartObj.Product.Name"
+                                     style="width:64px;height:64px;object-fit:cover;border-radius:var(--ec-radius-sm);"
+                                     onerror="this.src='https://placehold.co/64x64/d1fae5/10b981?text=M'" />
+                            </td>
+                            <td>
+                                <div style="font-weight:600;">@cartObj.Product.Name</div>
+                                <div style="font-size:0.8rem;color:var(--ec-text-muted);margin-top:2px;">
+                                    @Html.Raw(cartObj.Product.Description?.Length > 80
+                                        ? cartObj.Product.Description.Substring(0, 80) + "…"
+                                        : cartObj.Product.Description)
+                                </div>
+                            </td>
+                            <td style="font-weight:700;color:var(--ec-accent);">
+                                @string.Format("{0:c}", cartObj.Product.Price)
+                            </td>
+                            <td>
+                                <span class="mango-badge mango-badge--neutral">@cartObj.Count</span>
+                            </td>
+                            <td>
+                                <a asp-action="Remove" asp-controller="Cart"
+                                   asp-route-cartDetailsId="@cartObj.Id"
+                                   class="mango-btn mango-btn--danger mango-btn--icon"
+                                   title="Remove item">
+                                    <i class="fa-solid fa-trash"></i>
                                 </a>
-                            </div>
-                        </div>
-                        <hr />
+                            </td>
+                        </tr>
                     }
-                    
-                    <div class="row">
-                        <div class="col-6">
-                            @if (string.IsNullOrEmpty(Model.CartHeader.CouponCode))
-                            {
-                                <span>Coupon:</span>
-                                <input asp-for="CartHeader.CouponCode"/>
-                                <button type="submit" asp-action="ApplyCoupon" class="btn-success"> Apply </button>
-                            }
-                            else
-                            {
-                                <span>Coupon:</span>
-                                <input asp-for="CartHeader.CouponCode" disabled/>
-                                <button type="submit" asp-action="RemoveCoupon" class="btn-danger"> Remove </button>
-                            }
+                </tbody>
+            </table>
+
+            @* Summary & Coupon Row *@
+            <div style="padding:1rem 1.25rem; border-top:1px solid var(--ec-border); display:flex; flex-wrap:wrap; gap:1rem; justify-content:space-between; align-items:center;">
+
+                @* Coupon *@
+                <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+                    <label class="mango-form__label mb-0" style="white-space:nowrap;">
+                        <i class="fa-solid fa-tag me-1 ec-text-primary"></i>Coupon Code
+                    </label>
+                    @if (string.IsNullOrEmpty(Model.CartHeader.CouponCode))
+                    {
+                        <input asp-for="CartHeader.CouponCode" class="mango-form__input" style="width:160px;" placeholder="Enter code" />
+                        <button type="submit" asp-action="ApplyCoupon"
+                                class="mango-btn mango-btn--primary mango-btn--sm">Apply</button>
+                    }
+                    else
+                    {
+                        <input asp-for="CartHeader.CouponCode" class="mango-form__input" style="width:160px;" disabled />
+                        <button type="submit" asp-action="RemoveCoupon"
+                                class="mango-btn mango-btn--danger mango-btn--sm">Remove</button>
+                    }
+                </div>
+
+                @* Totals *@
+                <div style="text-align:right;">
+                    @if (Model.CartHeader.DiscountTotal > 0)
+                    {
+                        <div style="font-size:0.875rem; color:var(--ec-success); margin-bottom:4px;">
+                            <i class="fa-solid fa-circle-check me-1"></i>Discount: &minus;@string.Format("{0:c}", Model.CartHeader.DiscountTotal)
                         </div>
-                        <div class="col-6 text-end">
-                            <span class="text-danger" style="font-size:21px;">  Order Total : @string.Format("{0:c}", Model.CartHeader.OrderTotal) <br /></span>
-                            @if(Model.CartHeader.DiscountTotal > 0)
-                            {
-                                <span class="text-success">Order Discount: @string.Format("{0:c}", Model.CartHeader.DiscountTotal)</span>
-                            }
-                        </div>
+                    }
+                    <div style="font-size:1.375rem; font-weight:700; color:var(--ec-text);">
+                        Total: <span style="color:var(--ec-accent);">@string.Format("{0:c}", Model.CartHeader.OrderTotal)</span>
                     </div>
                 </div>
-                <div class="card-footer row">
-                    <div class="col-6 col-md-3 offset-md-6">
-                    </div>
-                    <div class="col-6 col-md-3">
-                        <a asp-action="Checkout" asp-controller="Cart" class="btn btn-success form-control ">
-                            <span>Checkout</span>
-                        </a>
-                    </div>
-                </div>
+            </div>
+
+            @* Checkout Footer *@
+            <div style="padding:1rem 1.25rem; border-top:1px solid var(--ec-border); background:var(--ec-surface-2); display:flex; justify-content:flex-end;">
+                <a asp-action="Checkout" asp-controller="Cart" class="mango-btn mango-btn--primary">
+                    <i class="fa-solid fa-lock me-1"></i> Proceed to Checkout
+                </a>
             </div>
         </div>
     </form>
 }
-
 else
 {
-    <div>
-        <p>Please add items to cart</p>
+    <div class="mango-page-header mango-fade-in">
+        <h1 class="mango-page-header__title"><i class="fa-solid fa-cart-shopping"></i> Shopping Cart</h1>
+    </div>
+    <div class="mango-alert mango-alert--info">
+        <i class="fa-solid fa-circle-info"></i>
+        <span>Your cart is empty. <a asp-controller="Home" asp-action="Index">Start shopping</a> to add items.</span>
     </div>
 }

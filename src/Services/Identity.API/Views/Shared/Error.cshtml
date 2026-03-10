@@ -2,40 +2,36 @@
 @model ErrorViewModel
 
 @{
-    var error = Model?.Error?.Error;
-    var errorDescription = Model?.Error?.ErrorDescription;
-    var request_id = Model?.Error?.RequestId;
+    ViewData["Title"] = "Error";
+    var error = Model?.Error;
 }
 
-<div class="error-page">
-    <div class="lead">
-        <h1>Error</h1>
-    </div>
-
-    <div class="row">
-        <div class="col-sm-6">
-            <div class="alert alert-danger">
-                Sorry, there was an error
-
-                @if (error != null)
-                {
-                    <strong>
-                        <em>
-                            : @error
-                        </em>
-                    </strong>
-
-                    if (errorDescription != null)
-                    {
-                        <div>@errorDescription</div>
-                    }
-                }
+<div class="auth-page mango-fade-in">
+    <div class="auth-card" style="text-align:center; border-top-color:var(--ec-danger); max-width:480px;">
+        <div class="auth-card__header" style="background:var(--ec-danger-light);">
+            <div style="font-size:3rem; color:var(--ec-danger); margin-bottom:0.75rem;">
+                <i class="fa-solid fa-circle-exclamation"></i>
             </div>
-
-            @if (request_id != null)
+            <h1 class="auth-card__title" style="color:var(--ec-danger);">Something went wrong</h1>
+            <p class="auth-card__subtitle">An error occurred during the authorization process</p>
+        </div>
+        <div class="auth-card__body">
+            @if (error != null)
             {
-                <div class="request-id">Request Id: @request_id</div>
+                <div class="mango-alert mango-alert--danger" role="alert" style="text-align:left;">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    <div>
+                        <strong>@error.Error</strong>
+                        @if (!string.IsNullOrEmpty(error.ErrorDescription))
+                        {
+                            <div style="margin-top:4px;font-size:0.875rem;">@error.ErrorDescription</div>
+                        }
+                    </div>
+                </div>
             }
+            <a href="~/" class="mango-btn mango-btn--secondary mt-2">
+                <i class="fa-solid fa-house"></i> Back to Home
+            </a>
         </div>
     </div>
 </div>

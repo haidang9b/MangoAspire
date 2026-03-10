@@ -1,28 +1,32 @@
-﻿<ul class="navbar-nav">
-    @if (User.Identity.IsAuthenticated)
-    {
-		<li class="nav-item">
-			<a class="nav-link" asp-controller="Cart" asp-action="Index">
-				<i class="fas fa-shopping-cart"></i>
-			</a>
-		</li>
-		<li class="nav-item">
-			<a class="nav-link" asp-controller="Order" asp-action="Index">
-				<i class="fas fa-receipt"></i> Orders
-			</a>
-		</li>
-
-        <li class="nav-item">
-            <a class="nav-link" href="#">Hello @User.Identity.Name</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" asp-action="Logout" asp-controller="Home">Logout</a>
-        </li>
-    }
-    else
-    {
-        <li class="nav-item">
-            <a class="nav-link" asp-action="Login" asp-controller="Home">Login</a>
-        </li>
-    }
-</ul>
+﻿@* Auth-dependent nav items — rendered inside .mango-nav__links *@
+@if (User.Identity.IsAuthenticated)
+{
+    <li>
+        <a class="mango-nav__link" asp-controller="Cart" asp-action="Index" title="Your cart">
+            <i class="fa-solid fa-cart-shopping"></i> Cart
+        </a>
+    </li>
+    <li>
+        <a class="mango-nav__link" asp-controller="Order" asp-action="Index" title="Your orders">
+            <i class="fa-solid fa-receipt"></i> Orders
+        </a>
+    </li>
+    <li>
+        <span class="mango-nav__user">
+            <i class="fa-solid fa-circle-user me-1"></i>@User.Identity.Name
+        </span>
+    </li>
+    <li>
+        <a class="mango-nav__link" asp-action="Logout" asp-controller="Home">
+            <i class="fa-solid fa-right-from-bracket"></i> Logout
+        </a>
+    </li>
+}
+else
+{
+    <li>
+        <a class="mango-nav__link" asp-action="Login" asp-controller="Home">
+            <i class="fa-solid fa-right-to-bracket"></i> Sign In
+        </a>
+    </li>
+}

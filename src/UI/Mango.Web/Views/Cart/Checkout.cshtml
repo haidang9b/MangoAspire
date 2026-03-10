@@ -1,133 +1,198 @@
 ﻿@model CartDto
 
-@if (TempData["Error"]  != null)
-{
-    <div class="alert alert-warning" role="alert">@TempData["Error"]</div>
+@{
+    ViewData["Title"] = "Checkout";
 }
 
 @if (Model != null && Model.CartDetails.Any())
 {
-    <form method="post">
+    <div class="mango-page-header mango-fade-in">
+        <h1 class="mango-page-header__title">
+            <i class="fa-solid fa-lock"></i> Checkout
+        </h1>
+        <div class="mango-page-header__actions">
+            <a asp-action="Index" asp-controller="Cart" class="mango-btn mango-btn--secondary mango-btn--sm">
+                <i class="fa-solid fa-arrow-left"></i> Back to Cart
+            </a>
+        </div>
+    </div>
+
+    <form method="post" class="mango-fade-in">
         <input asp-for="CartHeader.UserId" hidden />
         <input asp-for="CartHeader.CouponCode" hidden />
         <input asp-for="CartHeader.DiscountTotal" hidden />
         <input asp-for="CartHeader.OrderTotal" hidden />
         <input asp-for="CartHeader.Id" hidden />
-        <div>
-            <span style="font-size:25px;" class="text-warning">Enter details and place order :</span>
-            <br />
-        </div>
-        <div class="border mt-2">
-            <div class="container row">
-                <div class="col-7">
-                    <div class="row">
-                        <div class="col-12">
-                            <label class="col-form-label">First Name :</label>
-                            <input asp-for="CartHeader.FirstName" class="form-control" />
-                        </div>
-                        <div class="col-12">
-                            <label class="col-form-label">Last Name :</label>
-                            <input asp-for="CartHeader.LastName" class="form-control" />
-                        </div>
-                        <div class="col-12">
-                            <label class="col-form-label">Email :</label>
-                            <input asp-for="CartHeader.Email" class="form-control" />
-                        </div>
-                        <div class="col-12">
-                            <label class="col-form-label">Phone :</label>
-                            <input asp-for="CartHeader.Phone" class="form-control" />
-                        </div>
-                        <div class="col-12">
-                            <label class="col-form-label">PickUp Time</label>
-                            <input asp-for="CartHeader.PickupDateTime" class="form-control form_datetime" type="text">
-                        </div>
-                        <div class="col-12">
-                            <label class="col-form-label">Card Number :</label>
-                            <input asp-for="CartHeader.CardNumber" class="form-control" />
-                        </div>
 
-                        <div class="col-12">
-                            <label class="col-form-label">CVV :</label>
-                            <input asp-for="CartHeader.CVV" class="form-control" />
-                        </div>
+        <div class="row g-4 align-items-start">
 
-                        <div class="col-12 pb-4">
-                            <label class="col-form-label">Expiry :</label>
-                            <input asp-for="CartHeader.ExpiryMonthYear" placeholder="MMYY" class="form-control" />
-                        </div>
+            @* ── Left: Contact & Payment Details ── *@
+            <div class="col-12 col-lg-7">
+                <div class="form-card">
+                    <div class="form-card__header">
+                        <h2 class="form-card__title">
+                            <i class="fa-solid fa-user ec-text-primary"></i> Contact Details
+                        </h2>
                     </div>
-                </div>
-                <div class="col-5">
-                    <div class="card mt-4">
-                        <div class="card-body">
-                            <div class=" d-none d-lg-block">
-                                <div class="row text-danger">
-                                    <div class="col-6">
-                                        Product Details
-                                    </div>
+                    <div class="form-card__body">
 
-                                    <div class="col-3">
-                                        Price
-                                    </div>
-                                    <div class="col-3">
-                                        Count
-                                    </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="mango-form__group">
+                                    <label class="mango-form__label" asp-for="CartHeader.FirstName">First Name</label>
+                                    <input asp-for="CartHeader.FirstName" class="mango-form__input" placeholder="First name" />
                                 </div>
                             </div>
-
-                            <hr />
-
-                            @foreach(var cartObj in Model.CartDetails)
-                            {
-                                <div class="row h-100">
-                                    <div class="col-6">
-                                        <span style="font-size:20px">@cartObj.Product.Name</span>
-                                    </div>
-
-                                    <div class="col-3" style="font-size:11px;">
-                                        <span style="font-size:17px;"> @string.Format("{0:c}",cartObj.Product.Price)</span>
-
-                                    </div>
-                                    <div class="col-3" style="font-size:11px;">
-                                        <span style="font-size:17px;"> @cartObj.Count</span>
-                                    </div>
-                                </div>
-                                <hr />
-                            }
-
-                            <div class="row">
-                                <div class="col-12 text-right pr-4 text-danger">
-                                    Order Total : @string.Format("{0:c}", Model.CartHeader.OrderTotal) <br />
-                                    @if(Model.CartHeader.DiscountTotal > 0)
-                                    {
-                                        <span class="text-success">Order Discount: @string.Format("{0:c}", Model.CartHeader.DiscountTotal)</span>
-                                    }
+                            <div class="col-md-6">
+                                <div class="mango-form__group">
+                                    <label class="mango-form__label" asp-for="CartHeader.LastName">Last Name</label>
+                                    <input asp-for="CartHeader.LastName" class="mango-form__input" placeholder="Last name" />
                                 </div>
                             </div>
-
                         </div>
-                        <div class="card-footer">
-                            <div class="row">
 
-                                <div class="col-12 ">
-                                    <button type="submit" class="btn btn-success form-control ">
-                                        <span>Place Order</span>
-                                    </button>
+                        <div class="mango-form__group">
+                            <label class="mango-form__label" asp-for="CartHeader.Email">Email</label>
+                            <input asp-for="CartHeader.Email" type="email" class="mango-form__input" placeholder="your@email.com" />
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="mango-form__group">
+                                    <label class="mango-form__label" asp-for="CartHeader.Phone">Phone</label>
+                                    <input asp-for="CartHeader.Phone" class="mango-form__input" placeholder="+1 (555) 000-0000" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mango-form__group">
+                                    <label class="mango-form__label" asp-for="CartHeader.PickupDateTime">
+                                        <i class="fa-solid fa-calendar me-1"></i>Pick-up Time
+                                    </label>
+                                    <input id="pickup-datetime"
+                                           name="CartHeader.PickupDateTime"
+                                           class="mango-form__input"
+                                           type="datetime-local"
+                                           value="@(Model.CartHeader.PickupDateTime > DateTime.MinValue ? Model.CartHeader.PickupDateTime.ToString("yyyy-MM-ddTHH:mm") : "")" />
+                                </div>
+                            </div>
+                        </div>
+
+                        @* Payment section *@
+                        <div style="border-top:1px solid var(--ec-border); padding-top:1.25rem; margin-top:.5rem;">
+                            <p class="mango-form__label mb-2" style="font-size:.875rem; text-transform:none; letter-spacing:0;">
+                                <i class="fa-solid fa-credit-card ec-text-primary me-1"></i>
+                                <strong>Payment Information</strong>
+                            </p>
+
+                            <div class="mango-form__group">
+                                <label class="mango-form__label" asp-for="CartHeader.CardNumber">Card Number</label>
+                                <input asp-for="CartHeader.CardNumber" class="mango-form__input" placeholder="1234 5678 9012 3456" />
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="mango-form__group">
+                                        <label class="mango-form__label" asp-for="CartHeader.CVV">CVV</label>
+                                        <input asp-for="CartHeader.CVV" class="mango-form__input" placeholder="123" />
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mango-form__group">
+                                        <label class="mango-form__label" asp-for="CartHeader.ExpiryMonthYear">Expiry (MMYY)</label>
+                                        <input asp-for="CartHeader.ExpiryMonthYear" class="mango-form__input" placeholder="0526" />
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+
+            @* ── Right: Order Summary ── *@
+            <div class="col-12 col-lg-5">
+                <div class="mango-card mango-card--accent-top">
+                    <div class="mango-card__header">
+                        <h2 class="mango-card__title">
+                            <i class="fa-solid fa-basket-shopping ec-text-primary"></i> Order Summary
+                        </h2>
+                    </div>
+
+                    <div class="mango-card__body" style="padding:0;">
+                        <table class="mango-table">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th style="text-align:center; width:60px;">Qty</th>
+                                    <th style="text-align:right; width:90px;">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var cartObj in Model.CartDetails)
+                                {
+                                    <tr>
+                                        <td style="font-weight:600; font-size:0.875rem;">@cartObj.Product.Name</td>
+                                        <td style="text-align:center;">
+                                            <span class="mango-badge mango-badge--neutral">@cartObj.Count</span>
+                                        </td>
+                                        <td style="text-align:right; font-weight:600; color:var(--ec-accent);">
+                                            @string.Format("{0:c}", cartObj.Product.Price * cartObj.Count)
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot>
+                                @if (Model.CartHeader.DiscountTotal > 0)
+                                {
+                                    <tr style="background:var(--ec-success-light);">
+                                        <td colspan="2" style="padding:.75rem 1rem; font-weight:600; color:var(--ec-success);">
+                                            <i class="fa-solid fa-tag me-1"></i>Discount
+                                        </td>
+                                        <td style="text-align:right; padding:.75rem 1rem; font-weight:700; color:var(--ec-success);">
+                                            &minus;@string.Format("{0:c}", Model.CartHeader.DiscountTotal)
+                                        </td>
+                                    </tr>
+                                }
+                                <tr style="background:linear-gradient(135deg,var(--ec-primary) 0%,var(--ec-primary-hover) 100%);">
+                                    <td colspan="2" style="padding:.875rem 1rem; font-weight:700; color:#fff;">
+                                        Total
+                                    </td>
+                                    <td style="text-align:right; padding:.875rem 1rem; font-weight:700; font-size:1.125rem; color:#fff;">
+                                        @string.Format("{0:c}", Model.CartHeader.OrderTotal)
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    <div class="mango-card__footer" style="justify-content:flex-end;">
+                        <button type="submit" class="mango-btn mango-btn--primary mango-btn--block">
+                            <i class="fa-solid fa-check me-1"></i> Place Order
+                        </button>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </form>
 }
+else
+{
+    <div class="mango-alert mango-alert--info mango-fade-in">
+        <i class="fa-solid fa-circle-info"></i>
+        <span>Nothing to checkout. <a asp-controller="Home" asp-action="Index">Continue shopping</a></span>
+    </div>
+}
 
 @section Scripts {
-    <script type="text/javascript">
-        $(document).ready(function () {
-            $(".form_datetime").datetimepicker({format: "yyyy-mm-dd hh:ii"});
-            $(".form_datetime").datetimepicker("setStartDate", new Date());
-        });    
+    <script>
+        // Set minimum pick-up time to right now
+        (function () {
+            var el = document.getElementById('pickup-datetime');
+            if (el) {
+                var now = new Date();
+                now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+                el.min = now.toISOString().slice(0, 16);
+            }
+        })();
     </script>
 }

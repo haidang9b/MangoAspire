@@ -4,107 +4,115 @@
     ViewData["Title"] = "My Orders";
 }
 
-<div class="container pt-4">
-    <div class="card">
-        <div class="card-header bg-dark text-white">
-            <h3 class="mb-0"><i class="bi bi-bag-check"></i> My Orders</h3>
-        </div>
-        <div class="card-body">
-            @if (Model == null || !Model.Data.Any())
-            {
-                <div class="alert alert-info">
-                    <i class="bi bi-info-circle"></i> You haven't placed any orders yet.
-                </div>
-                <a asp-controller="Home" asp-action="Index" class="btn btn-primary">
-                    <i class="bi bi-cart"></i> Start Shopping
-                </a>
-            }
-            else
-            {
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead class="table-secondary">
-                            <tr>
-                                <th>Order #</th>
-                                <th>Date</th>
-                                <th>Items</th>
-                                <th>Total</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var order in Model.Data)
-                            {
-                                <tr>
-                                    <td>
-                                        <span class="text-muted">@order.Id.ToString()[..8]...</span>
-                                    </td>
-                                    <td>@order.OrderTime.ToString("MMM dd, yyyy HH:mm")</td>
-                                    <td>@order.ItemCount item(s)</td>
-                                    <td class="fw-bold">@string.Format("{0:c}", order.OrderTotal)</td>
-                                    <td>
-                                        @switch (order.Status)
-                                        {
-                                            case "Processing":
-                                                <span class="badge bg-warning text-dark">
-                                                    <i class="bi bi-hourglass-split"></i> Processing
-                                                </span>
-                                                break;
-                                            case "Completed":
-                                                <span class="badge bg-success">
-                                                    <i class="bi bi-check-circle"></i> Completed
-                                                </span>
-                                                break;
-                                            case "Cancelled":
-                                                <span class="badge bg-danger">
-                                                    <i class="bi bi-x-circle"></i> Cancelled
-                                                </span>
-                                                break;
-                                            default:
-                                                <span class="badge bg-secondary">@order.Status</span>
-                                                break;
-                                        }
-                                    </td>
-                                    <td>
-                                        <a asp-action="Details" asp-route-id="@order.Id" class="btn btn-sm btn-outline-primary">
-                                            <i class="bi bi-eye"></i> View Details
-                                        </a>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-
-                @* Pagination *@
-                <nav aria-label="Order pagination">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span class="text-muted">
-                            Showing @(((Model.PageIndex - 1) * Model.PageSize) + 1) - @Math.Min(Model.PageIndex * Model.PageSize, Model.Count) of @Model.Count orders
-                        </span>
-                        <ul class="pagination mb-0">
-                            <li class="page-item @(!Model.HasPreviousPage ? "disabled" : "")">
-                                <a class="page-link" asp-action="Index" asp-route-pageIndex="@(Model.PageIndex - 1)" asp-route-pageSize="@Model.PageSize">
-                                    <i class="fas fa-chevron-left"></i> Previous
-                                </a>
-                            </li>
-                            @for (int i = 1; i <= Model.TotalPages; i++)
-                            {
-                                <li class="page-item @(i == Model.PageIndex ? "active" : "")">
-                                    <a class="page-link" asp-action="Index" asp-route-pageIndex="@i" asp-route-pageSize="@Model.PageSize">@i</a>
-                                </li>
-                            }
-                            <li class="page-item @(!Model.HasNextPage ? "disabled" : "")">
-                                <a class="page-link" asp-action="Index" asp-route-pageIndex="@(Model.PageIndex + 1)" asp-route-pageSize="@Model.PageSize">
-                                    Next <i class="fas fa-chevron-right"></i>
-                                </a>
-                            </li>
-                        </ul>
-
-                    </div>
-                </nav>
-            }
-        </div>
+<div class="mango-page-header mango-fade-in">
+    <h1 class="mango-page-header__title">
+        <i class="fa-solid fa-receipt"></i> My Orders
+    </h1>
+    <div class="mango-page-header__actions">
+        <a asp-controller="Home" asp-action="Index" class="mango-btn mango-btn--secondary mango-btn--sm">
+            <i class="fa-solid fa-bag-shopping"></i> Shop More
+        </a>
     </div>
 </div>
+
+@if (Model == null || !Model.Data.Any())
+{
+    <div class="mango-alert mango-alert--info mango-fade-in" role="alert">
+        <i class="fa-solid fa-circle-info"></i>
+        <span>You haven't placed any orders yet. <a asp-controller="Home" asp-action="Index">Start shopping!</a></span>
+    </div>
+}
+else
+{
+    <div class="mango-table-wrapper mango-fade-in">
+        <table class="mango-table" aria-label="Order history">
+            <thead>
+                <tr>
+                    <th>Order #</th>
+                    <th>Date</th>
+                    <th>Items</th>
+                    <th>Total</th>
+                    <th>Status</th>
+                    <th style="width:130px;"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var order in Model.Data)
+                {
+                    <tr>
+                        <td>
+                            <span style="font-family:monospace;font-size:0.8rem;color:var(--ec-text-muted);">
+                                #@order.Id.ToString()[..8]…
+                            </span>
+                        </td>
+                        <td>@order.OrderTime.ToString("MMM dd, yyyy HH:mm")</td>
+                        <td>
+                            <span class="mango-badge mango-badge--neutral">@order.ItemCount item(s)</span>
+                        </td>
+                        <td style="font-weight:700;color:var(--ec-accent);">
+                            @string.Format("{0:c}", order.OrderTotal)
+                        </td>
+                        <td>
+                            @switch (order.Status)
+                            {
+                                case "Processing":
+                                    <span class="mango-badge mango-badge--warning">
+                                        <i class="fa-solid fa-hourglass-half"></i> Processing
+                                    </span>
+                                    break;
+                                case "Completed":
+                                    <span class="mango-badge mango-badge--success">
+                                        <i class="fa-solid fa-circle-check"></i> Completed
+                                    </span>
+                                    break;
+                                case "Cancelled":
+                                    <span class="mango-badge mango-badge--danger">
+                                        <i class="fa-solid fa-circle-xmark"></i> Cancelled
+                                    </span>
+                                    break;
+                                default:
+                                    <span class="mango-badge mango-badge--neutral">@order.Status</span>
+                                    break;
+                            }
+                        </td>
+                        <td>
+                            <a asp-action="Details" asp-route-id="@order.Id"
+                               class="mango-btn mango-btn--secondary mango-btn--sm">
+                                <i class="fa-solid fa-eye"></i> Details
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        @* Pagination *@
+        <nav class="mango-pagination" aria-label="Order pagination">
+            <span class="mango-pagination__info">
+                Showing @(((Model.PageIndex - 1) * Model.PageSize) + 1)–@Math.Min(Model.PageIndex * Model.PageSize, Model.Count)
+                of @Model.Count orders
+            </span>
+            <ul class="mango-pagination__pages">
+                <li>
+                    <a class="mango-pagination__page-link @(!Model.HasPreviousPage ? "mango-pagination__page-link--disabled" : "")"
+                       asp-action="Index" asp-route-pageIndex="@(Model.PageIndex - 1)" asp-route-pageSize="@Model.PageSize">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </a>
+                </li>
+                @for (int i = 1; i <= Model.TotalPages; i++)
+                {
+                    <li>
+                        <a class="mango-pagination__page-link @(i == Model.PageIndex ? "mango-pagination__page-link--active" : "")"
+                           asp-action="Index" asp-route-pageIndex="@i" asp-route-pageSize="@Model.PageSize">@i</a>
+                    </li>
+                }
+                <li>
+                    <a class="mango-pagination__page-link @(!Model.HasNextPage ? "mango-pagination__page-link--disabled" : "")"
+                       asp-action="Index" asp-route-pageIndex="@(Model.PageIndex + 1)" asp-route-pageSize="@Model.PageSize">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+}
