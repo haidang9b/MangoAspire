@@ -1,60 +1,68 @@
 ﻿@model Mango.Web.Models.ProductDto
 
+@{
+    ViewData["Title"] = "Delete Product";
+}
 
-<form asp-action="ProductDelete">
-    <input asp-for="Id" hidden />
-    <br />
-    <div class="container border p-3">
-        <h1 class="text-info">Delete Product</h1>
-
-        <hr />
-        <div class="row">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="col-2">
-                <label asp-for="Name" class="control-label pt-2" style="font-size:20px;"></label>
-            </div>
-            <div class="col-10 pb-3">
-                <input asp-for="Name" class="form-control" disabled/>
-            </div>
-            <div class="col-2">
-                <label asp-for="CategoryName" class="control-label pt-2" style="font-size:20px;"></label>
-            </div>
-            <div class="col-10 pb-3">
-                <input asp-for="CategoryName" class="form-control" disabled />
-            </div>
-            <div class="col-2">
-                <label asp-for="Description" class="control-label pt-2" style="font-size:20px;"></label>
-            </div>
-            <div class="col-10 pb-3">
-                <textarea asp-for="Description" class="form-control" rows="5" disabled></textarea>
-            </div>
-            <div class="col-2">
-                <label asp-for="ImageUrl" class="control-label pt-2" style="font-size:20px;"></label>
-            </div>
-            <div class="col-10 pb-3">
-                <input asp-for="ImageUrl" class="form-control" disabled />
-            </div>
-            <div class="col-2">
-                <label asp-for="Price" class="control-label pt-2" style="font-size:20px;"></label>
-            </div>
-            <div class="col-10 pb-3">
-                <input asp-for="Price" class="form-control" disabled />
-            </div>
-            <div class="col-5 offset-2">
-
-                <a asp-action="ProductIndex" class="btn-primary btn form-control ">Back to List</a>
-            </div>
-            <div class="col-5">
-                <input type="submit" value="Delete" class="btn btn-danger form-control" />
-
-            </div>
-
-        </div>
-
-        <div>
-        </div>
+<div class="mango-page-header mango-fade-in">
+    <h1 class="mango-page-header__title">Delete Product</h1>
+    <div class="mango-page-header__actions">
+        <a asp-action="ProductIndex" class="mango-btn mango-btn--secondary mango-btn--sm">
+            <i class="fa-solid fa-arrow-left"></i> Back to List
+        </a>
     </div>
-</form>
+</div>
+
+<div class="form-card mango-fade-in" style="border-top-color: var(--ec-danger); max-width:560px;">
+    <div class="form-card__header" style="background: var(--ec-danger-light);">
+        <h2 class="form-card__title" style="color: var(--ec-danger);">
+            <i class="fa-solid fa-triangle-exclamation"></i> Confirm Deletion
+        </h2>
+    </div>
+    <div class="form-card__body">
+        <p style="color:var(--ec-text-muted); font-size:0.9rem; margin-bottom:1.25rem;">
+            You are about to permanently delete this product. This action cannot be undone.
+        </p>
+
+        <form asp-action="ProductDelete">
+            <input asp-for="Id" hidden />
+
+            <div class="mango-form__group">
+                <label class="mango-form__label">Product Name</label>
+                <input asp-for="Name" class="mango-form__input" disabled />
+            </div>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="mango-form__group">
+                        <label class="mango-form__label">Category</label>
+                        <input asp-for="CategoryName" class="mango-form__input" disabled />
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mango-form__group">
+                        <label class="mango-form__label">Price</label>
+                        <input asp-for="Price" class="mango-form__input" disabled />
+                    </div>
+                </div>
+            </div>
+            <div class="mango-form__group">
+                <label class="mango-form__label">Description</label>
+                <textarea asp-for="Description" class="mango-form__textarea" rows="3" disabled></textarea>
+            </div>
+            <div class="mango-form__group">
+                <label class="mango-form__label">Image URL</label>
+                <input asp-for="ImageUrl" class="mango-form__input" disabled />
+            </div>
+
+            <div class="form-card__footer">
+                <button type="submit" class="mango-btn mango-btn--danger">
+                    <i class="fa-solid fa-trash"></i> Delete Product
+                </button>
+                <a asp-action="ProductIndex" class="mango-btn mango-btn--secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

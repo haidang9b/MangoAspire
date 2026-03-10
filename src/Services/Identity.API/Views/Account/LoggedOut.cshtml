@@ -1,35 +1,46 @@
 @using Identity.API.MainModule.Account
 @model LoggedOutViewModel
 
-@{ 
-    // set this so the layout rendering sees an anonymous user
+@{
+    ViewData["Title"] = "Signed Out";
     ViewData["signed-out"] = true;
+
+    if (Model.AutomaticRedirectAfterSignOut && Model.PostLogoutRedirectUri != null)
+    {
+        <meta http-equiv="refresh" content="5;url=@Model.PostLogoutRedirectUri" />
+    }
 }
 
-<div class="logged-out-page">
-    <h1>
-        Logout
-        <small>You are now logged out</small>
-    </h1>
-
-    @if (Model.PostLogoutRedirectUri != null)
-    {
-        <div>
-            Click <a class="PostLogoutRedirectUri" href="@Model.PostLogoutRedirectUri">here</a> to return to the
-            <span>@Model.ClientName</span> application.
+<div class="auth-page mango-fade-in">
+    <div class="auth-card" style="text-align:center;">
+        <div class="auth-card__header">
+            <img src="~/images/mango.png" alt="Mango logo" class="auth-card__logo" />
+            <h1 class="auth-card__title">You've been signed out</h1>
+            <p class="auth-card__subtitle">Thanks for visiting MangoShop</p>
         </div>
-    }
+        <div class="auth-card__body">
+            <div style="font-size:3rem; color:var(--ec-primary); margin-bottom:1rem;">
+                <i class="fa-solid fa-circle-check"></i>
+            </div>
+            <p style="color:var(--ec-text-muted); font-size:0.9rem;">
+                You have successfully signed out of your account.
+            </p>
 
-    @if (Model.SignOutIframeUrl != null)
-    {
-        <iframe width="0" height="0" class="signout" src="@Model.SignOutIframeUrl"></iframe>
-    }
+            @if (Model.PostLogoutRedirectUri != null)
+            {
+                <p style="font-size:0.8rem; color:var(--ec-text-muted); margin-top:0.75rem;">
+                    Redirecting you back to <strong>@Model.ClientName</strong> in a moment&hellip;
+                </p>
+                <a href="@Model.PostLogoutRedirectUri" class="mango-btn mango-btn--primary mt-2">
+                    <i class="fa-solid fa-arrow-right"></i> Return to @Model.ClientName
+                </a>
+            }
+            else
+            {
+                <a href="~/" class="mango-btn mango-btn--primary mt-2">
+                    <i class="fa-solid fa-right-to-bracket"></i> Sign back in
+                </a>
+            }
+        </div>
+    </div>
 </div>
-
-@section scripts
-{
-    @if (Model.AutomaticRedirectAfterSignOut)
-    {
-        <script src="~/js/signout-redirect.js"></script>
-    }
-}

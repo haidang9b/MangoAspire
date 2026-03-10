@@ -1,73 +1,83 @@
-﻿@model Mango.Web.Models.PaginatedItemsDto<ProductDto>
+﻿@using System.Text.Encodings.Web
+@model Mango.Web.Models.PaginatedItemsDto<ProductDto>
 
-<form>
-    <div class="container">
-        <div class="row">
-            @if (Model != null && Model.Data.Any())
-            {
-                @foreach(var product in Model.Data)
-                {
-                    <div class="col-4">
-                        <div class="p-0 my-3 border">
-                            <div class="card">
-                                <img src="@product.ImageUrl" class="card-img-top">
-                                <div class="card-body">
-                                    <h3 class="card-title text-success">@product.Name</h3>
-                                    <span class="badge badge-light mb-2">@product.CategoryName</span>
-                                    <p class="card-text">@Html.Raw(product.Description)</p>
-                                    <div class="row">
-                                        <div class="col pt-1">
-                                            <span style="font-size:23px;">@string.Format("{0:c}", product.Price)</span>
-                                        </div>
-                                        <div class="col">
-                                            <a asp-action="Details" asp-route-productId="@product.Id" class="btn btn-success form-control">Details</a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                }
-            }
-            else
-            {
-                <div class="col-12">
-                    <div class="alert alert-info">
-                        <i class="bi bi-info-circle"></i> No products available.
-                    </div>
-                </div>
-            }
-        </div>
+@{
+    ViewData["Title"] = "Home";
+}
 
-        @if (Model != null && Model.Data.Any())
+@* Hero Section *@
+<div class="mango-hero mango-fade-in">
+    <h1 class="mango-hero__title">
+        <i class="fa-solid fa-leaf me-2 ec-text-primary"></i>Fresh Picks, Every Day
+    </h1>
+    <p class="mango-hero__subtitle">Discover our curated selection of quality products</p>
+    <a asp-controller="Product" asp-action="ProductIndex" class="mango-btn mango-btn--primary">
+        <i class="fa-solid fa-box-open"></i> Browse All Products
+    </a>
+</div>
+
+@if (Model != null && Model.Data.Any())
+{
+    @* Product Card Grid *@
+    <div class="row g-4 mango-fade-in">
+        @foreach (var product in Model.Data)
         {
-            @* Pagination *@
-            <nav aria-label="Product pagination" class="mt-4">
-                <div class="d-flex justify-content-between align-items-center">
-                    <span class="text-muted">
-                        Showing @(((Model.PageIndex - 1) * Model.PageSize) + 1) - @Math.Min(Model.PageIndex * Model.PageSize, Model.Count) of @Model.Count products
-                    </span>
-                    <ul class="pagination mb-0">
-                        <li class="page-item @(!Model.HasPreviousPage ? "disabled" : "")">
-                            <a class="page-link" asp-action="Index" asp-route-pageIndex="@(Model.PageIndex - 1)" asp-route-pageSize="@Model.PageSize">
-                                <i class="fas fa-chevron-left"></i> Previous
-                            </a>
-                        </li>
-                        @for (int i = 1; i <= Model.TotalPages; i++)
-                        {
-                            <li class="page-item @(i == Model.PageIndex ? "active" : "")">
-                                <a class="page-link" asp-action="Index" asp-route-pageIndex="@i" asp-route-pageSize="@Model.PageSize">@i</a>
-                            </li>
-                        }
-                        <li class="page-item @(!Model.HasNextPage ? "disabled" : "")">
-                            <a class="page-link" asp-action="Index" asp-route-pageIndex="@(Model.PageIndex + 1)" asp-route-pageSize="@Model.PageSize">
-                                Next <i class="fas fa-chevron-right"></i>
-                            </a>
-                        </li>
-                    </ul>
-
+            <div class="col-12 col-sm-6 col-lg-4">
+                <div class="mango-product-card h-100">
+                    <img src="@product.ImageUrl"
+                         class="mango-product-card__img"
+                         alt="@product.Name"
+                         onerror="this.src='https://placehold.co/400x200/d1fae5/10b981?text=Mango'" />
+                    <div class="mango-product-card__body">
+                        <span class="mango-product-card__category">@product.CategoryName</span>
+                        <h2 class="mango-product-card__name">@product.Name</h2>
+                        <p class="mango-product-card__desc">@HtmlEncoder.Default.Encode(System.Text.RegularExpressions.Regex.Replace(product.Description ?? "", "<[^>]+>", " "))</p>
+                    </div>
+                    <div class="mango-product-card__footer">
+                        <span class="mango-product-card__price">@string.Format("{0:c}", product.Price)</span>
+                        <a asp-action="Details" asp-route-productId="@product.Id"
+                           class="mango-btn mango-btn--primary mango-btn--sm">
+                            <i class="fa-solid fa-eye"></i> Details
+                        </a>
+                    </div>
                 </div>
-            </nav>
+            </div>
         }
     </div>
-</form>
+
+    @* Pagination *@
+    <nav class="mango-pagination mt-3" aria-label="Product pagination">
+        <span class="mango-pagination__info">
+            Showing @(((Model.PageIndex - 1) * Model.PageSize) + 1)–@Math.Min(Model.PageIndex * Model.PageSize, Model.Count)
+            of @Model.Count products
+        </span>
+        <ul class="mango-pagination__pages">
+            <li>
+                <a class="mango-pagination__page-link @(!Model.HasPreviousPage ? "mango-pagination__page-link--disabled" : "")"
+                   asp-action="Index" asp-route-pageIndex="@(Model.PageIndex - 1)" asp-route-pageSize="@Model.PageSize">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </a>
+            </li>
+            @for (int i = 1; i <= Model.TotalPages; i++)
+            {
+                <li>
+                    <a class="mango-pagination__page-link @(i == Model.PageIndex ? "mango-pagination__page-link--active" : "")"
+                       asp-action="Index" asp-route-pageIndex="@i" asp-route-pageSize="@Model.PageSize">@i</a>
+                </li>
+            }
+            <li>
+                <a class="mango-pagination__page-link @(!Model.HasNextPage ? "mango-pagination__page-link--disabled" : "")"
+                   asp-action="Index" asp-route-pageIndex="@(Model.PageIndex + 1)" asp-route-pageSize="@Model.PageSize">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </a>
+            </li>
+        </ul>
+    </nav>
+}
+else
+{
+    <div class="mango-alert mango-alert--info" role="alert">
+        <i class="fa-solid fa-circle-info"></i>
+        <span>No products available right now. Check back soon!</span>
+    </div>
+}

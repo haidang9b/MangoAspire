@@ -1,63 +1,108 @@
-﻿@model ProductDto
+﻿@using System.Text.Encodings.Web
+@model ProductDto
 
-<form method="post">
-    <input asp-for="Id" hidden/>
-    <div class=" pt-4">
-        <div class="card container" style="border:1px solid #808080;">
-            <div class="card-header bg-dark text-light row" style="border-radius: 0px;">
-                <div class="col-12 col-md-6">
-                    <h1 class="text-white">@Model.Name</h1>
+@{
+    ViewData["Title"] = Model?.Name ?? "Product Details";
+}
+
+<div class="mango-page-header mango-fade-in">
+    <h1 class="mango-page-header__title">Product Details</h1>
+    <div class="mango-page-header__actions">
+        <a asp-action="Index" asp-controller="Home" class="mango-btn mango-btn--secondary mango-btn--sm">
+            <i class="fa-solid fa-arrow-left"></i> Back to Products
+        </a>
+    </div>
+</div>
+
+<form method="post" class="mango-fade-in">
+    <input asp-for="Id" hidden />
+
+    <div class="mango-card mango-card--accent-top">
+
+        @* Product header strip — name + price *@
+        <div class="mango-card__header" style="flex-wrap:wrap; gap:.5rem;">
+            <h2 class="mango-card__title" style="font-size:1.25rem;">@Model.Name</h2>
+            <span style="font-size:1.375rem; font-weight:700; color:var(--ec-accent);">
+                @string.Format("{0:c}", Model.Price)
+            </span>
+        </div>
+
+        <div class="mango-card__body">
+            <div class="row g-4 align-items-start">
+
+                @* Product Image *@
+                <div class="col-12 col-lg-4 text-center">
+                    <img src="@Model.ImageUrl"
+                         alt="@Model.Name"
+                         class="img-fluid"
+                         style="border-radius:var(--ec-radius-lg); max-height:320px; object-fit:cover; width:100%; box-shadow:var(--ec-shadow);"
+                         onerror="this.src='https://placehold.co/400x320/d1fae5/10b981?text=Mango'" />
                 </div>
-                <div class="col-12 col-md-6 text-end">
-                    <h1 class="text-warning"> @string.Format("{0:c}",Model.Price) </h1>
-                </div>
-            </div>
-            <div class="card-body">
-                <div class="container rounded p-2">
-                    <div class="row">
-                        <div class="col-12 col-lg-4 p-1 text-center">
-                            <img src="@Model.ImageUrl" style="border-radius:35px;" width="100%" class="rounded" />
-                        </div>
-                        <div class="col-12 col-lg-8">
-                            <div class="row pl-3">
 
-                                <div class="col-12">
-                                    <span class="badge badge-primary text-success p-3 border">@Model.CategoryName</span>
-                                    @if (Model.Stock > 0)
-                                    {
-                                        <span class="badge bg-success text-white p-3 border ms-2">In Stock: @Model.Stock</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-danger text-white p-3 border ms-2">Out of Stock</span>
-                                    }
-                                    <h3 class="text-success"></h3>
+                @* Product Info *@
+                <div class="col-12 col-lg-8">
 
-                                    <p class="text-secondary">@Html.Raw(Model.Description) </p>
-                                </div>
+                    @* Badges *@
+                    <div class="d-flex gap-2 flex-wrap mb-3">
+                        <span class="mango-badge mango-badge--neutral">
+                            <i class="fa-solid fa-tag"></i> @Model.CategoryName
+                        </span>
+                        @if (Model.Stock > 0)
+                        {
+                            <span class="mango-badge mango-badge--success">
+                                <i class="fa-solid fa-circle-check"></i> In Stock: @Model.Stock
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="mango-badge mango-badge--danger">
+                                <i class="fa-solid fa-circle-xmark"></i> Out of Stock
+                            </span>
+                        }
+                    </div>
 
-                            </div>
-                            <div class="row px-4">
-                                <input asp-for=Count class="form-control" />
-                                <span asp-validation-for="Count" class="text-danger"></span>
-                            </div>
-                        </div>
+                    @* Description *@
+                    <div style="color:var(--ec-text-muted); font-size:0.9375rem; line-height:1.7; margin-bottom:1.5rem;">
+                        @HtmlEncoder.Default.Encode(System.Text.RegularExpressions.Regex.Replace(Model.Description ?? "", "<[^>]+>", " "))
+                    </div>
+
+                    @* Quantity selector *@
+                    <div style="max-width:200px;">
+                        <label class="mango-form__label" asp-for="Count">
+                            <i class="fa-solid fa-hashtag me-1"></i>Quantity
+                        </label>
+                        <input asp-for="Count"
+                               type="number"
+                               min="1"
+                               class="mango-form__input"
+                               placeholder="1" />
+                        <span asp-validation-for="Count" class="text-danger" style="font-size:0.8rem;"></span>
                     </div>
                 </div>
             </div>
-            <div class="card-footer row bg-dark">
-                <div class="col-12 col-md-6 pb-1 ">
-                    <a class="btn btn-success btn-square form-control btn-lg" style="height:50px;">Back to List</a>
-                </div>
-                <div class="col-12 col-md-6 ">
+        </div>
 
-
-                    <button type="submit" class="btn btn-info form-control btn-lg" style="height:50px;">Add to Cart</button>
-                </div>
-            </div>
+        @* Footer actions *@
+        <div class="mango-card__footer" style="justify-content:flex-end;">
+            <a asp-action="Index" asp-controller="Home" class="mango-btn mango-btn--secondary">
+                <i class="fa-solid fa-arrow-left"></i> Back
+            </a>
+            @if (Model.Stock > 0)
+            {
+                <button type="submit" class="mango-btn mango-btn--primary">
+                    <i class="fa-solid fa-cart-plus"></i> Add to Cart
+                </button>
+            }
+            else
+            {
+                <button type="button" class="mango-btn mango-btn--secondary" disabled title="Out of stock">
+                    <i class="fa-solid fa-ban"></i> Out of Stock
+                </button>
+            }
         </div>
     </div>
 </form>
+
 @section Scripts {
-    <partial name="_ValidationScriptsPartial"/>
+    <partial name="_ValidationScriptsPartial" />
 }

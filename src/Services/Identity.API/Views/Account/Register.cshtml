@@ -1,61 +1,125 @@
 ﻿@using Identity.API.MainModule.Account
 @model RegisterViewModel
 
+@{
+    ViewData["Title"] = "Create Account";
+}
 
-<div class="login-page">
-    <div class="lead">
-        <h1>Register</h1>
-        <p>Choose how to register</p>
-    </div>
+<div class="auth-page mango-fade-in">
+    <div class="auth-card" style="max-width: 520px;">
 
-    <partial name="_ValidationSummary" />
-
-    <div class="row">
-
-        <div class="col-sm-6">
-            <div class="card">
-                <div class="card-header">
-                    <h2>Local Account Register</h2>
-                </div>
-
-                <div class="card-body">
-                    <form asp-route="Login">
-                        <input type="hidden" asp-for="ReturnUrl" />
-
-                        <div class="form-group">
-                            <label asp-for="Username"></label>
-                            <input class="form-control" placeholder="Username" asp-for="Username" autofocus>
-                        </div>
-                        <div class="form-group">
-                            <label asp-for="Email"></label>
-                            <input class="form-control" placeholder="Email" asp-for="Email" autofocus>
-                        </div>
-                        <div class="form-group">
-                            <label asp-for="FirstName"></label>
-                            <input class="form-control" placeholder="FirstName" asp-for="FirstName" autofocus>
-                        </div>
-                        <div class="form-group">
-                            <label asp-for="LastName"></label>
-                            <input class="form-control" placeholder="LastName" asp-for="LastName" autofocus>
-                        </div>
-                        <div class="form-group">
-                            <label asp-for="Password"></label>
-                            <input type="password" class="form-control" placeholder="Password" asp-for="Password" autocomplete="off">
-                        </div>
-                        <div class="form-group">
-                            <label asp-for="RoleName"></label>
-                            <select asp-for="RoleName" class="form-control" asp-items="@(new SelectList(ViewBag.message))"></select>
-                        </div>
-                        <button class="btn btn-primary" name="button" value="Register">Register</button>
-                        <button class="btn btn-secondary" name="button" value="cancel">Cancel</button>
-                    </form>
-                </div>
-                <div class="card-footer">
-                    <a href="@Url.Action("Login",new {Model.ReturnUrl })">Login</a>
-                </div>
-            </div>
+        @* Header *@
+        <div class="auth-card__header">
+            <img src="~/images/mango.png" alt="Mango logo" class="auth-card__logo" />
+            <h1 class="auth-card__title">Create your account</h1>
+            <p class="auth-card__subtitle">Join Mango and start shopping</p>
         </div>
 
+        @* Body *@
+        <div class="auth-card__body">
 
+            @* Validation errors *@
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="mango-validation" role="alert">
+                    <p class="mango-validation__title">
+                        <i class="fa-solid fa-circle-exclamation me-1"></i>Please fix the following errors
+                    </p>
+                    <ul class="mango-validation__list">
+                        @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                        {
+                            <li class="mango-validation__item">@error.ErrorMessage</li>
+                        }
+                    </ul>
+                </div>
+            }
+
+            <form asp-route="Login" class="auth-form" novalidate>
+                <input type="hidden" asp-for="ReturnUrl" />
+
+                @* First Name + Last Name in 2 columns *@
+                <div class="row g-3 mb-0">
+                    <div class="col-6">
+                        <div class="auth-form__group">
+                            <label class="auth-form__label" asp-for="FirstName">First Name</label>
+                            <input class="auth-form__input"
+                                   placeholder="First name"
+                                   asp-for="FirstName"
+                                   autofocus
+                                   autocomplete="given-name" />
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="auth-form__group">
+                            <label class="auth-form__label" asp-for="LastName">Last Name</label>
+                            <input class="auth-form__input"
+                                   placeholder="Last name"
+                                   asp-for="LastName"
+                                   autocomplete="family-name" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="auth-form__group">
+                    <label class="auth-form__label" asp-for="Username">
+                        <i class="fa-solid fa-user me-1"></i>Username
+                    </label>
+                    <input class="auth-form__input"
+                           placeholder="Choose a username"
+                           asp-for="Username"
+                           autocomplete="username" />
+                </div>
+
+                <div class="auth-form__group">
+                    <label class="auth-form__label" asp-for="Email">
+                        <i class="fa-solid fa-envelope me-1"></i>Email
+                    </label>
+                    <input type="email"
+                           class="auth-form__input"
+                           placeholder="your@email.com"
+                           asp-for="Email"
+                           autocomplete="email" />
+                </div>
+
+                <div class="auth-form__group">
+                    <label class="auth-form__label" asp-for="Password">
+                        <i class="fa-solid fa-lock me-1"></i>Password
+                    </label>
+                    <input type="password"
+                           class="auth-form__input"
+                           placeholder="Create a strong password"
+                           asp-for="Password"
+                           autocomplete="new-password" />
+                </div>
+
+                <div class="auth-form__group">
+                    <label class="auth-form__label" asp-for="RoleName">
+                        <i class="fa-solid fa-id-badge me-1"></i>Role
+                    </label>
+                    <select class="auth-form__select"
+                            asp-for="RoleName"
+                            asp-items="@(ViewBag.message != null ? new SelectList(ViewBag.message) : new SelectList(Enumerable.Empty<string>()))">
+                        <option value="">-- Select a role --</option>
+                    </select>
+                </div>
+
+                <div class="auth-form__actions">
+                    <button class="mango-btn mango-btn--primary mango-btn--block"
+                            name="button" value="Register" type="submit">
+                        <i class="fa-solid fa-user-plus me-1"></i>Create Account
+                    </button>
+                    <button class="mango-btn mango-btn--secondary mango-btn--block"
+                            name="button" value="cancel" type="submit">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        @* Footer *@
+        <div class="auth-card__footer">
+            Already have an account?&nbsp;
+            <a href="@Url.Action("Login", new { Model.ReturnUrl })">Sign in</a>
+        </div>
     </div>
 </div>
