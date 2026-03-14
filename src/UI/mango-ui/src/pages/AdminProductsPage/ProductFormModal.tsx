@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useApi } from '@/hooks/useApi';
 import { TextBox, SelectBox, Modal } from '@/components';
+import { useTranslation } from 'react-i18next';
 import { EMPTY_FORM, productToForm, type FormState } from './ProductFormHelpers';
 import type { Product, CatalogType } from '@/types/product';
 import type { CreateProductRequest, UpdateProductRequest } from '@/api/productsApi';
@@ -14,6 +15,7 @@ export interface ProductFormModalProps {
 
 export function ProductFormModal({ editing, catalogTypes, onClose, onSaved }: ProductFormModalProps) {
     const { products: productsService } = useApi();
+    const { t } = useTranslation();
     const [form, setForm] = useState<FormState>(editing ? productToForm(editing) : EMPTY_FORM);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -62,7 +64,7 @@ export function ProductFormModal({ editing, catalogTypes, onClose, onSaved }: Pr
                 onSaved();
             }
         } catch {
-            setError('Could not connect to the server.');
+            setError(t('common.error') || 'Could not connect to the server.');
         } finally {
             setSaving(false);
         }
@@ -70,14 +72,14 @@ export function ProductFormModal({ editing, catalogTypes, onClose, onSaved }: Pr
 
     return (
         <Modal
-            title={editing ? 'Edit Product' : 'New Product'}
+            title={editing ? (t('admin.editProduct') || 'Edit Product') : (t('admin.createProduct') || 'New Product')}
             isOpen={true}
             onClose={onClose}
             footer={
                 <>
-                    <button type="button" className="btn-secondary" onClick={onClose}>Cancel</button>
+                    <button type="button" className="btn-secondary" onClick={onClose}>{t('common.cancel')}</button>
                     <button type="submit" form="product-form" className="btn-primary" disabled={saving}>
-                        {saving ? 'Saving…' : editing ? 'Save Changes' : 'Create Product'}
+                        {saving ? t('common.loading') : editing ? t('common.save') : t('admin.createProduct')}
                     </button>
                 </>
             }
@@ -86,14 +88,14 @@ export function ProductFormModal({ editing, catalogTypes, onClose, onSaved }: Pr
                 <div className="form-row">
                     <TextBox
                         id="pm-name"
-                        label="Name *"
+                        label={`${t('products.title')} *`}
                         value={form.name}
                         onChange={set('name')}
                         required
                     />
                     <TextBox
                         id="pm-price"
-                        label="Price *"
+                        label={`${t('products.price')} *`}
                         type="number"
                         step="0.01"
                         min="0.01"
@@ -106,11 +108,11 @@ export function ProductFormModal({ editing, catalogTypes, onClose, onSaved }: Pr
                 <div className="form-row">
                     <SelectBox
                         id="pm-type"
-                        label="Category"
+                        label={t('products.category')}
                         value={form.catalogTypeId}
                         onChange={handleCatalogTypeChange}
                     >
-                        <option value="">— select —</option>
+                        <option value="">— {t('common.select')} —</option>
                         {catalogTypes.map(ct => (
                             <option key={ct.id} value={ct.id}>{ct.type}</option>
                         ))}
@@ -118,7 +120,7 @@ export function ProductFormModal({ editing, catalogTypes, onClose, onSaved }: Pr
 
                     <TextBox
                         id="pm-stock"
-                        label="Stock *"
+                        label={`${t('admin.stock') || 'Stock'} *`}
                         type="number"
                         min="0"
                         value={form.stock}
@@ -129,14 +131,14 @@ export function ProductFormModal({ editing, catalogTypes, onClose, onSaved }: Pr
 
                 <TextBox
                     id="pm-imageUrl"
-                    label="Image URL *"
+                    label={`${t('admin.imageUrl') || 'Image URL'} *`}
                     value={form.imageUrl}
                     onChange={set('imageUrl')}
                     required
                 />
 
                 <div className="form-group">
-                    <label htmlFor="pm-description">Description *</label>
+                    <label htmlFor="pm-description">{t('products.description') || 'Description'} *</label>
                     <textarea
                         id="pm-description"
                         className="form-control"

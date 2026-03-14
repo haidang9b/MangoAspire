@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import type { Product } from '@/types';
+import { useTranslation } from 'react-i18next';
 import './ProductCard.css';
 
 interface Props {
@@ -7,6 +8,7 @@ interface Props {
 }
 
 export function ProductCard({ product }: Props) {
+    const { t } = useTranslation();
     const placeholder = `https://placehold.co/400x280/1e1e2e/a6adc8?text=${encodeURIComponent(product.name)}`;
     const imgSrc = product.imageUrl || placeholder;
 
@@ -40,7 +42,7 @@ export function ProductCard({ product }: Props) {
                             className="btn-secondary w-full"
                             style={{ fontSize: '0.9rem', height: '40px', padding: '0 12px' }}
                         >
-                            Details
+                            {t('products.details')}
                         </Link>
                     </div>
                 </div>

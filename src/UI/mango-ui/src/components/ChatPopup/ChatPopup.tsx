@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useApi } from '@/hooks/useApi';
 import { useAuth } from '@/hooks';
+import { useTranslation } from 'react-i18next';
 import type { ChatMessage } from '@/types/chat';
 import './ChatPopup.css';
 
 export function ChatPopup() {
     const { chat: chatService } = useApi();
     const { user } = useAuth();
+    const { t } = useTranslation();
     const isAuthenticated = !!user;
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -161,7 +163,7 @@ export function ChatPopup() {
                     <form className="chat-input-area" onSubmit={handleSend}>
                         <input
                             type="text"
-                            placeholder="Type your message..."
+                            placeholder={t('common.add') || "Type your message..."}
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
                             disabled={isLoading}

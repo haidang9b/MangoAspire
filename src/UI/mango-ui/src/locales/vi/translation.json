@@ -1,0 +1,93 @@
+{
+  "common": {
+    "loading": "Đang tải...",
+    "error": "Đã xảy ra lỗi",
+    "save": "Lưu",
+    "cancel": "Hủy",
+    "delete": "Xóa",
+    "edit": "Sửa",
+    "add": "Thêm",
+    "back": "Quay lại",
+    "next": "Tiếp theo",
+    "previous": "Trước",
+    "language": "Ngôn ngữ",
+    "all": "Tất cả",
+    "page": "Trang",
+    "of": "của"
+  },
+  "nav": {
+    "home": "Trang chủ",
+    "cart": "Giỏ hàng",
+    "orders": "Đơn hàng",
+    "admin": "Quản trị",
+    "login": "Đăng nhập",
+    "logout": "Đăng xuất"
+  },
+  "products": {
+    "title": "Sản phẩm",
+    "noProducts": "Không tìm thấy sản phẩm",
+    "addToCart": "Thêm vào giỏ",
+    "details": "Chi tiết",
+    "price": "Giá",
+    "category": "Danh mục",
+    "searchPlaceholder": "Tìm kiếm sản phẩm...",
+    "inStock": "Còn hàng",
+    "outOfStock": "Hết hàng"
+  },
+  "cart": {
+    "title": "Giỏ hàng của bạn",
+    "empty": "Giỏ hàng trống",
+    "proceedToCheckout": "Tiến hành thanh toán",
+    "total": "Tổng cộng",
+    "quantity": "Số lượng",
+    "subtotal": "Tạm tính",
+    "discount": "Giảm giá"
+  },
+  "checkout": {
+    "title": "Thanh toán",
+    "placeOrder": "Đặt hàng",
+    "orderSummary": "Tóm tắt đơn hàng",
+    "shippingAddress": "Địa chỉ giao hàng",
+    "billingAddress": "Địa chỉ thanh toán",
+    "enterCoupon": "Nhập mã giảm giá",
+    "apply": "Áp dụng",
+    "couponApplied": "Mã giảm giá đã được áp dụng!",
+    "invalidCoupon": "Mã giảm giá không hợp lệ",
+    "deliveryInfo": "Thông tin giao hàng",
+    "pickupTime": "Thời gian nhận hàng (tối thiểu 1 giờ kể từ bây giờ)",
+    "paymentDetails": "Thông tin thanh toán",
+    "cardNumber": "Số thẻ",
+    "cvv": "CVV",
+    "expiry": "Hết hạn (MMYY)",
+    "firstName": "Tên",
+    "lastName": "Họ",
+    "email": "Email",
+    "phone": "Số điện thoại"
+  },
+  "orders": {
+    "title": "Đơn hàng của bạn",
+    "orderId": "Mã đơn hàng",
+    "date": "Ngày",
+    "status": "Trạng thái",
+    "total": "Tổng cộng",
+    "details": "Xem chi tiết",
+    "confirmed": "Đơn hàng đã được xác nhận!",
+    "thankYou": "Cảm ơn bạn đã đặt hàng. Chúng tôi đã nhận được và sẽ sớm bắt đầu chuẩn bị.",
+    "notFound": "Không tìm thấy đơn hàng",
+    "shippingInfo": "Thông tin giao hàng",
+    "fullName": "Họ và Tên",
+    "email": "Địa chỉ Email",
+    "phone": "Số điện thoại",
+    "items": "Sản phẩm trong đơn hàng",
+    "itemCount": "{{count}} sản phẩm",
+    "cancelReason": "Lý do hủy",
+    "noOrders": "Chưa có đơn hàng nào",
+    "noOrdersDesc": "Có vẻ như bạn chưa đặt đơn hàng nào.",
+    "startShopping": "Bắt đầu mua sắm"
+  },
+  "admin": {
+    "title": "Bảng điều khiển",
+    "createProduct": "Tạo sản phẩm",
+    "deleteConfirm": "Bạn có chắc chắn muốn xóa sản phẩm này?"
+  }
+}

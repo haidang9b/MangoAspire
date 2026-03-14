@@ -1,4 +1,5 @@
 import { useApi, useFetch, useProducts, useProductsSearchParams } from '@/hooks';
+import { useTranslation } from 'react-i18next';
 import { ProductCard, SearchBox, PageMetadata, Pagination } from '@/components';
 import { CACHE_KEYS, PAGE_SIZE_OPTIONS } from '@/constants';
 import type { CatalogType } from '@/types';
@@ -13,6 +14,7 @@ export function ProductsPage() {
         updateParams,
         handleTypeChange,
         handleSearch } = useProductsSearchParams();
+    const { t } = useTranslation();
 
     const { products, totalCount, isLoading, error, reload } = useProducts({
         pageIndex,
@@ -35,14 +37,14 @@ export function ProductsPage() {
     return (
         <div className="products-page">
             <PageMetadata
-                title="Products | Mango Store"
+                title={`${t('products.title')} | Mango Store`}
                 description="Explore our wide variety of fresh mangoes and tropical fruits."
             />
             {/* Controls */}
             <div className="products-page__controls">
                 <div className="products-page__search-bar">
                     <SearchBox
-                        placeholder="Search products..."
+                        placeholder={t('products.searchPlaceholder')}
                         value={search}
                         onChange={handleSearch}
                     />
@@ -52,7 +54,7 @@ export function ProductsPage() {
                         className={`filter-chip ${selectedType == null ? 'filter-chip--active' : ''}`}
                         onClick={() => handleTypeChange(undefined)}
                     >
-                        All
+                        {t('common.all') || "All"}
                     </button>
                     {(catalogTypes ?? []).map((ct) => (
                         <button
@@ -65,7 +67,7 @@ export function ProductsPage() {
                     ))}
                 </div>
                 <p className="products-page__count">
-                    {isLoading ? 'Loading…' : `${totalCount} product${totalCount !== 1 ? 's' : ''}`}
+                    {isLoading ? t('common.loading') : `${totalCount} product${totalCount !== 1 ? 's' : ''}`}
                 </p>
             </div>
 
@@ -83,14 +85,14 @@ export function ProductsPage() {
                     <div className="products-page__error">
                         <span>⚠️</span>
                         <p>{error}</p>
-                        <button onClick={reload}>Retry</button>
+                        <button onClick={reload}>{t('common.retry') || "Retry"}</button>
                     </div>
                 )}
 
                 {!isLoading && !error && products.length === 0 && (
                     <div className="products-page__empty">
                         <span>🔍</span>
-                        <p>No products found.</p>
+                        <p>{t('products.noProducts')}</p>
                     </div>
                 )}
 

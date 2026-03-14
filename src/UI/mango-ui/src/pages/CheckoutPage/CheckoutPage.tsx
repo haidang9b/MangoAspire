@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useAuth, useCart, useApi } from '@/hooks';
+import { useTranslation } from 'react-i18next';
 import { PageMetadata, TextBox } from '@/components';
 import { ROUTES } from '@/constants';
 import type { CheckoutRequest, CartDetails } from '@/types';
@@ -23,6 +24,7 @@ export function CheckoutPage() {
     const { cart } = useCart();
     const { cart: cartService } = useApi();
     const navigate = useNavigate();
+    const { t } = useTranslation();
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
@@ -48,9 +50,9 @@ export function CheckoutPage() {
         return (
             <div className="checkout-page checkout-page--empty">
                 <div className="empty-msg">
-                    <h2>Your cart is empty</h2>
+                    <h2>{t('cart.empty')}</h2>
                     <p>Add some delicious items before checking out!</p>
-                    <button className="btn-primary" onClick={() => navigate(ROUTES.HOME)}>Back to Shop</button>
+                    <button className="btn-primary" onClick={() => navigate(ROUTES.HOME)}>{t('common.back')} {t('products.title')}</button>
                 </div>
             </div>
         );
@@ -86,30 +88,30 @@ export function CheckoutPage() {
     return (
         <div className="checkout-page">
             <PageMetadata
-                title="Checkout | Mango Store"
+                title={`${t('checkout.title')} | Mango Store`}
                 description="Complete your order and enjoy our premium mangoes soon!"
             />
-            <h1 className="checkout-page__title">Checkout</h1>
+            <h1 className="checkout-page__title">{t('checkout.title')}</h1>
 
             {submitError && <div className="checkout-error-alert">{submitError}</div>}
 
             <form className="checkout-container" onSubmit={handleSubmit(onSubmit)}>
                 <section className="checkout-form">
                     <div className="checkout-section">
-                        <h3>Personal Details</h3>
+                        <h3>{t('checkout.personalDetails', 'Personal Details')}</h3>
                         <div className="form-grid">
                             <TextBox
-                                label="First Name"
+                                label={t('checkout.firstName', 'First Name')}
                                 error={errors.firstName?.message}
                                 {...register('firstName', { required: 'Required' })}
                             />
                             <TextBox
-                                label="Last Name"
+                                label={t('checkout.lastName', 'Last Name')}
                                 error={errors.lastName?.message}
                                 {...register('lastName', { required: 'Required' })}
                             />
                             <TextBox
-                                label="Email"
+                                label={t('checkout.email', 'Email Address')}
                                 type="email"
                                 error={errors.email?.message}
                                 {...register('email', {
@@ -121,7 +123,7 @@ export function CheckoutPage() {
                                 })}
                             />
                             <TextBox
-                                label="Phone"
+                                label={t('checkout.phone', 'Phone Number')}
                                 type="tel"
                                 error={errors.phone?.message}
                                 {...register('phone', {
@@ -136,9 +138,9 @@ export function CheckoutPage() {
                     </div>
 
                     <div className="checkout-section">
-                        <h3>Delivery Information</h3>
+                        <h3>{t('checkout.deliveryInfo', 'Delivery Information')}</h3>
                         <TextBox
-                            label="Pickup Time (Min 1hr from now)"
+                            label={t('checkout.pickupTime', 'Pickup Time (Min 1hr from now)')}
                             type="datetime-local"
                             error={errors.pickupDate?.message}
                             {...register('pickupDate', {
@@ -153,10 +155,10 @@ export function CheckoutPage() {
                     </div>
 
                     <div className="checkout-section">
-                        <h3>Payment Details</h3>
+                        <h3>{t('checkout.paymentDetails', 'Payment Details')}</h3>
                         <div className="form-grid">
                             <TextBox
-                                label="Card Number"
+                                label={t('checkout.cardNumber', 'Card Number')}
                                 placeholder="0000 0000 0000 0000"
                                 containerClassName="form-field--wide"
                                 error={errors.cardNumber?.message}
@@ -169,7 +171,7 @@ export function CheckoutPage() {
                                 })}
                             />
                             <TextBox
-                                label="CVV"
+                                label={t('checkout.cvv', 'CVV')}
                                 placeholder="123"
                                 maxLength={4}
                                 error={errors.cvv?.message}
@@ -182,7 +184,7 @@ export function CheckoutPage() {
                                 })}
                             />
                             <TextBox
-                                label="Expiry (MMYY)"
+                                label={t('checkout.expiry', 'Expiry (MMYY)')}
                                 placeholder="MMYY"
                                 maxLength={4}
                                 error={errors.expiryMonthYear?.message}
@@ -200,7 +202,7 @@ export function CheckoutPage() {
 
                 <aside className="checkout-summary">
                     <div className="summary-card">
-                        <h3>Order Review</h3>
+                        <h3>{t('checkout.orderSummary')}</h3>
                         <div className="summary-items">
                             {cart.cartDetails.map((item: CartDetails) => (
                                 <div key={item.id} className="summary-item">
@@ -215,12 +217,12 @@ export function CheckoutPage() {
 
                         <div className="summary-totals">
                             <div className="summary-row summary-row--total">
-                                <span className="text-danger">Order Total</span>
+                                <span className="text-danger">{t('cart.total')}</span>
                                 <span className="text-danger">${cart.cartHeader.orderTotal.toFixed(2)}</span>
                             </div>
                             {cart.cartHeader.discountTotal > 0 && (
                                 <div className="summary-row summary-row--discount">
-                                    <span className="text-success">Order Discount</span>
+                                    <span className="text-success">{t('cart.discount')}</span>
                                     <span className="text-success">-${cart.cartHeader.discountTotal.toFixed(2)}</span>
                                 </div>
                             )}
@@ -231,7 +233,7 @@ export function CheckoutPage() {
                             className="btn-primary checkout-submit-btn"
                             disabled={isSubmitting}
                         >
-                            {isSubmitting ? 'Placing Order...' : 'Place Order'}
+                            {isSubmitting ? t('common.loading') : t('checkout.placeOrder')}
                         </button>
                     </div>
                 </aside>

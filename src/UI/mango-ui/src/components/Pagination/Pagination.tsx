@@ -1,4 +1,5 @@
 import { PAGE_SIZE_OPTIONS } from '@/constants';
+import { useTranslation } from 'react-i18next';
 import './Pagination.css';
 
 interface PaginationProps {
@@ -20,6 +21,8 @@ export const Pagination = ({
     pageSizeOptions = PAGE_SIZE_OPTIONS,
     className = ''
 }: PaginationProps) => {
+    const { t } = useTranslation();
+
     if (totalPages === 0 && !onPageSizeChange) return null;
 
     // Ensure current pageSize is in the options list
@@ -33,17 +36,17 @@ export const Pagination = ({
                     disabled={currentPage <= 1}
                     onClick={() => onPageChange(currentPage - 1)}
                 >
-                    ← Prev
+                    ← {t('common.previous')}
                 </button>
                 <span className="pagination-info">
-                    Page {currentPage} of {totalPages || 1}
+                    {t('common.page')} {currentPage} {t('common.of')} {totalPages || 1}
                 </span>
                 <button
                     className="pagination-btn"
                     disabled={currentPage >= totalPages || totalPages === 0}
                     onClick={() => onPageChange(currentPage + 1)}
                 >
-                    Next →
+                    {t('common.next')} →
                 </button>
             </div>
 

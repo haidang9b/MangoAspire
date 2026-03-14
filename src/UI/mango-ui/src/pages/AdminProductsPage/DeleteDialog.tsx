@@ -9,9 +9,11 @@ export interface DeleteDialogProps {
 }
 
 import { Modal } from '@/components';
+import { useTranslation } from 'react-i18next';
 
 export function DeleteDialog({ product, onCancel, onDeleted }: DeleteDialogProps) {
     const { products: productsService } = useApi();
+    const { t } = useTranslation();
     const [deleting, setDeleting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -30,21 +32,21 @@ export function DeleteDialog({ product, onCancel, onDeleted }: DeleteDialogProps
 
     return (
         <Modal
-            title="Delete Product"
+            title={t('common.delete') || "Delete Product"}
             isOpen={true}
             onClose={onCancel}
             size="sm"
             footer={
                 <>
-                    <button className="btn-secondary" onClick={onCancel}>Cancel</button>
+                    <button className="btn-secondary" onClick={onCancel}>{t('common.cancel')}</button>
                     <button className="btn-danger" onClick={handleDelete} disabled={deleting}>
-                        {deleting ? 'Deleting…' : 'Delete'}
+                        {deleting ? t('common.loading') : t('common.delete')}
                     </button>
                 </>
             }
         >
             <p className="delete-confirm__msg">
-                Are you sure you want to delete <strong>{product.name}</strong>? This cannot be undone.
+                {t('admin.deleteConfirm') || "Are you sure you want to delete"} <strong>{product.name}</strong>?
             </p>
             {error && <p className="form-error">⚠️ {error}</p>}
         </Modal>

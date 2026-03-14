@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useApi, useFetch } from '@/hooks';
+import { useTranslation } from 'react-i18next';
 import { PageMetadata, Pagination } from '@/components';
 import { CACHE_KEYS, ORDER_STATUS, PAGE_SIZE_OPTIONS, ROUTES } from '@/constants';
 import type { OrderDto, PaginatedItems } from '@/types';
@@ -8,6 +9,7 @@ import './OrdersPage.css';
 
 export function OrdersPage() {
     const { orders: ordersService } = useApi();
+    const { t } = useTranslation();
     const [pageIndex, setPageIndex] = useState(1);
     const [pageSize, setPageSize] = useState(10);
 
@@ -38,17 +40,17 @@ export function OrdersPage() {
         setPageIndex(1);
     };
 
-    if (isLoading) return <div className="page-loading">Loading order history...</div>;
+    if (isLoading) return <div className="page-loading">{t('common.loading')}</div>;
 
     return (
         <div className="orders-page container py-5">
             <PageMetadata
-                title="My Orders | Mango Store"
+                title={`${t('orders.title')} | Mango Store`}
                 description="View and track your previous orders from Mango Store."
             />
             <header className="page-header mb-5">
-                <h1 className="page-title">My Orders</h1>
-                <p className="page-subtitle">Track and manage your order history</p>
+                <h1 className="page-title">{t('orders.title')}</h1>
+                <p className="page-subtitle">{t('orders.subtitle', 'Track and manage your order history')}</p>
             </header>
 
             {error && <div className="error-banner mb-4">{error}</div>}
@@ -56,9 +58,9 @@ export function OrdersPage() {
             {!orders || orders.data.length === 0 ? (
                 <div className="empty-state">
                     <div className="empty-state__icon">📦</div>
-                    <h2>No orders found</h2>
-                    <p>It looks like you haven't placed any orders yet.</p>
-                    <Link to={ROUTES.HOME} className="btn btn-primary mt-3">Start Shopping</Link>
+                    <h2>{t('orders.noOrders')}</h2>
+                    <p>{t('orders.noOrdersDesc')}</p>
+                    <Link to={ROUTES.HOME} className="btn btn-primary mt-3">{t('orders.startShopping')}</Link>
                 </div>
             ) : (
                 <>
@@ -66,7 +68,7 @@ export function OrdersPage() {
                         {orders.data.map((order) => (
                             <div key={order.id} className="order-card">
                                 <div className="order-card__header">
-                                    <span className="order-card__id">Order #{order.id.split('-')[0].toUpperCase()}</span>
+                                    <span className="order-card__id">{t('orders.orderId')} #{order.id.split('-')[0].toUpperCase()}</span>
                                     <span
                                         className="order-card__status"
                                         style={{ '--status-color': getStatusColor(order.status) } as React.CSSProperties}
@@ -76,21 +78,21 @@ export function OrdersPage() {
                                 </div>
                                 <div className="order-card__body">
                                     <div className="order-card__row">
-                                        <span className="label">Date</span>
+                                        <span className="label">{t('orders.date')}</span>
                                         <span className="value">{new Date(order.orderTime).toLocaleDateString()}</span>
                                     </div>
                                     <div className="order-card__row">
-                                        <span className="label">Items</span>
-                                        <span className="value">{order.itemCount} item(s)</span>
+                                        <span className="label">{t('orders.items')}</span>
+                                        <span className="value">{t('orders.itemCount', { count: order.itemCount })}</span>
                                     </div>
                                     <div className="order-card__row">
-                                        <span className="label">Total</span>
+                                        <span className="label">{t('cart.total')}</span>
                                         <span className="value value--total">${order.orderTotal.toFixed(2)}</span>
                                     </div>
                                 </div>
                                 <div className="order-card__footer">
                                     <Link to={`${ROUTES.ORDERS}/${order.id}`} className="btn btn-outline btn-block">
-                                        View Details
+                                        {t('orders.details')}
                                     </Link>
                                 </div>
                             </div>

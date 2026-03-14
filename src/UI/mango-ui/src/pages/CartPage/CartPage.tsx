@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useCart } from '@/hooks';
+import { useTranslation } from 'react-i18next';
 import { PageMetadata } from '@/components/PageMetadata';
 import { ROUTES } from '@/constants';
 import type { CartDetails } from '@/types';
@@ -7,11 +8,12 @@ import './CartPage.css';
 
 export function CartPage() {
     const { cart, isLoading, error, removeItem, applyCoupon, removeCoupon, refresh } = useCart();
+    const { t } = useTranslation();
 
     if (isLoading && !cart) {
         return (
             <div className="cart-page cart-page--loading">
-                <p>Loading your cart...</p>
+                <p>{t('common.loading')}</p>
             </div>
         );
     }
@@ -30,10 +32,10 @@ export function CartPage() {
             <div className="cart-page cart-page--empty">
                 <div className="empty-cart-msg">
                     <span style={{ fontSize: '4rem' }}>🛒</span>
-                    <h2>Your cart is empty</h2>
+                    <h2>{t('cart.empty')}</h2>
                     <p>Go add some delicious mangoes!</p>
                     <Link to={ROUTES.HOME} className="cart-page__btn" style={{ textDecoration: 'none', display: 'block', textAlign: 'center' }}>
-                        Back to Shop
+                        {t('common.back')}
                     </Link>
                 </div>
             </div>
@@ -43,10 +45,10 @@ export function CartPage() {
     return (
         <div className="cart-page">
             <PageMetadata
-                title="Your Cart | Mango Store"
+                title={`${t('cart.title')} | Mango Store`}
                 description="Review your items and proceed to checkout for your delicious mangoes."
             />
-            <h1 className="cart-page__title">Shopping Cart</h1>
+            <h1 className="cart-page__title">{t('cart.title')}</h1>
 
             <div className="cart-page__container">
                 <div className="cart-page__items">
@@ -60,7 +62,7 @@ export function CartPage() {
                                 <p className="cart-item__price">${item.product?.price.toFixed(2)}</p>
                             </div>
                             <div className="cart-item__quantity">
-                                <span>Qty: {item.count}</span>
+                                <span>{t('cart.quantity')}: {item.count}</span>
                             </div>
                             <div className="cart-item__total">
                                 <p>${((item.product?.price ?? 0) * item.count).toFixed(2)}</p>
@@ -74,10 +76,10 @@ export function CartPage() {
 
                 <div className="cart-page__summary">
                     <div className="summary-card">
-                        <h3>Order Summary</h3>
+                        <h3>{t('checkout.orderSummary')}</h3>
 
                         <div className="summary-row summary-row--total">
-                            <span className="text-danger" style={{ fontSize: '1.3rem', fontWeight: 'bold' }}>Order Total</span>
+                            <span className="text-danger" style={{ fontSize: '1.3rem', fontWeight: 'bold' }}>{t('cart.total')}</span>
                             <span className="text-danger" style={{ fontSize: '1.3rem', fontWeight: 'bold' }}>
                                 ${cart.cartHeader.orderTotal.toFixed(2)}
                             </span>
@@ -112,7 +114,7 @@ export function CartPage() {
                         </div>
 
                         <Link to={ROUTES.CHECKOUT} className="cart-page__btn cart-page__btn--checkout" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            Checkout
+                            {t('cart.proceedToCheckout')}
                         </Link>
                     </div>
                 </div>

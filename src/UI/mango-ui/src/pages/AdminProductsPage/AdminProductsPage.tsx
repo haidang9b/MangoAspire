@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useApi } from '@/hooks/useApi';
 import { useFetch } from '@/hooks/useFetch';
+import { useTranslation } from 'react-i18next';
 import { PageMetadata, SearchBox, SelectBox, Pagination } from '@/components';
 import { ProductFormModal } from './ProductFormModal';
 import { DeleteDialog } from './DeleteDialog';
@@ -20,6 +21,7 @@ export function AdminProductsPage() {
         handleTypeChange,
         handleSearch } = useProductsSearchParams();
     const { products: productsService } = useApi();
+    const { t } = useTranslation();
     const [tick, setTick] = useState(0);
     const [showForm, setShowForm] = useState(false);
     const [editing, setEditing] = useState<Product | null>(null);
@@ -67,19 +69,19 @@ export function AdminProductsPage() {
 
     return (
         <div className="admin-page">
-            <PageMetadata title="Manage Products | Mango Admin" description="Admin panel for managing products." />
+            <PageMetadata title={`${t('admin.title')} | Mango Admin`} description="Admin panel for managing products." />
 
             <div className="admin-page__header">
                 <div>
-                    <h1 className="admin-page__title">Product Management</h1>
+                    <h1 className="admin-page__title">{t('admin.title')}</h1>
                     <p className="admin-page__subtitle">{totalCount} product{totalCount !== 1 ? 's' : ''} total</p>
                 </div>
-                <button className="btn-primary" onClick={openCreate}>+ New Product</button>
+                <button className="btn-primary" onClick={openCreate}>+ {t('admin.createProduct')}</button>
             </div>
 
             <div className="admin-page__toolbar">
                 <SearchBox
-                    placeholder="Search by name…"
+                    placeholder={t('products.searchPlaceholder')}
                     value={search}
                     onChange={handleSearch}
                     className="admin-search-wrapper"
@@ -90,7 +92,7 @@ export function AdminProductsPage() {
                     value={selectedType ?? ''}
                     onChange={e => handleTypeChange(e.target.value ? Number(e.target.value) : undefined)}
                 >
-                    <option value="">All Categories</option>
+                    <option value="">{t('common.all') || "All Categories"}</option>
                     {catalogTypes?.map(t => (
                         <option key={t.id} value={t.id}>{t.type}</option>
                     ))}
@@ -109,7 +111,7 @@ export function AdminProductsPage() {
                 <div className="admin-error">
                     <span>⚠️</span>
                     <p>{error}</p>
-                    <button className="btn-secondary" onClick={reload}>Retry</button>
+                    <button className="btn-secondary" onClick={reload}>{t('common.retry') || "Retry"}</button>
                 </div>
             )}
 
@@ -120,9 +122,9 @@ export function AdminProductsPage() {
                             <thead>
                                 <tr>
                                     <th>Image</th>
-                                    <th>Name</th>
-                                    <th>Category</th>
-                                    <th className="text-right">Price</th>
+                                    <th>{t('products.title')}</th>
+                                    <th>{t('products.category')}</th>
+                                    <th className="text-right">{t('products.price')}</th>
                                     <th className="text-right">Stock</th>
                                     <th className="text-center">Actions</th>
                                 </tr>
@@ -130,7 +132,7 @@ export function AdminProductsPage() {
                             <tbody>
                                 {allProducts.length === 0 ? (
                                     <tr>
-                                        <td colSpan={6} className="admin-table__empty">No products found.</td>
+                                        <td colSpan={6} className="admin-table__empty">{t('products.noProducts')}</td>
                                     </tr>
                                 ) : (
                                     allProducts.map((p: Product) => {
@@ -157,8 +159,8 @@ export function AdminProductsPage() {
                                                 </td>
                                                 <td className="text-center">
                                                     <div className="admin-table__actions">
-                                                        <button className="action-btn action-btn--edit" onClick={() => openEdit(p)}>✏️ Edit</button>
-                                                        <button className="action-btn action-btn--delete" onClick={() => setDeleting(p)}>🗑 Delete</button>
+                                                        <button className="action-btn action-btn--edit" onClick={() => openEdit(p)}>✏️ {t('common.edit')}</button>
+                                                        <button className="action-btn action-btn--delete" onClick={() => setDeleting(p)}>🗑 {t('common.delete')}</button>
                                                     </div>
                                                 </td>
                                             </tr>

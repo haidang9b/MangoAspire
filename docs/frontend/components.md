@@ -7,6 +7,9 @@ Recent UI refactorings have extracted monolithic structures into distinct, cohes
 - `App.tsx` has been decomposed into smaller layers including `AppRoutes` and `AppProviders` to comply with SOLID principles.
 - Complex component logic (e.g., forms, search bars) has been isolated.
 
+## Shared Components
+- `LanguageSelector`: Triggers global `i18next` language toggling, often utilizing the `useTranslation` hook, and is integrated into the Navbar.
+
 ## Theming and Styling
 We have actively migrated away from third-party UI libraries like Material UI to favor custom, lightweight UI primitive components.
 

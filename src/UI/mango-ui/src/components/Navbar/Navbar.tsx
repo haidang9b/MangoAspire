@@ -1,5 +1,7 @@
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth, useCart, useTheme } from '@/hooks';
+import { useTranslation } from 'react-i18next';
+import { LanguageSelector } from './LanguageSelector';
 import { ROUTES } from '@/constants';
 import { Roles, hasRole } from '@/constants/roles';
 import './Navbar.css';
@@ -9,6 +11,7 @@ export function Navbar() {
     const { theme, toggleTheme } = useTheme();
     const { cartCount } = useCart();
     const navigate = useNavigate();
+    const { t } = useTranslation();
 
     return (
         <nav className="navbar">
@@ -17,6 +20,7 @@ export function Navbar() {
                 <span className="navbar__name">Mango Store</span>
             </div>
             <div className="navbar__actions">
+                <LanguageSelector />
                 <button
                     className="navbar__theme-toggle"
                     onClick={toggleTheme}
@@ -34,23 +38,23 @@ export function Navbar() {
                                 )}
                             </Link>
                             <Link to={ROUTES.ORDERS} className="navbar__link" style={{ marginRight: '15px' }}>
-                                My Orders
+                                {t('nav.orders')}
                             </Link>
                             {hasRole(userInfo?.role, Roles.Admin) && (
                                 <Link to={ROUTES.ADMIN_PRODUCTS} className="navbar__link" style={{ marginRight: '15px' }}>
-                                    ⚙️ Manage Products
+                                    ⚙️ {t('nav.admin')}
                                 </Link>
                             )}
                             <span className="navbar__user-name">
                                 {userInfo?.given_name || userInfo?.name || user.profile.name || user.profile.email || 'User'}
                             </span>
                             <button className="navbar__btn navbar__btn--logout" onClick={logout}>
-                                Sign out
+                                {t('nav.logout')}
                             </button>
                         </div>
                     ) : (
                         <button className="navbar__btn navbar__btn--login" onClick={login}>
-                            Sign in
+                            {t('nav.login')}
                         </button>
                     )
                 )}

@@ -1,0 +1,93 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "language": "Language",
+    "all": "All",
+    "page": "Page",
+    "of": "of"
+  },
+  "nav": {
+    "home": "Home",
+    "cart": "Cart",
+    "orders": "Orders",
+    "admin": "Admin",
+    "login": "Login",
+    "logout": "Logout"
+  },
+  "products": {
+    "title": "Products",
+    "noProducts": "No products found",
+    "addToCart": "Add to Cart",
+    "details": "Details",
+    "price": "Price",
+    "category": "Category",
+    "searchPlaceholder": "Search products...",
+    "inStock": "In Stock",
+    "outOfStock": "Out of Stock"
+  },
+  "cart": {
+    "title": "Your Cart",
+    "empty": "Your cart is empty",
+    "proceedToCheckout": "Proceed to Checkout",
+    "total": "Total",
+    "quantity": "Quantity",
+    "subtotal": "Subtotal",
+    "discount": "Discount"
+  },
+  "checkout": {
+    "title": "Checkout",
+    "placeOrder": "Place Order",
+    "orderSummary": "Order Summary",
+    "shippingAddress": "Shipping Address",
+    "billingAddress": "Billing Address",
+    "enterCoupon": "Enter Coupon",
+    "apply": "Apply",
+    "couponApplied": "Coupon applied successfully!",
+    "invalidCoupon": "Invalid coupon",
+    "deliveryInfo": "Delivery Information",
+    "pickupTime": "Pickup Time (minimum 1 hour from now)",
+    "paymentDetails": "Payment Details",
+    "cardNumber": "Card Number",
+    "cvv": "CVV",
+    "expiry": "Expiry (MMYY)",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "email": "Email",
+    "phone": "Phone Number"
+  },
+  "orders": {
+    "title": "Your Orders",
+    "orderId": "Order ID",
+    "date": "Date",
+    "status": "Status",
+    "total": "Total",
+    "details": "View Details",
+    "confirmed": "Order Confirmed!",
+    "thankYou": "Thank you for your order. We've received it and will start preparing it soon.",
+    "notFound": "Order not found",
+    "shippingInfo": "Shipping Information",
+    "fullName": "Full Name",
+    "email": "Email Address",
+    "phone": "Phone Number",
+    "items": "Order Items",
+    "itemCount": "{{count}} item(s)",
+    "cancelReason": "Cancellation Reason",
+    "noOrders": "No orders found",
+    "noOrdersDesc": "It looks like you haven't placed any orders yet.",
+    "startShopping": "Start Shopping"
+  },
+  "admin": {
+    "title": "Admin Dashboard",
+    "createProduct": "Create Product",
+    "deleteConfirm": "Are you sure you want to delete this product?"
+  }
+}

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useApi, useFetch, useAuth, useCart } from '@/hooks';
+import { useTranslation } from 'react-i18next';
 import { PageMetadata } from '@/components';
 import { CACHE_KEYS, ROUTES } from '@/constants';
 import type { Product } from '@/types';
@@ -12,6 +13,7 @@ export function ProductDetailsPage() {
     const navigate = useNavigate();
     const { user, login } = useAuth();
     const { addToCart } = useCart();
+    const { t } = useTranslation();
 
     const [quantity, setQuantity] = useState(1);
     const [adding, setAdding] = useState(false);
@@ -37,7 +39,7 @@ export function ProductDetailsPage() {
     if (isLoading) {
         return (
             <div className="product-details-page product-details-page--loading">
-                <p>Loading product details...</p>
+                <p>{t('common.loading')}</p>
             </div>
         );
     }
@@ -46,7 +48,7 @@ export function ProductDetailsPage() {
         return (
             <div className="product-details-page product-details-page--error">
                 <p>⚠️ {error || 'Product not found'}</p>
-                <button onClick={() => navigate(ROUTES.HOME)}>Back to Shop</button>
+                <button onClick={() => navigate(ROUTES.HOME)}>{t('common.back')} {t('products.title')}</button>
             </div>
         );
     }
@@ -60,7 +62,7 @@ export function ProductDetailsPage() {
                 description={product.description?.replace(/<[^>]*>/g, '').slice(0, 160) || `Buy ${product.name} at Mango Store.`}
             />
             <div className="product-details__back">
-                <Link to={ROUTES.HOME} className="back-link">← Back to Products</Link>
+                <Link to={ROUTES.HOME} className="back-link">← {t('common.back')} {t('products.title')}</Link>
             </div>
 
             <div className="product-details__container">
@@ -83,9 +85,9 @@ export function ProductDetailsPage() {
                         <div className="product-details__meta">
                             <span className="badge-tag">{product.catalogType?.type ?? 'Mango'}</span>
                             {product.stock > 0 ? (
-                                <span className="badge-tag badge-tag--success">In Stock: {product.stock}</span>
+                                <span className="badge-tag badge-tag--success">{t('products.inStock')}: {product.stock}</span>
                             ) : (
-                                <span className="badge-tag badge-tag--danger">Out of Stock</span>
+                                <span className="badge-tag badge-tag--danger">{t('products.outOfStock')}</span>
                             )}
                         </div>
 
@@ -93,7 +95,7 @@ export function ProductDetailsPage() {
 
                         <div className="product-details__action-box">
                             <div className="quantity-selector">
-                                <label htmlFor="quantity">Quantity</label>
+                                <label htmlFor="quantity">{t('cart.quantity')}</label>
                                 <div className="quantity-controls">
                                     <button type="button" onClick={() => setQuantity(q => Math.max(1, q - 1))}>−</button>
                                     <input
@@ -108,13 +110,13 @@ export function ProductDetailsPage() {
                             </div>
 
                             <div className="product-details__btns">
-                                <Link to={ROUTES.HOME} className="btn-secondary">Back to List</Link>
+                                <Link to={ROUTES.HOME} className="btn-secondary">{t('common.back')}</Link>
                                 <button
                                     className="btn-primary"
                                     onClick={handleAddToCart}
                                     disabled={adding || product.stock <= 0}
                                 >
-                                    {adding ? 'Adding...' : 'Add to Cart'}
+                                    {adding ? t('common.loading') : t('products.addToCart')}
                                 </button>
                             </div>
                         </div>
