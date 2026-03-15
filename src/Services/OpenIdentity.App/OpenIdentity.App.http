@@ -1,0 +1,6 @@
+@OpenIdentity.App_HostAddress = http://localhost:5009
+
+GET {{OpenIdentity.App_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

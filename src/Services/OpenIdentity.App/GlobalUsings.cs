@@ -1,0 +1,11 @@
+﻿global using Microsoft.AspNetCore;
+global using Microsoft.AspNetCore.Authentication;
+global using Microsoft.AspNetCore.Authorization;
+global using Microsoft.AspNetCore.Identity;
+global using Microsoft.AspNetCore.Mvc;
+global using OpenIddict.Abstractions;
+global using OpenIddict.Server.AspNetCore;
+global using OpenIdentity.App.Data;
+global using OpenIdentity.App.Entities;
+global using OpenIdentity.App.Models;
+global using System.Security.Claims;
