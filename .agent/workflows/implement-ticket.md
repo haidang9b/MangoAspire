@@ -12,7 +12,7 @@ Description: End-to-end execution of a feature or bug fix from requirements to d
 2. **Load Memory:** Read `docs/memory/project-context.md` (or equivalent global memory file) to load previous architectural constraints, known bugs, or project-specific "gotchas" before making any decisions.
 
 ### Step 1: Business Analysis and Technical Planning
-1. **Trigger BA Analysis:** Execute the sub-workflow `analyze-requirement`.
+1. **Trigger BA Analysis:** Execute the sub-workflow `analyze-po-requirement`.
    - The agent acts as a BA to translate PO requirements into a Technical Blueprint.
    - Output: A structured list of Entities, API Contracts, and UI Components.
 2. **Context Search:** Scan relevant Backend (Domain/Application) and Frontend (Components/Context) files to identify exact touchpoints.
@@ -34,13 +34,13 @@ Description: End-to-end execution of a feature or bug fix from requirements to d
 5. **Sync:** Ensure TypeScript interfaces strictly match Backend DTOs. Mark Step 2 `[x] Completed`.
 
 ### Step 3: Verification and Quality
-1. **Backend Testing:** Run 'test-gen' to create xUnit tests with Moq and Shouldly. Execute `dotnet test`.
+1. **Backend Testing:** Run 'create-unit-test' to create xUnit tests with Moq and Shouldly. Execute `dotnet test`.
 2. **Frontend Testing:** Generate Vitest tests using React Testing Library. Execute `npm run test`.
 3. **Refactor:** Run the 'fix-warnings' workflow to ensure zero C# 14 compiler warnings.
 4. **Update Tracker:** If tests pass, mark Step 3 `[x] Completed`. If failed, update tracker to `Blocked: Test Failure` and propose a fix.
 
 ### Step 4: Documentation, Memory, and Completion
-1. **Update Docs:** Run 'manage-docs' to sync `/docs` with the new implementation.
+1. **Update Docs:** Run 'manage-documentation' to sync `/docs` with the new implementation.
 2. **Commit:** Trigger 'generate-commit' to create a Conventional Commit.
 3. **Consolidate Memory:** Extract any new architectural decisions, workarounds, or domain learnings discovered during this ticket and append them to `docs/memory/project-context.md` for future context.
 4. **Archive:** Move the plan (`docs/plans/TICKET-ID.md`) and the completed tracker (`docs/tracking/TICKET-ID.md`) to `docs/archive/plans/` and mark the ticket `[x] Done`.
