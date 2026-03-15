@@ -25,6 +25,16 @@ app.MapPost("/api/products", async (
 });
 ```
 
+### Modular Routing (OpenIdentity.App Pattern)
+For services with multiple distinct API groups, we use a modular routing pattern where endpoints are separated into static classes (e.g., `ClientEndpoints`, `RoleEndpoints`) and registered via extension methods:
+
+```csharp
+app.MapGroup("/api")
+   .RequireAuthorization("Admin")
+   .MapClientsApi()
+   .MapResourcesApi();
+```
+
 ## Security Overview
 Endpoints interacting with sensitive resources (e.g., `Orders.API`, `ShoppingCart.API`) explicitly require Authorization headers matching specific policies and scopes provided by the `Identity.API`.
 

@@ -22,6 +22,7 @@ graph TD
 
     subgraph "Core Microservices"
         Identity[Identity.API]
+        OpenIdentity[OpenIdentity.App]
         Product[Products.API]
         Cart[ShoppingCart.API]
         Order[Orders.API]
@@ -40,6 +41,7 @@ graph TD
     UI --> Gateway
     
     Gateway --> Identity
+    Gateway --> OpenIdentity
     Gateway --> Product
     Gateway --> Cart
     Gateway --> Order
@@ -51,6 +53,7 @@ graph TD
     Order --> Postgres
     Coupon --> Postgres
     Identity --> Postgres
+    OpenIdentity --> Postgres
     Payment --> Postgres
     Chat --> Postgres
 
@@ -70,7 +73,7 @@ graph TD
 ## Key Components
 
 ### 1. Identity & Security
-- **Duende IdentityServer**: Centralized authentication and authorization.
+- **Duende IdentityServer & OpenIddict**: Centralized authentication and authorization. `Identity.API` uses Duende, while the new `OpenIdentity.App` leverages OpenIddict for modularity.
 - **OpenID Connect (OIDC)**: Used for secure communication between the frontends and microservices.
 - **Token-Based Auth**: Bearer tokens handling access control.
 
@@ -100,6 +103,7 @@ graph TD
 | Service | Responsibility | Database |
 | :--- | :--- | :--- |
 | **Identity.API** | AuthN/AuthZ, user management | `identitydb` |
+| **OpenIdentity.App** | Modernized AuthN/AuthZ using OpenIddict | `openidentitydb` |
 | **Products.API** | Product catalog management | `productdb` |
 | **ShoppingCart.API** | User cart & items | `shoppingcartdb` |
 | **Coupons.API** | Discount codes & promotions | `coupondb` |

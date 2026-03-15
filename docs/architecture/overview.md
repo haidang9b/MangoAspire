@@ -14,6 +14,7 @@ The system is composed of several autonomous microservices, each managing its ow
 ## Core Microservices
 The backend features the following primary services:
 - **Identity.API**: Handles AuthN/AuthZ using Duende IdentityServer.
+- **OpenIdentity.App**: Modernized Identity service utilizing **OpenIddict** and Minimal APIs.
 - **Products.API**: Manages the product catalog.
 - **ShoppingCart.API**: Manages user carts and items.
 - **Orders.API**: Handles the order lifecycle.

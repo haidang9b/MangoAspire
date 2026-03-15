@@ -8,6 +8,7 @@ The system explicitly abides by the database-per-service pattern. Sharing relati
 All relational stores are backed by **PostgreSQL** and modeled with Entity Framework Core (EF Core) via Code-First migrations.
 
 - **`identitydb`**: Schema dedicated to user accounts, roles, claims, and OAuth grants.
+- **`openidentitydb`**: Independent schema for the OpenIddict-based authentication service.
 - **`productdb`**: Master schema for Products and Catalog Types.
 - **`shoppingcartdb`**: Extremely transient database for storing cart session data.
 - **`orderdb`**: Master transaction log managing order states.
