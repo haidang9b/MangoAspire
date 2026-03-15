@@ -29,6 +29,7 @@
     <ProjectReference Include="..\Services\Products.API\Products.API.csproj" />
     <ProjectReference Include="..\Services\ShoppingCart.API\ShoppingCart.API.csproj" />
     <ProjectReference Include="..\UI\Mango.Web\Mango.Web.csproj" />
+    <ProjectReference Include="..\Services\OpenIdentity.App\OpenIdentity.App.csproj" />
   </ItemGroup>
 
 </Project>

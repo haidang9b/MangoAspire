@@ -1,5 +1,6 @@
 ﻿var builder = DistributedApplication.CreateBuilder(args);
 
+
 var postgresPassword = builder.AddParameter("postgres-password", "postgres");
 var rabbitMqPassword = builder.AddParameter("rabbitmq-password", "YourSecretPassword");
 
@@ -12,6 +13,7 @@ var productdb = postgres.AddDatabase("productdb");
 var orderdb = postgres.AddDatabase("orderdb");
 var coupondb = postgres.AddDatabase("coupondb");
 var identitydb = postgres.AddDatabase("identitydb");
+var openidentitydb = postgres.AddDatabase("openidentitydb");
 var shoppingcartdb = postgres.AddDatabase("shoppingcartdb");
 var sagaorchestratorsdb = postgres.AddDatabase("sagaorchestratorsdb");
 var chatagentdb = postgres.AddDatabase("chatagentdb");
@@ -60,6 +62,10 @@ var debezium = builder.AddContainer("debezium", "debezium/server", "2.7.3.Final"
 var identity = builder.AddProject<Projects.Identity_API>("identity-app")
     .WaitFor(identitydb)
     .WithReference(identitydb);
+
+var openIdentity = builder.AddProject<Projects.OpenIdentity_App>("openidentity-app")
+    .WaitFor(openidentitydb)
+    .WithReference(openidentitydb);
 
 // Get identity endpoint for services that need JWT validation
 var launchProfileName = ShouldUseHttpForEndpoints() ? "http" : "https";

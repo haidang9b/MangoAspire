@@ -1,0 +1,57 @@
+@{
+    string name = null;
+    if (!true.Equals(ViewData["signed-out"]))
+    {
+        name = Context.User?.Identity?.Name;
+    }
+}
+
+<nav class="mango-nav" role="navigation" aria-label="Main navigation">
+    <div class="mango-nav__inner mango-container">
+
+        @* Brand *@
+        <a href="~/" class="mango-nav__brand">
+            <img src="~/images/mango.png" alt="Mango logo" class="mango-nav__brand-logo" />
+            Mango <span style="font-weight:400; color: var(--ec-text-muted);">Identity</span>
+        </a>
+
+        @* Nav links *@
+        <ul class="mango-nav__links" id="mango-nav-links" role="list">
+            @if (!string.IsNullOrWhiteSpace(name))
+            {
+                <li>
+                    <span class="mango-nav__user">
+                        <i class="fa-solid fa-circle-user me-1"></i>@name
+                    </span>
+                </li>
+                <li>
+                    <a class="mango-nav__link"
+                       asp-action="Logout"
+                       asp-controller="Account">
+                        <i class="fa-solid fa-right-from-bracket me-1"></i>Logout
+                    </a>
+                </li>
+            }
+        </ul>
+
+        @* Right actions: dark mode toggle + hamburger *@
+        <div class="mango-nav__actions">
+            <button id="mango-theme-toggle"
+                    class="mango-nav__toggle"
+                    onclick="toggleMangoTheme()"
+                    type="button"
+                    title="Toggle dark mode"
+                    aria-label="Toggle dark/light mode">
+                <i class="fa-solid fa-moon"></i>
+            </button>
+
+            <button class="mango-nav__hamburger"
+                    type="button"
+                    onclick="document.getElementById('mango-nav-links').classList.toggle('mango-nav__links--open')"
+                    aria-label="Toggle navigation"
+                    aria-expanded="false">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+        </div>
+    </div>
+</nav>

@@ -1,0 +1,22 @@
+@{
+    ViewData["Title"] = "Welcome";
+}
+
+<div class="welcome-container text-center mt-5">
+    <h1>Welcome to Mango OpenIdentity</h1>
+    <p class="lead">Secure Central Authentication Service</p>
+    
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <div class="alert alert-success mt-4">
+            You are logged in as <strong>@User.Identity.Name</strong>.
+        </div>
+    }
+    else
+    {
+        <div class="mt-4">
+            <a asp-controller="Account" asp-action="Login" class="btn btn-primary btn-lg mx-2">Login</a>
+            <a asp-controller="Account" asp-action="Register" class="btn btn-outline-secondary btn-lg mx-2">Register</a>
+        </div>
+    }
+</div>

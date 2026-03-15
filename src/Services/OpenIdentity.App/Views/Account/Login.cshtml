@@ -1,0 +1,121 @@
+@using OpenIdentity.App.Models
+@model LoginViewModel
+
+@{
+    ViewData["Title"] = "Sign In";
+}
+
+<div class="auth-page mango-fade-in">
+    <div class="auth-card">
+
+        @* Header *@
+        <div class="auth-card__header">
+            <img src="~/images/mango.png" alt="Mango logo" class="auth-card__logo" />
+            <h1 class="auth-card__title">Welcome back</h1>
+            <p class="auth-card__subtitle">Sign in to your Mango account</p>
+        </div>
+
+        @* Body *@
+        <div class="auth-card__body">
+
+            @* Validation errors *@
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="mango-validation" role="alert">
+                    <p class="mango-validation__title">
+                        <i class="fa-solid fa-circle-exclamation me-1"></i>Please fix the following errors
+                    </p>
+                    <ul class="mango-validation__list">
+                        @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                        {
+                            <li class="mango-validation__item">@error.ErrorMessage</li>
+                        }
+                    </ul>
+                </div>
+            }
+
+            @if (Model.EnableLocalLogin)
+            {
+                <form asp-route="Login" class="auth-form" novalidate>
+                    <input type="hidden" asp-for="ReturnUrl" />
+
+                    <div class="auth-form__group">
+                        <label class="auth-form__label" asp-for="Username">
+                            <i class="fa-solid fa-user me-1"></i>Username
+                        </label>
+                        <input class="auth-form__input"
+                               placeholder="Enter your username"
+                               asp-for="Username"
+                               autofocus
+                               autocomplete="username" />
+                    </div>
+
+                    <div class="auth-form__group">
+                        <label class="auth-form__label" asp-for="Password">
+                            <i class="fa-solid fa-lock me-1"></i>Password
+                        </label>
+                        <input type="password"
+                               class="auth-form__input"
+                               placeholder="Enter your password"
+                               asp-for="Password"
+                               autocomplete="current-password" />
+                    </div>
+
+                    @if (Model.AllowRememberLogin)
+                    {
+                        <div class="auth-form__group">
+                            <label class="auth-form__check">
+                                <input class="form-check-input" asp-for="RememberLogin" />
+                                Remember me on this device
+                            </label>
+                        </div>
+                    }
+
+                    <div class="auth-form__actions">
+                        <button class="mango-btn mango-btn--primary mango-btn--block"
+                                name="button" value="login" type="submit">
+                            <i class="fa-solid fa-right-to-bracket me-1"></i>Sign In
+                        </button>
+                        <button class="mango-btn mango-btn--secondary mango-btn--block"
+                                name="button" value="cancel" type="submit">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            }
+
+            @if (Model.VisibleExternalProviders.Any())
+            {
+                <div class="mt-3 pt-3" style="border-top: 1px solid var(--ec-border);">
+                    <p class="text-center mb-2" style="font-size:0.8125rem; color:var(--ec-text-muted);">Or sign in with</p>
+                    <div class="d-flex flex-wrap gap-2">
+                        @foreach (var provider in Model.VisibleExternalProviders)
+                        {
+                            <a class="mango-btn mango-btn--secondary mango-btn--sm"
+                               asp-controller="External"
+                               asp-action="Challenge"
+                               asp-route-scheme="@provider.AuthenticationScheme"
+                               asp-route-returnUrl="@Model.ReturnUrl">
+                                @provider.DisplayName
+                            </a>
+                        }
+                    </div>
+                </div>
+            }
+
+            @if (!Model.EnableLocalLogin && !Model.VisibleExternalProviders.Any())
+            {
+                <div class="mango-alert mango-alert--warning" role="alert">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span><strong>Invalid login request</strong> — No login schemes configured.</span>
+                </div>
+            }
+        </div>
+
+        @* Footer *@
+        <div class="auth-card__footer">
+            New to Mango?&nbsp;
+            <a href="@Url.Action("Register", new { Model.ReturnUrl })">Create an account</a>
+        </div>
+    </div>
+</div>
