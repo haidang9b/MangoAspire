@@ -14,7 +14,7 @@ public class ApplicationDbContextFactory : IDesignTimeDbContextFactory<Applicati
 
         var builder = new DbContextOptionsBuilder<ApplicationDbContext>();
         var connectionString = configuration.GetConnectionString("openidentitydb")
-            ?? "Host=localhost;Database=openidentitydb_dev;Username=postgres;Password=postgres";
+            ?? throw new InvalidOperationException("Connection string 'openidentitydb' not found.");
 
         builder.UseNpgsql(connectionString);
 
