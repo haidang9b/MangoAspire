@@ -41,6 +41,12 @@ var debezium = builder.AddContainer("debezium", "debezium/server", "2.7.3.Final"
     .WithEnvironment("DEBEZIUM_SINK_RABBITMQ_CONNECTION_USERNAME", "guest")
     .WithEnvironment("DEBEZIUM_SINK_RABBITMQ_CONNECTION_PASSWORD", "YourSecretPassword");
 
+var identityType = (Environment.GetEnvironmentVariable("IdentityType")
+        ?? Environment.GetEnvironmentVariable("IDENTITY_TYPE")
+        ?? "Duende")
+    .Trim();
+var useOpenIddict = identityType.Equals("OpenIddict", StringComparison.OrdinalIgnoreCase);
+
 //var serviceBus = builder.AddAzureServiceBus("mango")
 //    .RunAsEmulator();
 
@@ -67,9 +73,11 @@ var openIdentity = builder.AddProject<Projects.OpenIdentity_App>("openidentity-a
     .WaitFor(openidentitydb)
     .WithReference(openidentitydb);
 
+var identityRef = useOpenIddict ? openIdentity : identity;
+
 // Get identity endpoint for services that need JWT validation
 var launchProfileName = ShouldUseHttpForEndpoints() ? "http" : "https";
-var identityEndpoint = identity.GetEndpoint(launchProfileName);
+var identityEndpoint = identityRef.GetEndpoint(launchProfileName);
 
 var products = builder.AddProject<Projects.Products_API>("products-api")
     .WaitFor(productdb).WithReference(productdb)
@@ -85,7 +93,7 @@ var shoppingcart = builder.AddProject<Projects.ShoppingCart_API>("shoppingcart-a
     //.WaitFor(serviceBus)
     .WithReference(shoppingcartdb)
     //.WithReference(serviceBus)
-    .WithReference(identity)
+    .WithReference(identityRef)
     .WithReference(coupon)
     .WithEnvironment("ServiceUrls__IdentityApp", identityEndpoint);
 
@@ -95,7 +103,7 @@ var orders = builder.AddProject<Projects.Orders_API>("orders-api")
     //.WaitFor(serviceBus)
     .WithReference(orderdb)
     .WithReference(rabbitMq)
-    .WithReference(identity)
+    .WithReference(identityRef)
     .WithEnvironment("ServiceUrls__IdentityApp", identityEndpoint);
 //.WithReference(serviceBus);
 
@@ -109,7 +117,7 @@ var payments = builder.AddProject<Projects.Payments_API>("payments-api")
 
 var agentApp = builder.AddProject<Projects.ChatAgent_App>("chatagent-app")
     .WithReference(chatagentdb).WaitFor(chatagentdb)
-    .WithReference(identity).WaitFor(identity)
+    .WithReference(identityRef).WaitFor(identityRef)
     .WithEnvironment("ServiceUrls__IdentityApp", identityEndpoint)
     .WithReference(coupon).WaitFor(coupon)
     .WithReference(shoppingcart).WaitFor(shoppingcart)
@@ -117,7 +125,7 @@ var agentApp = builder.AddProject<Projects.ChatAgent_App>("chatagent-app")
 
 
 var webApp = builder.AddProject<Projects.Mango_Web>("mango-web")
-    .WithReference(identity)
+    .WithReference(identityRef)
     .WithReference(products)
     .WithReference(shoppingcart)
     .WithReference(orders)
@@ -129,13 +137,15 @@ var webApp = builder.AddProject<Projects.Mango_Web>("mango-web")
 identity.WithEnvironment("IdentityServer__Clients__1__RedirectUris__0", $"{webApp.GetEndpoint("https")}/signin-oidc")
         .WithEnvironment("IdentityServer__Clients__1__PostLogoutRedirectUris__0", $"{webApp.GetEndpoint("https")}/signout-callback-oidc");
 
+openIdentity.WithEnvironment("OpenIddict__Clients__MangoWeb__RedirectUri", $"{webApp.GetEndpoint("https")}/signin-oidc")
+    .WithEnvironment("OpenIddict__Clients__MangoWeb__PostLogoutUri", $"{webApp.GetEndpoint("https")}/signout-callback-oidc");
 
 builder.AddProject<Projects.Mango_Orchestrators>("mango-saga-orchestrators")
     .WaitFor(rabbitMq).WithReference(rabbitMq)
     .WaitFor(sagaorchestratorsdb).WithReference(sagaorchestratorsdb);
 
 
-builder.AddProject<Projects.Mango_Gateway>("mango-gateway")
+var gateway = builder.AddProject<Projects.Mango_Gateway>("mango-gateway")
     .WithReference(products)
     .WithReference(orders)
     .WithReference(shoppingcart)
@@ -143,9 +153,21 @@ builder.AddProject<Projects.Mango_Gateway>("mango-gateway")
     .WithReference(agentApp);
 
 
-//builder.AddExecutable("mango-ui", "pnpm", "../UI/mango-ui", "dev")
-//    .WithHttpEndpoint(port: 5173, env: "PORT")
-//    .WithExternalHttpEndpoints();
+var mangoUi = builder.AddExecutable("mango-ui", "pnpm", "../UI/mango-ui", "dev")
+    .WithHttpEndpoint(port: 5173, env: "PORT")
+    .WithExternalHttpEndpoints();
+
+//var gatewayEndpoint = gateway.GetEndpoint(launchProfileName);
+var mangoUiUrl = "http://localhost:5173";
+//var gatewayUrl = gatewayEndpoint.Url;
+
+mangoUi
+    .WithEnvironment("VITE_IDENTITY_URL", identityEndpoint);
+
+openIdentity
+    .WithEnvironment("OpenIddict__Clients__MangoSpa__RedirectUri", $"{mangoUiUrl}/callback")
+    .WithEnvironment("OpenIddict__Clients__MangoSpa__SilentRedirectUri", $"{mangoUiUrl}/silent-callback")
+    .WithEnvironment("OpenIddict__Clients__MangoSpa__PostLogoutUri", mangoUiUrl);
 
 builder.Build().Run();
 

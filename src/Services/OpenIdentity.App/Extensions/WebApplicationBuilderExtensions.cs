@@ -17,6 +17,18 @@ public static class WebApplicationBuilderExtensions
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();
 
+        var corsOrigins = builder.Configuration.GetSection("Cors:Origins").Get<string[]>() ??
+            ["http://localhost:5173"];
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy("spa", policy =>
+            {
+                policy.WithOrigins(corsOrigins)
+                    .AllowAnyHeader()
+                    .AllowAnyMethod();
+            });
+        });
+
         builder.Services.AddOpenIddict()
             .AddCore(options =>
             {
@@ -27,20 +39,22 @@ public static class WebApplicationBuilderExtensions
             {
                 options.SetTokenEndpointUris("/connect/token")
                        .SetAuthorizationEndpointUris("/connect/authorize")
-                       .SetUserInfoEndpointUris("/connect/userinfo");
+                       .SetUserInfoEndpointUris("/connect/userinfo")
+                       .SetEndSessionEndpointUris("/connect/endsession");
 
                 options.AllowAuthorizationCodeFlow()
                        .RequireProofKeyForCodeExchange()
                        .AllowClientCredentialsFlow()
                        .AllowRefreshTokenFlow();
 
-                options.RegisterScopes("api", "roles");
+                options.RegisterScopes("openid", "profile", "email", "roles", "mango", "offline_access");
 
                 // Use ASP.NET Core Data Protection and endpoint generation
                 options.UseAspNetCore()
                        .EnableTokenEndpointPassthrough()
                        .EnableAuthorizationEndpointPassthrough()
-                       .EnableUserInfoEndpointPassthrough();
+                       .EnableUserInfoEndpointPassthrough()
+                       .EnableEndSessionEndpointPassthrough();
 
                 // Match Identity.API pattern: Use persistent certificates for development for cross-restart token validity.
                 if (builder.Environment.IsDevelopment())

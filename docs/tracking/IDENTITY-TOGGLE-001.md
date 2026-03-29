@@ -6,10 +6,10 @@
 - [x] Analyze impact on individual microservices (Authentication Middleware)
 - [x] Analyze impact on Frontend applications (`Mango.Web` and `mango-ui`)
 - [x] Create Technical Blueprint and Clarifying Questions
-- [ ] Obtain user approval for the plan
+- [x] Obtain user approval for the plan
 
 ## Step 2: Implementation (Core Infrastructure)
-- [ ] Update `Mango.AppHost` to support conditional service registration based on a feature flag
+- [x] Update `Mango.AppHost` to support conditional service registration based on a feature flag
 - [ ] Create a shared configuration/extension for authentication that respects the flag
 
 ## Step 3: Implementation (Microservices)

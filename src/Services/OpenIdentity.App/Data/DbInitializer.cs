@@ -96,13 +96,49 @@ public class DbInitializer(
     // -------------------------------------------------------
     private async Task SeedScopesAsync()
     {
-        if (await scopeManager.FindByNameAsync("api") == null)
+        if (await scopeManager.FindByNameAsync("openid") == null)
         {
             await scopeManager.CreateAsync(new OpenIddictScopeDescriptor
             {
-                Name = "api",
+                Name = "openid",
+                DisplayName = "OpenID"
+            });
+        }
+
+        if (await scopeManager.FindByNameAsync("profile") == null)
+        {
+            await scopeManager.CreateAsync(new OpenIddictScopeDescriptor
+            {
+                Name = "profile",
+                DisplayName = "User Profile"
+            });
+        }
+
+        if (await scopeManager.FindByNameAsync("email") == null)
+        {
+            await scopeManager.CreateAsync(new OpenIddictScopeDescriptor
+            {
+                Name = "email",
+                DisplayName = "User Email"
+            });
+        }
+
+        if (await scopeManager.FindByNameAsync("offline_access") == null)
+        {
+            await scopeManager.CreateAsync(new OpenIddictScopeDescriptor
+            {
+                Name = "offline_access",
+                DisplayName = "Offline Access"
+            });
+        }
+
+        if (await scopeManager.FindByNameAsync("mango") == null)
+        {
+            await scopeManager.CreateAsync(new OpenIddictScopeDescriptor
+            {
+                Name = "mango",
                 DisplayName = "API Access",
-                Resources = { "resource_server" }
+                Resources = { "mango" }
             });
         }
 
@@ -122,7 +158,7 @@ public class DbInitializer(
     private async Task SeedClientsAsync()
     {
         // Mango Web — Authorization Code + PKCE
-        var webClientId = configuration["OpenIddict:Clients:MangoWeb:ClientId"] ?? "mango-web";
+        var webClientId = configuration["OpenIddict:Clients:MangoWeb:ClientId"] ?? "mango";
         if (await applicationManager.FindByClientIdAsync(webClientId) == null)
         {
             var redirectUri = configuration["OpenIddict:Clients:MangoWeb:RedirectUri"] ?? "https://localhost:7002/signin-oidc";
@@ -143,10 +179,11 @@ public class DbInitializer(
                     Permissions.GrantTypes.AuthorizationCode,
                     Permissions.GrantTypes.RefreshToken,
                     Permissions.ResponseTypes.Code,
+                    Permissions.Prefixes.Scope + "openid",
                     Permissions.Scopes.Email,
                     Permissions.Scopes.Profile,
                     Permissions.Scopes.Roles,
-                    Permissions.Prefixes.Scope + "api",
+                    Permissions.Prefixes.Scope + "mango",
                     Permissions.Prefixes.Scope + "roles"
                 },
                 RedirectUris = { new Uri(redirectUri) },
@@ -170,8 +207,47 @@ public class DbInitializer(
                 {
                     Permissions.Endpoints.Token,
                     Permissions.GrantTypes.ClientCredentials,
-                    Permissions.Prefixes.Scope + "api"
+                    Permissions.Prefixes.Scope + "mango"
                 }
+            });
+        }
+
+        // Mango SPA — Authorization Code + PKCE (public client)
+        var spaClientId = configuration["OpenIddict:Clients:MangoSpa:ClientId"] ?? "mango-spa";
+        if (await applicationManager.FindByClientIdAsync(spaClientId) == null)
+        {
+            var redirectUri = configuration["OpenIddict:Clients:MangoSpa:RedirectUri"] ?? "http://localhost:5173/callback";
+            var silentRedirectUri = configuration["OpenIddict:Clients:MangoSpa:SilentRedirectUri"] ?? "http://localhost:5173/silent-callback";
+            var postLogoutUri = configuration["OpenIddict:Clients:MangoSpa:PostLogoutUri"] ?? "http://localhost:5173";
+
+            await applicationManager.CreateAsync(new OpenIddictApplicationDescriptor
+            {
+                ClientId = spaClientId,
+                DisplayName = "Mango SPA",
+                ConsentType = ConsentTypes.Implicit,
+                ClientType = ClientTypes.Public,
+                Permissions =
+                {
+                    Permissions.Endpoints.Authorization,
+                    Permissions.Endpoints.EndSession,
+                    Permissions.Endpoints.Token,
+                    Permissions.GrantTypes.AuthorizationCode,
+                    Permissions.GrantTypes.RefreshToken,
+                    Permissions.ResponseTypes.Code,
+                    Permissions.Prefixes.Scope + "openid",
+                    Permissions.Scopes.Profile,
+                    Permissions.Scopes.Email,
+                    Permissions.Scopes.Roles,
+                    Permissions.Prefixes.Scope + "mango",
+                    Permissions.Prefixes.Scope + "offline_access"
+                },
+                RedirectUris =
+                {
+                    new Uri(redirectUri),
+                    new Uri(silentRedirectUri)
+                },
+                PostLogoutRedirectUris = { new Uri(postLogoutUri) },
+                Requirements = { Requirements.Features.ProofKeyForCodeExchange }
             });
         }
     }

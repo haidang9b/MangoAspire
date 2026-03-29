@@ -126,4 +126,31 @@ public class AccountController(
             SignOutIframeUrl = ""
         });
     }
+
+    [HttpGet("~/connect/endsession")]
+    public IActionResult EndSession()
+    {
+        var request = HttpContext.GetOpenIddictServerRequest();
+        var logoutId = request?.GetParameter("logout_id")?.ToString() ?? string.Empty;
+
+        return View("Logout", new LogoutViewModel
+        {
+            LogoutId = logoutId,
+            ShowLogoutPrompt = true
+        });
+    }
+
+    [HttpPost("~/connect/endsession")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EndSessionPost()
+    {
+        var request = HttpContext.GetOpenIddictServerRequest();
+        var postLogoutRedirectUri = request?.PostLogoutRedirectUri ?? "~/";
+
+        await signInManager.SignOutAsync();
+
+        return SignOut(
+            new AuthenticationProperties { RedirectUri = postLogoutRedirectUri },
+            OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+    }
 }
