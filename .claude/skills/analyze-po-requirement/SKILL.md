@@ -3,6 +3,7 @@ name: analyze-po-requirement
 description: Translates high-level Product Owner (PO) requirements into a technical blueprint for the MangoAspire Vertical Slice backend and React frontend.
 ---
 
+<!-- GENERATED from .agent/ by scripts/sync-agent-harness.ps1 - do not edit directly -->
 # Analyze PO Requirement
 
 Transform a raw Product Owner (PO) requirement into a structured technical plan for MangoAspire (a .NET 10 + Aspire microservices e-commerce platform with a React/Vite SPA). This skill bridges the gap between business needs and technical implementation across the React frontend and the .NET backend, following **Vertical Slice Architecture** (see AGENTS.md and `.agent/rules/architecture.md`).

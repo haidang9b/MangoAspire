@@ -1,0 +1,32 @@
+{
+  "name": "MangoAspire Dev",
+  "image": "mcr.microsoft.com/devcontainers/dotnet:1-10.0",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "lts"
+    },
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {},
+    "ghcr.io/devcontainers/features/powershell:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "forwardPorts": [9121, 5173, 18888, 15672, 8083],
+  "portsAttributes": {
+    "9121": { "label": "Serena MCP" },
+    "5173": { "label": "mango-ui (Vite)" },
+    "18888": { "label": "Aspire dashboard" },
+    "15672": { "label": "RabbitMQ management" },
+    "8083": { "label": "Debezium" }
+  },
+  "postCreateCommand": "corepack enable && npm i -g @anthropic-ai/claude-code && pwsh ./scripts/bootstrap.ps1 -SkipMcp",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-dotnettools.csdevkit",
+        "dbaeumer.vscode-eslint",
+        "ms-azuretools.vscode-docker",
+        "ms-vscode.powershell"
+      ]
+    }
+  },
+  "remoteUser": "vscode"
+}

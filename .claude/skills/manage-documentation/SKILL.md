@@ -3,6 +3,7 @@ name: manage-documentation
 description: Analyzes code changes to synchronize or create technical documentation in the /docs folder for a React + .NET 10 codebase.
 ---
 
+<!-- GENERATED from .agent/ by scripts/sync-agent-harness.ps1 - do not edit directly -->
 # Documentation Manager
 
 Maintain a set of accurate, up-to-date Markdown documents that reflect the current state of the Vertical Slice backend and the React frontend. This skill ensures that code changes are continuously synchronized with the project's technical documentation.

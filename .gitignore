@@ -396,3 +396,17 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+# Claude Code / AI harness — machine-local overrides (shared config IS committed)
+.claude/settings.local.json
+.claude/*.local.json
+.mcp.local.json
+
+# Serena MCP local state
+.serena/project.local.yml
+.serena/cache/
+
+# Environment files (never commit secrets)
+.env
+.env.*
+!.env.example

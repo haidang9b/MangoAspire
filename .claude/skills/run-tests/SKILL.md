@@ -1,8 +1,9 @@
 ---
-name: run-project-tests
+name: run-tests
 description: Use this skill to run the .NET unit test suite (xUnit) for MangoAspire and triage failures.
 ---
 
+<!-- GENERATED from .agent/ by scripts/sync-agent-harness.ps1 - do not edit directly -->
 # Instructions
 
 1. From the repository root, run the full suite: `dotnet test MangoAspire.sln`.
