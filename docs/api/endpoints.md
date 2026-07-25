@@ -36,6 +36,25 @@ app.MapGroup("/api")
 ```
 
 ## Security Overview
-Endpoints interacting with sensitive resources (e.g., `Orders.API`, `ShoppingCart.API`) explicitly require Authorization headers matching specific policies and scopes provided by the `Identity.API`.
+Endpoints interacting with sensitive resources (e.g., `Orders.API`, `ShoppingCart.API`) explicitly require Authorization headers matching specific policies and scopes provided by the active identity provider.
+
+The JWT `Authority` is never hardcoded. Each service reads it from `ServiceUrls:IdentityApp`, which `Mango.AppHost` sets to the endpoint of whichever provider the `IdentityType` switch selected — see the [Architecture Overview](../architecture/overview.md#identity-provider-switch).
+
+### Provider-Agnostic Scope Policies
+The two providers emit the `scope` claim differently: Duende issues one claim per scope, while OpenIddict issues a single space-delimited claim. Policies must accept both, so `ApiScope` splits on whitespace rather than matching a claim value exactly:
+
+```csharp
+options.AddPolicy("ApiScope", policy =>
+{
+    policy.RequireAuthenticatedUser();
+    // Duende emits one claim per scope; OpenIddict emits a single
+    // space-delimited scope claim. Accept both formats.
+    policy.RequireAssertion(context => context.User.FindAll("scope")
+        .SelectMany(claim => claim.Value.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+        .Contains("mango"));
+});
+```
+
+Use this pattern for any new scope-based policy. A plain `policy.RequireClaim("scope", "mango")` silently passes under Duende and fails under OpenIddict.
 
 All routing is funneled through the `Mango.Gateway` (YARP). Front-end clients should strictly call the Gateway URLs, avoiding direct internal microservice ports.
