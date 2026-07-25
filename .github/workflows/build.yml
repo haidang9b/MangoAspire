@@ -1,0 +1,79 @@
+name: Build
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: .NET build & test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          # Projects target net10.0. There is no global.json, so this picks the
+          # latest 10.0 SDK available on the runner image.
+          dotnet-version: "10.0.x"
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          # Versions are centrally managed, so the props file is the cache key.
+          key: nuget-${{ runner.os }}-${{ hashFiles('Directory.Packages.props') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      - name: Restore
+        run: dotnet restore MangoAspire.sln
+
+      - name: Build
+        run: dotnet build MangoAspire.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test MangoAspire.sln --configuration Release --no-build
+
+  frontend:
+    name: SPA build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/UI/mango-ui
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Must come before setup-node: the pnpm cache resolution below needs the
+      # pnpm binary already on PATH.
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: src/UI/mango-ui/pnpm-lock.yaml
+
+      - name: Install dependencies
+        # --frozen-lockfile fails if pnpm-lock.yaml is out of sync with
+        # package.json, rather than silently resolving different versions.
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        # Runs "tsc -b && vite build", so this type-checks as well as bundles.
+        run: pnpm build
