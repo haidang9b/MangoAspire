@@ -1,4 +1,6 @@
-﻿namespace OpenIdentity.App.Routes;
+﻿using OpenIdentity.App.Services;
+
+namespace OpenIdentity.App.Routes;
 
 public static class RoleEndpoints
 {
@@ -15,12 +17,16 @@ public static class RoleEndpoints
             return result.Succeeded ? Results.Ok() : Results.BadRequest(result.Errors);
         });
 
-        rolesApi.MapDelete("/{name}", async (RoleManager<IdentityRole> manager, string name) =>
+        rolesApi.MapDelete("/{name}", async (RoleManager<IdentityRole> manager, UserProfileCache userProfileCache, string name) =>
         {
             var role = await manager.FindByNameAsync(name);
             if (role != null)
             {
                 await manager.DeleteAsync(role);
+
+                // Any cached profile may still list the deleted role.
+                await userProfileCache.InvalidateAllAsync();
+
                 return Results.Ok();
             }
             return Results.NotFound();

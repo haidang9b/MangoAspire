@@ -10,50 +10,47 @@ namespace Identity.API.Services;
 
 public class ProfileService : IProfileService
 {
-    private readonly IUserClaimsPrincipalFactory<ApplicationUser> _userClaimsPrincipalFactory;
     private readonly UserManager<ApplicationUser> _userManager;
-    private readonly RoleManager<IdentityRole> _roleManager;
+    private readonly UserProfileCache _userProfileCache;
 
-    public ProfileService(IUserClaimsPrincipalFactory<ApplicationUser> userClaimsPrincipalFactory, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager)
+    public ProfileService(UserManager<ApplicationUser> userManager, UserProfileCache userProfileCache)
     {
-        _userClaimsPrincipalFactory = userClaimsPrincipalFactory;
         _userManager = userManager;
-        _roleManager = roleManager;
+        _userProfileCache = userProfileCache;
     }
 
     public async Task GetProfileDataAsync(ProfileDataRequestContext context)
     {
         string sub = context.Subject.GetSubjectId();
-        ApplicationUser user = await _userManager.FindByIdAsync(sub);
-        ClaimsPrincipal claimsPrincipal = await _userClaimsPrincipalFactory.CreateAsync(user);
+        var profile = await _userProfileCache.GetAsync(sub);
 
-        List<Claim> claims = claimsPrincipal.Claims.ToList();
-        claims = claims.Where(claim => context.RequestedClaimTypes.Contains(claim.Type)).ToList();
-
-        if (_userManager.SupportsUserRole)
+        if (profile is null)
         {
-            var roles = await _userManager.GetRolesAsync(user);
-            foreach (var roleName in roles)
-            {
-                claims.Add(new Claim(JwtClaimTypes.Role, roleName));
-                claims.Add(new Claim(JwtClaimTypes.FamilyName, user.LastName));
-                claims.Add(new Claim(JwtClaimTypes.GivenName, user.FirstName));
-                if (_roleManager.SupportsRoleClaims)
-                {
-                    IdentityRole role = await _roleManager.FindByNameAsync(roleName);
-                    if (role != null)
-                    {
-                        claims.AddRange(await _roleManager.GetClaimsAsync(role));
-                    }
-                }
-            }
+            context.IssuedClaims = [];
+            return;
         }
+
+        List<Claim> claims = profile.Claims
+            .Where(claim => context.RequestedClaimTypes.Contains(claim.Type))
+            .Select(claim => new Claim(claim.Type, claim.Value))
+            .ToList();
+
+        foreach (var roleName in profile.Roles)
+        {
+            claims.Add(new Claim(JwtClaimTypes.Role, roleName));
+            claims.Add(new Claim(JwtClaimTypes.FamilyName, profile.LastName ?? string.Empty));
+            claims.Add(new Claim(JwtClaimTypes.GivenName, profile.FirstName ?? string.Empty));
+        }
+
+        claims.AddRange(profile.RoleClaims.Select(claim => new Claim(claim.Type, claim.Value)));
 
         context.IssuedClaims = claims;
     }
 
     public async Task IsActiveAsync(IsActiveContext context)
     {
+        // Deliberately not cached: this is the gate that stops a deleted user
+        // from continuing to exchange tokens, so it must see current state.
         string sub = context.Subject.GetSubjectId();
         var user = await _userManager.FindByIdAsync(sub);
         context.IsActive = user != null;

@@ -1,4 +1,5 @@
 ﻿using Mango.Core.Auth;
+using Mango.Core.Exceptions;
 using Mango.RestApis.Requests;
 using Microsoft.EntityFrameworkCore;
 
@@ -23,6 +24,19 @@ public class UpsertCart
     {
         public async Task<ResultModel<bool>> HandleAsync(Command request, CancellationToken cancellationToken)
         {
+            // Products are a local replica kept in sync by CDC. Check the
+            // product is present before inserting, so a product this service
+            // has not replicated yet surfaces as a business error rather than
+            // a foreign key violation from SaveChangesAsync.
+            var productExists = await dbContext.Products
+                .AsNoTracking()
+                .AnyAsync(p => p.Id == request.Cart.ProductId, cancellationToken);
+
+            if (!productExists)
+            {
+                throw new DataVerificationException($"Product '{request.Cart.ProductId}' was not found.");
+            }
+
             var cartHeader = await dbContext.CartHeaders
                 .FirstOrDefaultAsync(h => h.UserId == currentUser.UserId, cancellationToken);
 

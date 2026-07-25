@@ -1,87 +1,72 @@
 ﻿using Duende.IdentityModel;
 using Identity.API.Models;
+using Mango.Core.Options;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Options;
 using System.Security.Claims;
 
 namespace Identity.API.Initializer;
 
 public class DBInitializer : IDBInitializer
 {
-    // Hard-coded seed identities. Must stay in sync with
-    // OpenIdentity.App/Data/DbInitializer.cs so the OIDC subject (user id),
-    // username and password are identical no matter which identity provider
-    // the AppHost IdentityType switch activates.
-    private const string AdminUserId = "a1111111-1111-1111-1111-111111111111";
-    private const string AdminPassword = "Admin123*";
-    private const string CustomerUserId = "c2222222-2222-2222-2222-222222222222";
-    private const string CustomerPassword = "Customer123*";
-
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly RoleManager<IdentityRole> _roleManager;
-    private readonly IConfiguration _configuration;
+    private readonly SeedUsersOptions _seedUsers;
 
-    public DBInitializer(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IConfiguration configuration)
+    public DBInitializer(
+        UserManager<ApplicationUser> userManager,
+        RoleManager<IdentityRole> roleManager,
+        IOptions<SeedUsersOptions> seedUsers)
     {
         _userManager = userManager;
         _roleManager = roleManager;
-        _configuration = configuration;
+        _seedUsers = seedUsers.Value;
     }
 
     public async Task InitializesAsync()
     {
-        var adminRole = _configuration["IdentityServer:AdminRole"] ?? "Admin";
-        var customerRole = _configuration["IdentityServer:CustomerRole"] ?? "Customer";
+        var admin = _seedUsers.Admin;
+        var customer = _seedUsers.Customer;
 
-        if (_roleManager.FindByNameAsync(adminRole).Result == null)
+        admin.Validate($"{SeedUsersOptions.SectionName}:{nameof(SeedUsersOptions.Admin)}");
+        customer.Validate($"{SeedUsersOptions.SectionName}:{nameof(SeedUsersOptions.Customer)}");
+
+        if (await _roleManager.FindByNameAsync(admin.Role) == null)
         {
-            await _roleManager.CreateAsync(new IdentityRole(adminRole));
-            await _roleManager.CreateAsync(new IdentityRole(customerRole));
+            await _roleManager.CreateAsync(new IdentityRole(admin.Role));
+            await _roleManager.CreateAsync(new IdentityRole(customer.Role));
         }
         else
         {
             return;
         }
 
-        ApplicationUser adminUser = new ApplicationUser()
+        await CreateSeedUserAsync(admin);
+        await CreateSeedUserAsync(customer);
+    }
+
+    private async Task CreateSeedUserAsync(SeedUserOptions seedUser)
+    {
+        var user = new ApplicationUser
         {
-            Id = AdminUserId,
-            UserName = "admin1@gmail.com",
-            Email = "admin1@gmail.com",
+            Id = seedUser.Id,
+            UserName = seedUser.UserName,
+            Email = seedUser.Email,
             EmailConfirmed = true,
-            PhoneNumber = "111111111111",
-            FirstName = "Jhon",
-            LastName = "Admin"
+            PhoneNumber = seedUser.PhoneNumber,
+            FirstName = seedUser.FirstName,
+            LastName = seedUser.LastName
         };
 
-        await _userManager.CreateAsync(adminUser, AdminPassword);
-        await _userManager.AddToRoleAsync(adminUser, adminRole);
+        await _userManager.CreateAsync(user, seedUser.Password);
+        await _userManager.AddToRoleAsync(user, seedUser.Role);
 
-        var tempAdminUser = await _userManager.AddClaimsAsync(adminUser, new Claim[] {
-            new Claim(JwtClaimTypes.Name, $"{adminUser.FirstName} {adminUser.LastName}"),
-            new Claim(JwtClaimTypes.GivenName, adminUser.FirstName),
-            new Claim(JwtClaimTypes.FamilyName, adminUser.LastName),
-            new Claim(JwtClaimTypes.Role, adminRole),
-        });
-
-        ApplicationUser customerUser = new ApplicationUser()
+        await _userManager.AddClaimsAsync(user, new Claim[]
         {
-            Id = CustomerUserId,
-            UserName = "customer1@gmail.com",
-            Email = "customer1@gmail.com",
-            EmailConfirmed = true,
-            PhoneNumber = "111111111111",
-            FirstName = "Jane",
-            LastName = "Customer"
-        };
-
-        await _userManager.CreateAsync(customerUser, CustomerPassword);
-        await _userManager.AddToRoleAsync(customerUser, customerRole);
-
-        var tempCustomerUser = await _userManager.AddClaimsAsync(customerUser, new Claim[] {
-            new Claim(JwtClaimTypes.Name, $"{customerUser.FirstName} {customerUser.LastName}"),
-            new Claim(JwtClaimTypes.GivenName, customerUser.FirstName),
-            new Claim(JwtClaimTypes.FamilyName, customerUser.LastName),
-            new Claim(JwtClaimTypes.Role, customerRole),
+            new Claim(JwtClaimTypes.Name, seedUser.FullName),
+            new Claim(JwtClaimTypes.GivenName, seedUser.FirstName),
+            new Claim(JwtClaimTypes.FamilyName, seedUser.LastName),
+            new Claim(JwtClaimTypes.Role, seedUser.Role),
         });
     }
 }

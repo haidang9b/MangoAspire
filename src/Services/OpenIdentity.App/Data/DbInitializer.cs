@@ -1,4 +1,6 @@
-﻿using static OpenIddict.Abstractions.OpenIddictConstants;
+﻿using Mango.Core.Options;
+using Microsoft.Extensions.Options;
+using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace OpenIdentity.App.Data;
 
@@ -7,17 +9,9 @@ public class DbInitializer(
     RoleManager<IdentityRole> roleManager,
     IOpenIddictApplicationManager applicationManager,
     IOpenIddictScopeManager scopeManager,
+    IOptions<SeedUsersOptions> seedUsers,
     IConfiguration configuration) : IDbInitializer
 {
-    // Hard-coded seed identities. Must stay in sync with
-    // Identity.API/Initializer/DBInitializer.cs so the OIDC subject (user id),
-    // username and password are identical no matter which identity provider
-    // the AppHost IdentityType switch activates.
-    private const string AdminUserId = "a1111111-1111-1111-1111-111111111111";
-    private const string AdminPassword = "Admin123*";
-    private const string CustomerUserId = "c2222222-2222-2222-2222-222222222222";
-    private const string CustomerPassword = "Customer123*";
-
     public async Task InitializeAsync()
     {
         await SeedRolesAndUsersAsync();
@@ -30,73 +24,58 @@ public class DbInitializer(
     // -------------------------------------------------------
     private async Task SeedRolesAndUsersAsync()
     {
-        const string adminRole = "Admin";
-        const string customerRole = "Customer";
+        var admin = seedUsers.Value.Admin;
+        var customer = seedUsers.Value.Customer;
+
+        admin.Validate($"{SeedUsersOptions.SectionName}:{nameof(SeedUsersOptions.Admin)}");
+        customer.Validate($"{SeedUsersOptions.SectionName}:{nameof(SeedUsersOptions.Customer)}");
 
         // Create roles if they don't exist
-        if (!await roleManager.RoleExistsAsync(adminRole))
+        if (!await roleManager.RoleExistsAsync(admin.Role))
         {
-            await roleManager.CreateAsync(new IdentityRole(adminRole));
+            await roleManager.CreateAsync(new IdentityRole(admin.Role));
         }
 
-        if (!await roleManager.RoleExistsAsync(customerRole))
+        if (!await roleManager.RoleExistsAsync(customer.Role))
         {
-            await roleManager.CreateAsync(new IdentityRole(customerRole));
+            await roleManager.CreateAsync(new IdentityRole(customer.Role));
         }
 
-        // Admin seed user
-        if (await userManager.FindByNameAsync("admin1@gmail.com") == null)
+        await CreateSeedUserAsync(admin);
+        await CreateSeedUserAsync(customer);
+    }
+
+    private async Task CreateSeedUserAsync(SeedUserOptions seedUser)
+    {
+        if (await userManager.FindByNameAsync(seedUser.UserName) != null)
         {
-            var adminUser = new ApplicationUser
-            {
-                Id = AdminUserId,
-                UserName = "admin1@gmail.com",
-                Email = "admin1@gmail.com",
-                EmailConfirmed = true,
-                Name = "John Admin"
-            };
-
-            var result = await userManager.CreateAsync(adminUser, AdminPassword);
-            if (!result.Succeeded)
-            {
-                throw new InvalidOperationException($"Failed to create admin user: {string.Join(", ", result.Errors.Select(e => e.Description))}");
-            }
-
-            await userManager.AddToRoleAsync(adminUser, adminRole);
-            await userManager.AddClaimsAsync(adminUser,
-            [
-                new Claim(Claims.Name, adminUser.Name),
-                new Claim(Claims.Role, adminRole),
-                new Claim(Claims.Email, adminUser.Email!)
-            ]);
+            return;
         }
 
-        // Customer seed user
-        if (await userManager.FindByNameAsync("customer1@gmail.com") == null)
+        var user = new ApplicationUser
         {
-            var customerUser = new ApplicationUser
-            {
-                Id = CustomerUserId,
-                UserName = "customer1@gmail.com",
-                Email = "customer1@gmail.com",
-                EmailConfirmed = true,
-                Name = "Jane Customer"
-            };
+            Id = seedUser.Id,
+            UserName = seedUser.UserName,
+            Email = seedUser.Email,
+            EmailConfirmed = true,
+            PhoneNumber = seedUser.PhoneNumber,
+            Name = seedUser.FullName
+        };
 
-            var result = await userManager.CreateAsync(customerUser, CustomerPassword);
-            if (!result.Succeeded)
-            {
-                throw new InvalidOperationException($"Failed to create customer user: {string.Join(", ", result.Errors.Select(e => e.Description))}");
-            }
-
-            await userManager.AddToRoleAsync(customerUser, customerRole);
-            await userManager.AddClaimsAsync(customerUser,
-            [
-                new Claim(Claims.Name, customerUser.Name),
-                new Claim(Claims.Role, customerRole),
-                new Claim(Claims.Email, customerUser.Email!)
-            ]);
+        var result = await userManager.CreateAsync(user, seedUser.Password);
+        if (!result.Succeeded)
+        {
+            throw new InvalidOperationException(
+                $"Failed to create seed user '{seedUser.UserName}': {string.Join(", ", result.Errors.Select(e => e.Description))}");
         }
+
+        await userManager.AddToRoleAsync(user, seedUser.Role);
+        await userManager.AddClaimsAsync(user,
+        [
+            new Claim(Claims.Name, user.Name!),
+            new Claim(Claims.Role, seedUser.Role),
+            new Claim(Claims.Email, user.Email!)
+        ]);
     }
 
     // -------------------------------------------------------

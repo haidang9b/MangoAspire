@@ -1,8 +1,10 @@
 ﻿var builder = DistributedApplication.CreateBuilder(args);
 
 
-var postgresPassword = builder.AddParameter("postgres-password", "postgres");
-var rabbitMqPassword = builder.AddParameter("rabbitmq-password", "YourSecretPassword");
+// Resolved from the "Parameters" section of appsettings.json, or overridden
+// with user-secrets / environment variables (Parameters__postgres-password).
+var postgresPassword = builder.AddParameter("postgres-password", secret: true);
+var rabbitMqPassword = builder.AddParameter("rabbitmq-password", secret: true);
 
 var postgres = builder.AddPostgres("postgres", port: 5435, password: postgresPassword)
     .WithLifetime(ContainerLifetime.Persistent)
@@ -37,13 +39,13 @@ var debezium = builder.AddContainer("debezium", "debezium/server", "2.7.3.Final"
     .WithEnvironment("DEBEZIUM_SOURCE_DATABASE_HOSTNAME", postgres.Resource.Name)
     .WithEnvironment("DEBEZIUM_SOURCE_DATABASE_PORT", postgres.Resource.Port)
     .WithEnvironment("DEBEZIUM_SOURCE_DATABASE_USER", "postgres")
-    .WithEnvironment("DEBEZIUM_SOURCE_DATABASE_PASSWORD", "postgres")
+    .WithEnvironment("DEBEZIUM_SOURCE_DATABASE_PASSWORD", postgresPassword)
     .WithEnvironment("DEBEZIUM_SOURCE_DATABASE_DBNAME", "productdb")
     // RabbitMQ connection
     .WithEnvironment("DEBEZIUM_SINK_RABBITMQ_CONNECTION_HOST", rabbitMq.Resource.Name)
     .WithEnvironment("DEBEZIUM_SINK_RABBITMQ_CONNECTION_PORT", "5672")
     .WithEnvironment("DEBEZIUM_SINK_RABBITMQ_CONNECTION_USERNAME", "guest")
-    .WithEnvironment("DEBEZIUM_SINK_RABBITMQ_CONNECTION_PASSWORD", "YourSecretPassword");
+    .WithEnvironment("DEBEZIUM_SINK_RABBITMQ_CONNECTION_PASSWORD", rabbitMqPassword);
 
 // -----------------------------------------------------------------
 //  Identity provider feature switch

@@ -1,9 +1,12 @@
 ﻿using FluentValidation;
 using Mango.Core.Auth;
+using Mango.Core.Caching;
 using Mango.Infrastructure.Auth;
+using Mango.Infrastructure.Caching;
 using Mango.Infrastructure.ExceptionHandlers;
 using Mango.Infrastructure.Middlewares;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi;
 using System.Reflection;
@@ -80,6 +83,30 @@ public static class IServiceCollectionExtensions
         services.AddScoped<ICurrentUserContext, CurrentUserContext>();
 
         services.AddTransient<CurrentUserContextMiddleware>();
+
+        return services;
+    }
+
+    /// <summary>
+    /// Registers <see cref="ICacheManager"/> over HybridCache. Without a
+    /// registered <c>IDistributedCache</c> this is an in-process (L1) cache;
+    /// registering one (for example Redis) adds the L2 layer with no change to
+    /// calling code.
+    /// </summary>
+    public static IServiceCollection AddCacheManager(
+        this IServiceCollection services,
+        Action<HybridCacheOptions>? configureOptions = null)
+    {
+        if (configureOptions is null)
+        {
+            services.AddHybridCache();
+        }
+        else
+        {
+            services.AddHybridCache(configureOptions);
+        }
+
+        services.AddSingleton<ICacheManager, HybridCacheManager>();
 
         return services;
     }

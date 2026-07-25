@@ -1,5 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
+﻿using Mango.Core.Caching;
+using Microsoft.EntityFrameworkCore;
 using Products.API.Dtos;
 
 namespace Products.API.Features.CatalogTypes;
@@ -8,30 +8,29 @@ public class GetCatalogTypes
 {
     private const string CacheKey = "CatalogTypes";
 
-    private static readonly TimeSpan CacheDuration = TimeSpan.FromHours(1);
+    private static readonly CacheEntryOptions CacheOptions = new() { Expiration = TimeSpan.FromHours(1) };
 
     public class Query : IQuery<List<CatalogTypeDto>>
     {
-        internal class Handler(ProductDbContext dbContext, IMemoryCache memoryCache) : IRequestHandler<Query, ResultModel<List<CatalogTypeDto>>>
+        internal class Handler(ProductDbContext dbContext, ICacheManager cacheManager) : IRequestHandler<Query, ResultModel<List<CatalogTypeDto>>>
         {
             public async Task<ResultModel<List<CatalogTypeDto>>> HandleAsync(Query request, CancellationToken cancellationToken)
             {
-                if (memoryCache.TryGetValue(CacheKey, out List<CatalogTypeDto>? cachedTypes) && cachedTypes != null)
-                {
-                    return ResultModel<List<CatalogTypeDto>>.Create(cachedTypes);
-                }
-
-                var catalogTypes = await dbContext.CatalogTypes
-                    .AsNoTracking()
-                    .OrderBy(x => x.Type)
-                    .Select(x => new CatalogTypeDto
-                    {
-                        Id = x.Id,
-                        Type = x.Type
-                    })
-                    .ToListAsync(cancellationToken);
-
-                memoryCache.Set(CacheKey, catalogTypes, CacheDuration);
+                var catalogTypes = await cacheManager.GetOrCreateAsync(
+                    CacheKey,
+                    dbContext,
+                    static (db, ct) => new ValueTask<List<CatalogTypeDto>>(
+                        db.CatalogTypes
+                            .AsNoTracking()
+                            .OrderBy(x => x.Type)
+                            .Select(x => new CatalogTypeDto
+                            {
+                                Id = x.Id,
+                                Type = x.Type
+                            })
+                            .ToListAsync(ct)),
+                    CacheOptions,
+                    cancellationToken: cancellationToken);
 
                 return ResultModel<List<CatalogTypeDto>>.Create(catalogTypes);
             }
