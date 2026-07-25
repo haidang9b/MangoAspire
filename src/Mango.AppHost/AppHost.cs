@@ -7,7 +7,11 @@ var rabbitMqPassword = builder.AddParameter("rabbitmq-password", "YourSecretPass
 var postgres = builder.AddPostgres("postgres", port: 5435, password: postgresPassword)
     .WithLifetime(ContainerLifetime.Persistent)
     .WithDataVolume()
-    .WithBindMount("./init-scripts/productdb", "/docker-entrypoint-initdb.d");
+    .WithBindMount("./init-scripts/productdb", "/docker-entrypoint-initdb.d")
+    // Debezium CDC uses the pgoutput plugin, which needs logical decoding.
+    // wal_level cannot be set from SQL and postgresql.conf lives inside the
+    // data volume, so pass it as a server argument.
+    .WithArgs("-c", "wal_level=logical");
 
 var productdb = postgres.AddDatabase("productdb");
 var orderdb = postgres.AddDatabase("orderdb");
