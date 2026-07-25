@@ -35,13 +35,28 @@ jobs:
           # scan would miss secrets introduced in earlier commits.
           fetch-depth: 0
 
+      - name: Verify gitleaks config is present
+        # gitleaks exits with a bare "no such file or directory" when the config
+        # path is wrong, which is easy to mistake for a scan failure.
+        run: |
+          if [ ! -f gitleaks.toml ]; then
+            echo "::error::gitleaks.toml not found at the repository root. Commit it, or update GITLEAKS_CONFIG to match its path."
+            exit 1
+          fi
+          echo "Found gitleaks.toml ($(wc -l < gitleaks.toml) lines)"
+
       - name: Run gitleaks
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLEAKS_CONFIG: ${{ github.workspace }}/.gitleaks.toml
+          # Must match the config file committed at the repository root.
+          GITLEAKS_CONFIG: ${{ github.workspace }}/gitleaks.toml
           GITLEAKS_ENABLE_SUMMARY: true
-          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: true
+          # Left off deliberately: when gitleaks exits early (a bad config path,
+          # for example) no report is written, and the artifact upload then
+          # crashes with "File results.sarif does not exist", hiding the real
+          # error. Findings still reach the Security tab via the step below.
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: false
           # GITLEAKS_LICENSE is only required when the repository is owned by a
           # GitHub organization. Personal accounts and public repositories are
           # free. If this repo moves to an org, add the key as a repository
