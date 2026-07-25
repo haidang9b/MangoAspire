@@ -1,4 +1,5 @@
-﻿using Mango.Infrastructure.Extensions;
+﻿using Mango.Core.Options;
+using Mango.Infrastructure.Extensions;
 using Mango.ServiceDefaults;
 using OpenIdentity.App.Services;
 
@@ -75,6 +76,9 @@ public static class WebApplicationBuilderExtensions
                 options.UseLocalServer();
                 options.UseAspNetCore();
             });
+
+        builder.Services.Configure<SeedUsersOptions>(
+            builder.Configuration.GetSection(SeedUsersOptions.SectionName));
 
         builder.Services.AddScoped<IDbInitializer, DbInitializer>();
 
