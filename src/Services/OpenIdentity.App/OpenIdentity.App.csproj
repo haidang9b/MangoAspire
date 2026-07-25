@@ -24,6 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Shared\Mango.Infrastructure\Mango.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Shared\Mango.ServiceDefaults\Mango.ServiceDefaults.csproj" />
     <ProjectReference Include="..\..\Shared\Mango.Core\Mango.Core.csproj" />
     <ProjectReference Include="..\..\Shared\Mediator\Mediator.csproj" />

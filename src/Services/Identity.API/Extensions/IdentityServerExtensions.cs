@@ -4,6 +4,7 @@ using Duende.IdentityServer.Services;
 using Identity.API.Initializer;
 using Identity.API.Models;
 using Identity.API.Services;
+using Mango.Infrastructure.Extensions;
 
 namespace Identity.API.Extensions;
 
@@ -13,6 +14,8 @@ public static class IdentityServerExtensions
         this IServiceCollection services, IConfiguration configuration)
     {
         services.AddScoped<IDBInitializer, DBInitializer>();
+        services.AddCacheManager();
+        services.AddScoped<UserProfileCache>();
         services.AddScoped<IProfileService, ProfileService>();
 
         var identityResources = configuration.GetSection("IdentityServer:IdentityResources").Get<List<IdentityResource>>() ?? new();

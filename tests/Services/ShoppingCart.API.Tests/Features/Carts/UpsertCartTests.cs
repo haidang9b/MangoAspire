@@ -15,6 +15,28 @@ public class UpsertCartTests
         _dbContext = new ShoppingCartDbContext(options);
     }
 
+    /// <summary>
+    /// Adds a product to the locally replicated products table. The handler
+    /// requires one to exist, mirroring the foreign key on cart_details.
+    /// </summary>
+    private async Task<Guid> SeedProductAsync(Guid? productId = null)
+    {
+        var id = productId ?? Guid.NewGuid();
+
+        _dbContext.Products.Add(new Product
+        {
+            Id = id,
+            Name = "Test Product",
+            Price = 9.99m,
+            Description = "Test Description",
+            CategoryName = "Test Category",
+            ImageUrl = "http://localhost/test.png"
+        });
+        await _dbContext.SaveChangesAsync();
+
+        return id;
+    }
+
     [Fact]
     public async Task HandleAsync_When_NewCart_Then_CreatesHeaderAndDetails()
     {
@@ -22,11 +44,13 @@ public class UpsertCartTests
         var userId = "test-user-id";
         _currentUserContextMock.Setup(c => c.UserId).Returns(userId);
 
+        var productId = await SeedProductAsync();
+
         var handler = new UpsertCart.Handler(_dbContext, _currentUserContextMock.Object);
 
         var requestDto = new AddToCartRequestDto
         {
-            ProductId = Guid.NewGuid(),
+            ProductId = productId,
             Count = 2,
             CouponCode = "DISCOUNT10"
         };
@@ -55,8 +79,9 @@ public class UpsertCartTests
     {
         // Arrange
         var userId = "test-user-id";
-        var productId = Guid.NewGuid();
         _currentUserContextMock.Setup(c => c.UserId).Returns(userId);
+
+        var productId = await SeedProductAsync();
 
         var existingHeader = new CartHeader { Id = Guid.NewGuid(), UserId = userId, CouponCode = "OLDCODE" };
         var existingDetail = new CartDetails { Id = Guid.NewGuid(), CartHeaderId = existingHeader.Id, ProductId = productId, Count = 1 };
@@ -97,9 +122,10 @@ public class UpsertCartTests
     {
         // Arrange
         var userId = "test-user-id";
-        var existingProductId = Guid.NewGuid();
-        var newProductId = Guid.NewGuid();
         _currentUserContextMock.Setup(c => c.UserId).Returns(userId);
+
+        var existingProductId = await SeedProductAsync();
+        var newProductId = await SeedProductAsync();
 
         var existingHeader = new CartHeader { Id = Guid.NewGuid(), UserId = userId, CouponCode = "OLDCODE" };
         var existingDetail = new CartDetails { Id = Guid.NewGuid(), CartHeaderId = existingHeader.Id, ProductId = existingProductId, Count = 1 };
@@ -135,5 +161,34 @@ public class UpsertCartTests
 
         var updatedHeader = await _dbContext.CartHeaders.FirstOrDefaultAsync(h => h.UserId == userId);
         updatedHeader.CouponCode.ShouldBe("FREESHIPPING");
+    }
+
+    [Fact]
+    public async Task HandleAsync_When_ProductNotReplicated_Then_ThrowsDataVerificationException()
+    {
+        // Arrange
+        var userId = "test-user-id";
+        _currentUserContextMock.Setup(c => c.UserId).Returns(userId);
+
+        var handler = new UpsertCart.Handler(_dbContext, _currentUserContextMock.Object);
+
+        // No product seeded, mirroring a product this service has not received
+        // from CDC yet.
+        var command = new UpsertCart.Command
+        {
+            Cart = new AddToCartRequestDto
+            {
+                ProductId = Guid.NewGuid(),
+                Count = 1,
+                CouponCode = null
+            }
+        };
+
+        // Act / Assert
+        await Should.ThrowAsync<DataVerificationException>(
+            () => handler.HandleAsync(command, CancellationToken.None));
+
+        (await _dbContext.CartHeaders.AnyAsync()).ShouldBeFalse();
+        (await _dbContext.CartDetails.AnyAsync()).ShouldBeFalse();
     }
 }

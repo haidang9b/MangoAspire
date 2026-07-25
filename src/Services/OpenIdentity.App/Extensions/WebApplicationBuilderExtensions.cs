@@ -1,4 +1,6 @@
+﻿using Mango.Infrastructure.Extensions;
 using Mango.ServiceDefaults;
+using OpenIdentity.App.Services;
 
 namespace OpenIdentity.App.Extensions;
 
@@ -75,6 +77,9 @@ public static class WebApplicationBuilderExtensions
             });
 
         builder.Services.AddScoped<IDbInitializer, DbInitializer>();
+
+        builder.Services.AddCacheManager();
+        builder.Services.AddScoped<UserProfileCache>();
 
         return builder;
     }

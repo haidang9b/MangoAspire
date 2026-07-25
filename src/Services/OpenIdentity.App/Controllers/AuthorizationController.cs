@@ -1,10 +1,12 @@
-﻿using static OpenIddict.Abstractions.OpenIddictConstants;
+﻿using OpenIdentity.App.Services;
+using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace OpenIdentity.App.Controllers;
 
 public class AuthorizationController(
     SignInManager<ApplicationUser> signInManager,
-    UserManager<ApplicationUser> userManager) : Controller
+    UserManager<ApplicationUser> userManager,
+    UserProfileCache userProfileCache) : Controller
 {
 
     [HttpGet("~/connect/authorize")]
@@ -145,15 +147,18 @@ public class AuthorizationController(
                 OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
         }
 
+        var userId = await userManager.GetUserIdAsync(user);
+        var profile = await userProfileCache.GetAsync(userId);
+
         var claims = new Dictionary<string, object>(StringComparer.Ordinal)
         {
-            [Claims.Subject] = await userManager.GetUserIdAsync(user),
-            [Claims.Name] = user.Name ?? await userManager.GetUserNameAsync(user) ?? string.Empty,
-            [Claims.Email] = await userManager.GetEmailAsync(user) ?? string.Empty,
-            [Claims.EmailVerified] = await userManager.IsEmailConfirmedAsync(user)
+            [Claims.Subject] = userId,
+            [Claims.Name] = profile?.Name ?? profile?.UserName ?? string.Empty,
+            [Claims.Email] = profile?.Email ?? string.Empty,
+            [Claims.EmailVerified] = profile?.EmailConfirmed ?? false
         };
 
-        var displayName = user.Name ?? string.Empty;
+        var displayName = profile?.Name ?? string.Empty;
         if (!string.IsNullOrWhiteSpace(displayName))
         {
             var (given, family) = SplitName(displayName);
@@ -161,7 +166,7 @@ public class AuthorizationController(
             claims[Claims.FamilyName] = family;
         }
 
-        var roles = await userManager.GetRolesAsync(user);
+        var roles = profile?.Roles ?? [];
         if (roles.Count == 1)
         {
             claims[Claims.Role] = roles[0];
@@ -239,7 +244,8 @@ public class AuthorizationController(
             }
         }
 
-        var roles = await userManager.GetRolesAsync(user);
+        var profile = await userProfileCache.GetAsync(await userManager.GetUserIdAsync(user));
+        var roles = profile?.Roles ?? [];
         if (roles.Count > 0 && principal.Identity is ClaimsIdentity identity)
         {
             identity.SetClaims(Claims.Role, [.. roles]);
