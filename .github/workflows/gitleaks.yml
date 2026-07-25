@@ -1,0 +1,59 @@
+name: Secret Scan
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  schedule:
+    # Weekly full-history sweep, so secrets committed before a rule existed
+    # still get caught.
+    - cron: "0 3 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gitleaks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gitleaks:
+    name: gitleaks
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # Publish findings to the Security > Code scanning tab.
+      security-events: write
+      # Let gitleaks annotate the pull request.
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Full history: without this only the tip commit is available and the
+          # scan would miss secrets introduced in earlier commits.
+          fetch-depth: 0
+
+      - name: Run gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_CONFIG: ${{ github.workspace }}/.gitleaks.toml
+          GITLEAKS_ENABLE_SUMMARY: true
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: true
+          # GITLEAKS_LICENSE is only required when the repository is owned by a
+          # GitHub organization. Personal accounts and public repositories are
+          # free. If this repo moves to an org, add the key as a repository
+          # secret and uncomment the line below.
+          # GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+
+      - name: Upload SARIF to code scanning
+        # Runs even when the scan fails, so findings are still surfaced.
+        # Non-fatal: SARIF upload needs GitHub Advanced Security on private
+        # repositories, and the job should not go red just for that.
+        if: always() && hashFiles('results.sarif') != ''
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: results.sarif
