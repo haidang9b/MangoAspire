@@ -1,16 +1,16 @@
 ---
 name: analyze-po-requirement
-description: Translates high-level Product Owner (PO) requirements into technical specifications for Clean Architecture, covering both React frontend and .NET backend.
+description: Translates high-level Product Owner (PO) requirements into a technical blueprint for the MangoAspire Vertical Slice backend and React frontend.
 ---
 
 # Analyze PO Requirement
 
-Transform a raw Product Owner (PO) requirement into a structured technical plan, ensuring all edge cases for the Overseas Order Management System are covered. This skill bridges the gap between business needs and technical implementation across a React frontend and .NET 10 backend.
+Transform a raw Product Owner (PO) requirement into a structured technical plan for MangoAspire (a .NET 10 + Aspire microservices e-commerce platform with a React/Vite SPA). This skill bridges the gap between business needs and technical implementation across the React frontend and the .NET backend, following **Vertical Slice Architecture** (see AGENTS.md and `.agent/rules/architecture.md`).
 
 ## When to Use
 
 - When receiving a new agile story, epic, or feature request from a Product Owner.
-- When planning the technical architecture for a new feature in the Overseas Order Management System.
+- When planning the technical approach for a new feature in one of the Mango services (Products, Coupons, Orders, ShoppingCart, Payments, ChatAgent, Identity).
 - When breaking down high-level business requirements into actionable development tasks.
 
 ## When Not to Use
@@ -27,22 +27,22 @@ Transform a raw Product Owner (PO) requirement into a structured technical plan,
 ## Workflow
 
 ### Step 1: Requirement Intake
-1. Read the provided PO description carefully (e.g., "We need a way to track shipping status for overseas orders").
-2. Ask any immediate clarifying questions if the core business goal is entirely unclear.
+1. Read the provided PO description carefully (e.g., "We need to let customers apply multiple coupons to a cart").
+2. Ask any immediate clarifying questions if the core business goal is unclear.
 
-### Step 2: Impact Analysis
-1. **Domain:** Identify new Entities (e.g., `ShippingLog`) or Value Objects needed.
-2. **Application:** Identify new DTOs, Application Service methods, and Clean Architecture Use Cases.
-3. **Infrastructure:** Determine if new Database tables, EF Core migrations, or external API integrations (e.g., DHL/FedEx) are required.
-4. **Frontend:** Identify new React UI components, React Context updates, or React Query hooks required.
+### Step 2: Impact Analysis (per affected service)
+1. **Feature slice:** Identify the new command/query, handler, DTOs, and FluentValidation validator that make up the vertical slice. Use the `DbContext` directly in handlers (no Repository pattern).
+2. **Endpoint:** Identify the Minimal API route(s) in `Routes/` and the `ResultModel<T>` shape returned.
+3. **Persistence:** Determine whether new tables, EF Core migrations, or `DbContext` configuration changes are required. Consider cross-service events (RabbitMQ / event bus) if the change spans services.
+4. **Frontend:** Identify new React components, Context updates, and `src/UI/mango-ui/src/api/` client calls consumed through hooks.
 
 ### Step 3: Edge Case Detection
-1. Identify potential localization issues, such as Timezone differences or Currency conversions.
-2. Consider edge cases related to incomplete data, Nullable fields, or unexpected user inputs.
-3. Document security or permission implications for the new feature.
+1. Identify localization concerns (i18n, currency, timezone/datetime handling).
+2. Consider edge cases around incomplete data, nullable fields, and unexpected input.
+3. Document security or permission implications (auth is provider-toggled: Duende / OpenIddict).
 
 ### Step 4: Output Generation
-Produce a structured "Technical Blueprint" that the `implement-ticket` workflow can use. The output must follow the structure defined in Output Structure.
+Produce a structured "Technical Blueprint" that the `implement-ticket` workflow can consume. Follow the Output Structure below.
 
 ## Output Structure
 
@@ -52,28 +52,28 @@ Generate a markdown document containing the following sections:
 Brief overview of the "What" and the "Why" behind the requirement.
 
 ### 🏗️ Technical Impact Map
-- **Backend:** Entities, DTOs, and Minimal API routes or Controllers.
-- **Frontend:** React Components, Context usage, and API hooks (e.g., React Query).
+- **Backend:** Affected service, feature slice (command/query + handler + validator), DTOs, and Minimal API routes.
+- **Frontend:** React components, Context usage, and API client calls/hooks.
 
 ### 🧪 Acceptance Criteria (AC)
 - Formatted as: "Given [context], when [action], then [result]."
-- Include specific testing requirements for both backend (xUnit) and frontend (Vitest).
+- Include backend testing requirements with **xUnit + Moq + Shouldly**. Note there is **no frontend test runner** configured; frontend verification is `pnpm --dir src/UI/mango-ui lint` + `build`.
 
 ### ❓ Clarifying Questions
-List 3-5 crucial questions to ask the PO or Developer to clear up ambiguity before implementation begins.
+List 3-5 crucial questions to ask the PO or developer to clear up ambiguity before implementation begins.
 
 ## Validation
 
-- [ ] The output document contains all required sections (Business Summary, Technical Impact Map, Acceptance Criteria, Clarifying Questions).
-- [ ] Technical impact covers both the React frontend and .NET Clean Architecture backend.
-- [ ] Acceptance criteria include explicit mentions of xUnit and Vitest testing requirements.
-- [ ] At least 3 clarifying questions are generated to address potential ambiguities or edge cases.
+- [ ] The output contains all required sections (Business Summary, Technical Impact Map, Acceptance Criteria, Clarifying Questions).
+- [ ] Technical impact covers both the React frontend and the .NET Vertical Slice backend.
+- [ ] Acceptance criteria include explicit backend xUnit testing requirements (and note the absence of a frontend runner).
+- [ ] At least 3 clarifying questions are generated.
 
 ## Common Pitfalls
 
 | Pitfall | Solution |
 |---------|----------|
-| Skipping frontend or backend impact | Ensure the technical analysis maps entirely across the stack (React + .NET 10). |
+| Skipping frontend or backend impact | Ensure the analysis maps across the stack (React + .NET 10). |
 | Vague acceptance criteria | Use strict BDD format ("Given... When... Then...") for all ACs. |
-| Forgetting testing requirements | Explicitly mention xUnit (backend) and Vitest (frontend) in the testing plan. |
-| Over-engineering the solution | Stick to Lean Clean Architecture principles; only propose new layers or entities if strictly necessary. |
+| Inventing a frontend test runner | None is configured — verify the SPA with `pnpm --dir src/UI/mango-ui lint` + `build`. |
+| Proposing extra layers | Stick to Vertical Slice; do not add Repository/Application/Domain layers unless maintainers ask. |

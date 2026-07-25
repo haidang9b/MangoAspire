@@ -1,0 +1,30 @@
+services:
+  serena:
+    # Built from the upstream Serena image + the .NET 10 SDK so its C# language server can start.
+    # See docker/serena/Dockerfile for why the stock image is insufficient for a .NET 10 project.
+    build:
+      context: .
+      dockerfile: docker/serena/Dockerfile
+    image: mango-serena:dotnet10
+    container_name: serena
+    restart: unless-stopped
+
+    ports:
+      - "9121:9121"
+
+    volumes:
+      - ./:/workspace
+
+    command:
+      - serena
+      - start-mcp-server
+      - --transport
+      - streamable-http
+      - --host
+      - 0.0.0.0
+      - --port
+      - "9121"
+      - --project
+      - /workspace
+      - --context
+      - claude-code

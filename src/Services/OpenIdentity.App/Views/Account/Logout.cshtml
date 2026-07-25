@@ -1,16 +1,32 @@
 @using OpenIdentity.App.Models
 @model LogoutViewModel
 
-<div class="logout-page">
-    <div class="lead">
-        <h1>Logout</h1>
-        <p>Would you like to logout of IdentityServer?</p>
-    </div>
+@{
+    ViewData["Title"] = "Sign Out";
+}
 
-    <form asp-action="Logout">
-        <input type="hidden" name="logoutId" value="@Model.LogoutId"  />
-        <div class="form-group">
-            <button class="btn btn-primary">Yes</button>
+<div class="auth-page mango-fade-in">
+    <div class="auth-card">
+        <div class="auth-card__header">
+            <img src="~/images/mango.png" alt="Mango logo" class="auth-card__logo" />
+            <h1 class="auth-card__title">Sign out</h1>
+            <p class="auth-card__subtitle">Do you want to end your session?</p>
         </div>
-    </form>
+        <div class="auth-card__body" style="text-align:center;">
+            <form method="post" action="/connect/endsession">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="logoutId" value="@Model.LogoutId" />
+                @foreach (var pair in Context.Request.Query)
+                {
+                    <input type="hidden" name="@pair.Key" value="@pair.Value" />
+                }
+                <button class="mango-btn mango-btn--primary mango-btn--block" type="submit">
+                    Yes, sign out
+                </button>
+            </form>
+            <a class="mango-btn mango-btn--secondary mango-btn--block mt-2" href="~/">
+                Cancel
+            </a>
+        </div>
+    </div>
 </div>

@@ -10,7 +10,8 @@
         "ASPNETCORE_ENVIRONMENT": "Development",
         "DOTNET_ENVIRONMENT": "Development",
         "ASPIRE_DASHBOARD_OTLP_ENDPOINT_URL": "https://localhost:21021",
-        "ASPIRE_RESOURCE_SERVICE_ENDPOINT_URL": "https://localhost:22112"
+        "ASPIRE_RESOURCE_SERVICE_ENDPOINT_URL": "https://localhost:22112",
+        "IdentityType": "OpenIddict"
       }
     },
     "http": {

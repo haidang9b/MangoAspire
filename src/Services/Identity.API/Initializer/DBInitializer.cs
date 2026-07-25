@@ -7,6 +7,15 @@ namespace Identity.API.Initializer;
 
 public class DBInitializer : IDBInitializer
 {
+    // Hard-coded seed identities. Must stay in sync with
+    // OpenIdentity.App/Data/DbInitializer.cs so the OIDC subject (user id),
+    // username and password are identical no matter which identity provider
+    // the AppHost IdentityType switch activates.
+    private const string AdminUserId = "a1111111-1111-1111-1111-111111111111";
+    private const string AdminPassword = "Admin123*";
+    private const string CustomerUserId = "c2222222-2222-2222-2222-222222222222";
+    private const string CustomerPassword = "Customer123*";
+
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly RoleManager<IdentityRole> _roleManager;
     private readonly IConfiguration _configuration;
@@ -35,6 +44,7 @@ public class DBInitializer : IDBInitializer
 
         ApplicationUser adminUser = new ApplicationUser()
         {
+            Id = AdminUserId,
             UserName = "admin1@gmail.com",
             Email = "admin1@gmail.com",
             EmailConfirmed = true,
@@ -43,7 +53,7 @@ public class DBInitializer : IDBInitializer
             LastName = "Admin"
         };
 
-        await _userManager.CreateAsync(adminUser, "Admin123*");
+        await _userManager.CreateAsync(adminUser, AdminPassword);
         await _userManager.AddToRoleAsync(adminUser, adminRole);
 
         var tempAdminUser = await _userManager.AddClaimsAsync(adminUser, new Claim[] {
@@ -55,6 +65,7 @@ public class DBInitializer : IDBInitializer
 
         ApplicationUser customerUser = new ApplicationUser()
         {
+            Id = CustomerUserId,
             UserName = "customer1@gmail.com",
             Email = "customer1@gmail.com",
             EmailConfirmed = true,
@@ -63,7 +74,7 @@ public class DBInitializer : IDBInitializer
             LastName = "Customer"
         };
 
-        await _userManager.CreateAsync(customerUser, "Customer123*");
+        await _userManager.CreateAsync(customerUser, CustomerPassword);
         await _userManager.AddToRoleAsync(customerUser, customerRole);
 
         var tempCustomerUser = await _userManager.AddClaimsAsync(customerUser, new Claim[] {

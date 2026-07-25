@@ -5,7 +5,7 @@ description: Analyzes code changes to synchronize or create technical documentat
 
 # Documentation Manager
 
-Maintain a set of accurate, up-to-date Markdown documents that reflect the current state of the Clean Architecture backend and the React frontend. This skill ensures that code changes are continuously synchronized with the project's technical documentation.
+Maintain a set of accurate, up-to-date Markdown documents that reflect the current state of the Vertical Slice backend and the React frontend. This skill ensures that code changes are continuously synchronized with the project's technical documentation.
 
 ## When to Use
 

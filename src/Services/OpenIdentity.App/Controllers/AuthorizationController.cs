@@ -33,7 +33,10 @@ public class AuthorizationController(
         var user = await userManager.GetUserAsync(authenticateResult.Principal) ??
             throw new InvalidOperationException("The user details cannot be retrieved.");
 
-        var principal = await signInManager.CreateUserPrincipalAsync(user);
+        var principal = await CreatePrincipalAsync(user);
+
+        principal.SetScopes(request.GetScopes());
+        principal.SetResources("mango");
 
         // Include the ID context
         principal.SetDestinations(GetDestinations);
@@ -110,7 +113,9 @@ public class AuthorizationController(
                     OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
             }
 
-            var principal = await signInManager.CreateUserPrincipalAsync(user);
+            var principal = await CreatePrincipalAsync(user);
+            principal.SetScopes(request.GetScopes());
+            principal.SetResources("mango");
             principal.SetDestinations(GetDestinations);
 
             return SignIn(principal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
@@ -143,10 +148,28 @@ public class AuthorizationController(
         var claims = new Dictionary<string, object>(StringComparer.Ordinal)
         {
             [Claims.Subject] = await userManager.GetUserIdAsync(user),
-            [Claims.Name] = await userManager.GetUserNameAsync(user),
-            [Claims.Email] = await userManager.GetEmailAsync(user),
+            [Claims.Name] = user.Name ?? await userManager.GetUserNameAsync(user) ?? string.Empty,
+            [Claims.Email] = await userManager.GetEmailAsync(user) ?? string.Empty,
             [Claims.EmailVerified] = await userManager.IsEmailConfirmedAsync(user)
         };
+
+        var displayName = user.Name ?? string.Empty;
+        if (!string.IsNullOrWhiteSpace(displayName))
+        {
+            var (given, family) = SplitName(displayName);
+            claims[Claims.GivenName] = given;
+            claims[Claims.FamilyName] = family;
+        }
+
+        var roles = await userManager.GetRolesAsync(user);
+        if (roles.Count == 1)
+        {
+            claims[Claims.Role] = roles[0];
+        }
+        else if (roles.Count > 1)
+        {
+            claims[Claims.Role] = roles;
+        }
 
         return Ok(claims);
     }
@@ -171,5 +194,57 @@ public class AuthorizationController(
                 yield return Destinations.AccessToken;
                 yield break;
         }
+    }
+
+    private static (string GivenName, string FamilyName) SplitName(string name)
+    {
+        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 0)
+        {
+            return (string.Empty, string.Empty);
+        }
+
+        if (parts.Length == 1)
+        {
+            return (parts[0], string.Empty);
+        }
+
+        return (parts[0], string.Join(' ', parts.Skip(1)));
+    }
+
+    private async Task<ClaimsPrincipal> CreatePrincipalAsync(ApplicationUser user)
+    {
+        var principal = await signInManager.CreateUserPrincipalAsync(user);
+        var subject = principal.GetClaim(Claims.Subject);
+        if (string.IsNullOrWhiteSpace(subject))
+        {
+            var userId = await userManager.GetUserIdAsync(user);
+            principal.SetClaim(Claims.Subject, userId);
+        }
+
+        var name = user.Name;
+        if (!string.IsNullOrWhiteSpace(name))
+        {
+            principal.SetClaim(Claims.Name, name);
+
+            var (given, family) = SplitName(name);
+            if (!string.IsNullOrWhiteSpace(given))
+            {
+                principal.SetClaim(Claims.GivenName, given);
+            }
+
+            if (!string.IsNullOrWhiteSpace(family))
+            {
+                principal.SetClaim(Claims.FamilyName, family);
+            }
+        }
+
+        var roles = await userManager.GetRolesAsync(user);
+        if (roles.Count > 0 && principal.Identity is ClaimsIdentity identity)
+        {
+            identity.SetClaims(Claims.Role, [.. roles]);
+        }
+
+        return principal;
     }
 }

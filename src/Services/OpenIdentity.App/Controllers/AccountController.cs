@@ -1,12 +1,16 @@
-﻿namespace OpenIdentity.App.Controllers;
+﻿using Microsoft.EntityFrameworkCore;
+
+namespace OpenIdentity.App.Controllers;
 
 [AllowAnonymous]
 public class AccountController(
     SignInManager<ApplicationUser> signInManager,
     UserManager<ApplicationUser> userManager,
+    RoleManager<IdentityRole> roleManager,
     IOpenIddictApplicationManager applicationManager,
     ILogger<AccountController> logger) : Controller
 {
+    private const string DefaultRole = "Customer";
     [HttpGet]
     public IActionResult Login(string? returnUrl = null)
     {
@@ -46,9 +50,10 @@ public class AccountController(
     }
 
     [HttpGet]
-    public IActionResult Register(string? returnUrl = null)
+    public async Task<IActionResult> Register(string? returnUrl = null)
     {
         ViewData["ReturnUrl"] = returnUrl;
+        ViewBag.message = await GetRoleNamesAsync();
         return View(new RegisterViewModel { ReturnUrl = returnUrl });
     }
 
@@ -60,16 +65,38 @@ public class AccountController(
 
         if (ModelState.IsValid)
         {
+            var displayName = string.Join(' ', new[] { model.FirstName, model.LastName }
+                .Where(part => !string.IsNullOrWhiteSpace(part)));
+
             var user = new ApplicationUser
             {
                 UserName = model.Username,
-                Email = model.Email
+                Email = model.Email,
+                EmailConfirmed = true,
+                Name = string.IsNullOrWhiteSpace(displayName) ? model.Username : displayName
             };
 
             var result = await userManager.CreateAsync(user, model.Password);
 
             if (result.Succeeded)
             {
+                // Only allow roles that already exist; fall back to the default role.
+                var role = !string.IsNullOrWhiteSpace(model.RoleName) && await roleManager.RoleExistsAsync(model.RoleName)
+                    ? model.RoleName
+                    : DefaultRole;
+
+                if (await roleManager.RoleExistsAsync(role))
+                {
+                    await userManager.AddToRoleAsync(user, role);
+                }
+
+                await userManager.AddClaimsAsync(user,
+                [
+                    new Claim(OpenIddictConstants.Claims.Name, user.Name!),
+                    new Claim(OpenIddictConstants.Claims.Email, user.Email!),
+                    new Claim(OpenIddictConstants.Claims.Role, role)
+                ]);
+
                 await signInManager.SignInAsync(user, isPersistent: false);
 
                 if (!string.IsNullOrEmpty(model.ReturnUrl) && (Url.IsLocalUrl(model.ReturnUrl) || model.ReturnUrl.StartsWith("/connect/authorize")))
@@ -86,7 +113,15 @@ public class AccountController(
             }
         }
 
+        ViewBag.message = await GetRoleNamesAsync();
         return View(model);
+    }
+
+    [HttpGet]
+    public IActionResult AccessDenied(string? returnUrl = null)
+    {
+        ViewData["ReturnUrl"] = returnUrl;
+        return View();
     }
 
     [HttpGet]
@@ -125,5 +160,42 @@ public class AccountController(
             ClientName = clientName,
             SignOutIframeUrl = ""
         });
+    }
+
+    [HttpGet("~/connect/endsession")]
+    public IActionResult EndSession()
+    {
+        var request = HttpContext.GetOpenIddictServerRequest();
+        var logoutId = request?.GetParameter("logout_id")?.ToString() ?? string.Empty;
+
+        return View("Logout", new LogoutViewModel
+        {
+            LogoutId = logoutId,
+            ShowLogoutPrompt = true
+        });
+    }
+
+    private async Task<List<string>> GetRoleNamesAsync()
+    {
+        return await roleManager.Roles
+            .AsNoTracking()
+            .Where(r => r.Name != null)
+            .Select(r => r.Name!)
+            .OrderBy(name => name)
+            .ToListAsync();
+    }
+
+    [HttpPost("~/connect/endsession")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EndSessionPost()
+    {
+        var request = HttpContext.GetOpenIddictServerRequest();
+        var postLogoutRedirectUri = request?.PostLogoutRedirectUri ?? "~/";
+
+        await signInManager.SignOutAsync();
+
+        return SignOut(
+            new AuthenticationProperties { RedirectUri = postLogoutRedirectUri },
+            OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
     }
 }

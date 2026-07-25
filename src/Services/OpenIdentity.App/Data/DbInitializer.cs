@@ -9,6 +9,14 @@ public class DbInitializer(
     IOpenIddictScopeManager scopeManager,
     IConfiguration configuration) : IDbInitializer
 {
+    // Hard-coded seed identities. Must stay in sync with
+    // Identity.API/Initializer/DBInitializer.cs so the OIDC subject (user id),
+    // username and password are identical no matter which identity provider
+    // the AppHost IdentityType switch activates.
+    private const string AdminUserId = "a1111111-1111-1111-1111-111111111111";
+    private const string AdminPassword = "Admin123*";
+    private const string CustomerUserId = "c2222222-2222-2222-2222-222222222222";
+    private const string CustomerPassword = "Customer123*";
 
     public async Task InitializeAsync()
     {
@@ -41,14 +49,14 @@ public class DbInitializer(
         {
             var adminUser = new ApplicationUser
             {
+                Id = AdminUserId,
                 UserName = "admin1@gmail.com",
                 Email = "admin1@gmail.com",
                 EmailConfirmed = true,
                 Name = "John Admin"
             };
 
-            var password = configuration["Identity:AdminPassword"] ?? throw new InvalidOperationException("Admin password not configured.");
-            var result = await userManager.CreateAsync(adminUser, password);
+            var result = await userManager.CreateAsync(adminUser, AdminPassword);
             if (!result.Succeeded)
             {
                 throw new InvalidOperationException($"Failed to create admin user: {string.Join(", ", result.Errors.Select(e => e.Description))}");
@@ -68,14 +76,14 @@ public class DbInitializer(
         {
             var customerUser = new ApplicationUser
             {
+                Id = CustomerUserId,
                 UserName = "customer1@gmail.com",
                 Email = "customer1@gmail.com",
                 EmailConfirmed = true,
                 Name = "Jane Customer"
             };
 
-            var password = configuration["Identity:CustomerPassword"] ?? throw new InvalidOperationException("Customer password not configured.");
-            var result = await userManager.CreateAsync(customerUser, password);
+            var result = await userManager.CreateAsync(customerUser, CustomerPassword);
             if (!result.Succeeded)
             {
                 throw new InvalidOperationException($"Failed to create customer user: {string.Join(", ", result.Errors.Select(e => e.Description))}");
@@ -96,13 +104,49 @@ public class DbInitializer(
     // -------------------------------------------------------
     private async Task SeedScopesAsync()
     {
-        if (await scopeManager.FindByNameAsync("api") == null)
+        if (await scopeManager.FindByNameAsync("openid") == null)
         {
             await scopeManager.CreateAsync(new OpenIddictScopeDescriptor
             {
-                Name = "api",
+                Name = "openid",
+                DisplayName = "OpenID"
+            });
+        }
+
+        if (await scopeManager.FindByNameAsync("profile") == null)
+        {
+            await scopeManager.CreateAsync(new OpenIddictScopeDescriptor
+            {
+                Name = "profile",
+                DisplayName = "User Profile"
+            });
+        }
+
+        if (await scopeManager.FindByNameAsync("email") == null)
+        {
+            await scopeManager.CreateAsync(new OpenIddictScopeDescriptor
+            {
+                Name = "email",
+                DisplayName = "User Email"
+            });
+        }
+
+        if (await scopeManager.FindByNameAsync("offline_access") == null)
+        {
+            await scopeManager.CreateAsync(new OpenIddictScopeDescriptor
+            {
+                Name = "offline_access",
+                DisplayName = "Offline Access"
+            });
+        }
+
+        if (await scopeManager.FindByNameAsync("mango") == null)
+        {
+            await scopeManager.CreateAsync(new OpenIddictScopeDescriptor
+            {
+                Name = "mango",
                 DisplayName = "API Access",
-                Resources = { "resource_server" }
+                Resources = { "mango" }
             });
         }
 
@@ -122,7 +166,7 @@ public class DbInitializer(
     private async Task SeedClientsAsync()
     {
         // Mango Web — Authorization Code + PKCE
-        var webClientId = configuration["OpenIddict:Clients:MangoWeb:ClientId"] ?? "mango-web";
+        var webClientId = configuration["OpenIddict:Clients:MangoWeb:ClientId"] ?? "mango";
         if (await applicationManager.FindByClientIdAsync(webClientId) == null)
         {
             var redirectUri = configuration["OpenIddict:Clients:MangoWeb:RedirectUri"] ?? "https://localhost:7002/signin-oidc";
@@ -143,10 +187,11 @@ public class DbInitializer(
                     Permissions.GrantTypes.AuthorizationCode,
                     Permissions.GrantTypes.RefreshToken,
                     Permissions.ResponseTypes.Code,
+                    Permissions.Prefixes.Scope + "openid",
                     Permissions.Scopes.Email,
                     Permissions.Scopes.Profile,
                     Permissions.Scopes.Roles,
-                    Permissions.Prefixes.Scope + "api",
+                    Permissions.Prefixes.Scope + "mango",
                     Permissions.Prefixes.Scope + "roles"
                 },
                 RedirectUris = { new Uri(redirectUri) },
@@ -170,8 +215,47 @@ public class DbInitializer(
                 {
                     Permissions.Endpoints.Token,
                     Permissions.GrantTypes.ClientCredentials,
-                    Permissions.Prefixes.Scope + "api"
+                    Permissions.Prefixes.Scope + "mango"
                 }
+            });
+        }
+
+        // Mango SPA — Authorization Code + PKCE (public client)
+        var spaClientId = configuration["OpenIddict:Clients:MangoSpa:ClientId"] ?? "mango-spa";
+        if (await applicationManager.FindByClientIdAsync(spaClientId) == null)
+        {
+            var redirectUri = configuration["OpenIddict:Clients:MangoSpa:RedirectUri"] ?? "http://localhost:5173/callback";
+            var silentRedirectUri = configuration["OpenIddict:Clients:MangoSpa:SilentRedirectUri"] ?? "http://localhost:5173/silent-callback";
+            var postLogoutUri = configuration["OpenIddict:Clients:MangoSpa:PostLogoutUri"] ?? "http://localhost:5173";
+
+            await applicationManager.CreateAsync(new OpenIddictApplicationDescriptor
+            {
+                ClientId = spaClientId,
+                DisplayName = "Mango SPA",
+                ConsentType = ConsentTypes.Implicit,
+                ClientType = ClientTypes.Public,
+                Permissions =
+                {
+                    Permissions.Endpoints.Authorization,
+                    Permissions.Endpoints.EndSession,
+                    Permissions.Endpoints.Token,
+                    Permissions.GrantTypes.AuthorizationCode,
+                    Permissions.GrantTypes.RefreshToken,
+                    Permissions.ResponseTypes.Code,
+                    Permissions.Prefixes.Scope + "openid",
+                    Permissions.Scopes.Profile,
+                    Permissions.Scopes.Email,
+                    Permissions.Scopes.Roles,
+                    Permissions.Prefixes.Scope + "mango",
+                    Permissions.Prefixes.Scope + "offline_access"
+                },
+                RedirectUris =
+                {
+                    new Uri(redirectUri),
+                    new Uri(silentRedirectUri)
+                },
+                PostLogoutRedirectUris = { new Uri(postLogoutUri) },
+                Requirements = { Requirements.Features.ProofKeyForCodeExchange }
             });
         }
     }
