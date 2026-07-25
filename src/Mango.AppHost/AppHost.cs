@@ -41,11 +41,23 @@ var debezium = builder.AddContainer("debezium", "debezium/server", "2.7.3.Final"
     .WithEnvironment("DEBEZIUM_SINK_RABBITMQ_CONNECTION_USERNAME", "guest")
     .WithEnvironment("DEBEZIUM_SINK_RABBITMQ_CONNECTION_PASSWORD", "YourSecretPassword");
 
-var identityType = (Environment.GetEnvironmentVariable("IdentityType")
-        ?? Environment.GetEnvironmentVariable("IDENTITY_TYPE")
+// -----------------------------------------------------------------
+//  Identity provider feature switch
+//  Allowed values: "Duende" (Identity.API) | "OpenIddict" (OpenIdentity.App)
+//  Set via appsettings.json ("IdentityType"), the IdentityType /
+//  IDENTITY_TYPE environment variables, or --IdentityType on the CLI.
+// -----------------------------------------------------------------
+var identityType = (builder.Configuration["IdentityType"]
+        ?? builder.Configuration["IDENTITY_TYPE"]
         ?? "Duende")
     .Trim();
 var useOpenIddict = identityType.Equals("OpenIddict", StringComparison.OrdinalIgnoreCase);
+
+if (!useOpenIddict && !identityType.Equals("Duende", StringComparison.OrdinalIgnoreCase))
+{
+    throw new InvalidOperationException(
+        $"Invalid IdentityType '{identityType}'. Allowed values are 'Duende' or 'OpenIddict'.");
+}
 
 //var serviceBus = builder.AddAzureServiceBus("mango")
 //    .RunAsEmulator();
@@ -65,15 +77,15 @@ var useOpenIddict = identityType.Equals("OpenIddict", StringComparison.OrdinalIg
 //    .AddServiceBusTopic("order-payment-succeeded-events")
 //    .AddServiceBusSubscription("order-payment-succeeded-events-ordersapi");
 
-var identity = builder.AddProject<Projects.Identity_API>("identity-app")
-    .WaitFor(identitydb)
-    .WithReference(identitydb);
-
-var openIdentity = builder.AddProject<Projects.OpenIdentity_App>("openidentity-app")
-    .WaitFor(openidentitydb)
-    .WithReference(openidentitydb);
-
-var identityRef = useOpenIddict ? openIdentity : identity;
+// Only the selected identity provider is registered/started; every
+// consumer resolves the authority through identityRef below.
+var identityRef = useOpenIddict
+    ? builder.AddProject<Projects.OpenIdentity_App>("openidentity-app")
+        .WaitFor(openidentitydb)
+        .WithReference(openidentitydb)
+    : builder.AddProject<Projects.Identity_API>("identity-app")
+        .WaitFor(identitydb)
+        .WithReference(identitydb);
 
 // Get identity endpoint for services that need JWT validation
 var launchProfileName = ShouldUseHttpForEndpoints() ? "http" : "https";
@@ -134,11 +146,19 @@ var webApp = builder.AddProject<Projects.Mango_Web>("mango-web")
     .WithEnvironment("ServiceUrls__IdentityApp", identityEndpoint)
     .WithEnvironment("OpenIdConnect__Authority", identityEndpoint);
 
-identity.WithEnvironment("IdentityServer__Clients__1__RedirectUris__0", $"{webApp.GetEndpoint("https")}/signin-oidc")
+// Feed the Mango.Web redirect URIs to whichever provider is active.
+if (useOpenIddict)
+{
+    identityRef
+        .WithEnvironment("OpenIddict__Clients__MangoWeb__RedirectUri", $"{webApp.GetEndpoint("https")}/signin-oidc")
+        .WithEnvironment("OpenIddict__Clients__MangoWeb__PostLogoutUri", $"{webApp.GetEndpoint("https")}/signout-callback-oidc");
+}
+else
+{
+    identityRef
+        .WithEnvironment("IdentityServer__Clients__1__RedirectUris__0", $"{webApp.GetEndpoint("https")}/signin-oidc")
         .WithEnvironment("IdentityServer__Clients__1__PostLogoutRedirectUris__0", $"{webApp.GetEndpoint("https")}/signout-callback-oidc");
-
-openIdentity.WithEnvironment("OpenIddict__Clients__MangoWeb__RedirectUri", $"{webApp.GetEndpoint("https")}/signin-oidc")
-    .WithEnvironment("OpenIddict__Clients__MangoWeb__PostLogoutUri", $"{webApp.GetEndpoint("https")}/signout-callback-oidc");
+}
 
 builder.AddProject<Projects.Mango_Orchestrators>("mango-saga-orchestrators")
     .WaitFor(rabbitMq).WithReference(rabbitMq)
@@ -164,10 +184,15 @@ var mangoUiUrl = "http://localhost:5173";
 mangoUi
     .WithEnvironment("VITE_IDENTITY_URL", identityEndpoint);
 
-openIdentity
-    .WithEnvironment("OpenIddict__Clients__MangoSpa__RedirectUri", $"{mangoUiUrl}/callback")
-    .WithEnvironment("OpenIddict__Clients__MangoSpa__SilentRedirectUri", $"{mangoUiUrl}/silent-callback")
-    .WithEnvironment("OpenIddict__Clients__MangoSpa__PostLogoutUri", mangoUiUrl);
+// The SPA client is only seeded by OpenIdentity.App; Duende configures
+// its clients statically in Identity.API appsettings.
+if (useOpenIddict)
+{
+    identityRef
+        .WithEnvironment("OpenIddict__Clients__MangoSpa__RedirectUri", $"{mangoUiUrl}/callback")
+        .WithEnvironment("OpenIddict__Clients__MangoSpa__SilentRedirectUri", $"{mangoUiUrl}/silent-callback")
+        .WithEnvironment("OpenIddict__Clients__MangoSpa__PostLogoutUri", mangoUiUrl);
+}
 
 builder.Build().Run();
 

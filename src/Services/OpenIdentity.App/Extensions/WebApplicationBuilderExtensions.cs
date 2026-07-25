@@ -47,6 +47,11 @@ public static class WebApplicationBuilderExtensions
                        .AllowClientCredentialsFlow()
                        .AllowRefreshTokenFlow();
 
+                // Downstream APIs validate access tokens with plain AddJwtBearer,
+                // which cannot decrypt OpenIddict's default JWE tokens. Emit
+                // signed-only (JWS) access tokens, like Duende does.
+                options.DisableAccessTokenEncryption();
+
                 options.RegisterScopes("openid", "profile", "email", "roles", "mango", "offline_access");
 
                 // Use ASP.NET Core Data Protection and endpoint generation

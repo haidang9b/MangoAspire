@@ -9,6 +9,14 @@ public class DbInitializer(
     IOpenIddictScopeManager scopeManager,
     IConfiguration configuration) : IDbInitializer
 {
+    // Hard-coded seed identities. Must stay in sync with
+    // Identity.API/Initializer/DBInitializer.cs so the OIDC subject (user id),
+    // username and password are identical no matter which identity provider
+    // the AppHost IdentityType switch activates.
+    private const string AdminUserId = "a1111111-1111-1111-1111-111111111111";
+    private const string AdminPassword = "Admin123*";
+    private const string CustomerUserId = "c2222222-2222-2222-2222-222222222222";
+    private const string CustomerPassword = "Customer123*";
 
     public async Task InitializeAsync()
     {
@@ -41,14 +49,14 @@ public class DbInitializer(
         {
             var adminUser = new ApplicationUser
             {
+                Id = AdminUserId,
                 UserName = "admin1@gmail.com",
                 Email = "admin1@gmail.com",
                 EmailConfirmed = true,
                 Name = "John Admin"
             };
 
-            var password = configuration["Identity:AdminPassword"] ?? throw new InvalidOperationException("Admin password not configured.");
-            var result = await userManager.CreateAsync(adminUser, password);
+            var result = await userManager.CreateAsync(adminUser, AdminPassword);
             if (!result.Succeeded)
             {
                 throw new InvalidOperationException($"Failed to create admin user: {string.Join(", ", result.Errors.Select(e => e.Description))}");
@@ -68,14 +76,14 @@ public class DbInitializer(
         {
             var customerUser = new ApplicationUser
             {
+                Id = CustomerUserId,
                 UserName = "customer1@gmail.com",
                 Email = "customer1@gmail.com",
                 EmailConfirmed = true,
                 Name = "Jane Customer"
             };
 
-            var password = configuration["Identity:CustomerPassword"] ?? throw new InvalidOperationException("Customer password not configured.");
-            var result = await userManager.CreateAsync(customerUser, password);
+            var result = await userManager.CreateAsync(customerUser, CustomerPassword);
             if (!result.Succeeded)
             {
                 throw new InvalidOperationException($"Failed to create customer user: {string.Join(", ", result.Errors.Select(e => e.Description))}");

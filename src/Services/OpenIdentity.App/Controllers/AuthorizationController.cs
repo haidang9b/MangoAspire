@@ -148,8 +148,8 @@ public class AuthorizationController(
         var claims = new Dictionary<string, object>(StringComparer.Ordinal)
         {
             [Claims.Subject] = await userManager.GetUserIdAsync(user),
-            [Claims.Name] = user.Name ?? await userManager.GetUserNameAsync(user),
-            [Claims.Email] = await userManager.GetEmailAsync(user),
+            [Claims.Name] = user.Name ?? await userManager.GetUserNameAsync(user) ?? string.Empty,
+            [Claims.Email] = await userManager.GetEmailAsync(user) ?? string.Empty,
             [Claims.EmailVerified] = await userManager.IsEmailConfirmedAsync(user)
         };
 
@@ -242,7 +242,7 @@ public class AuthorizationController(
         var roles = await userManager.GetRolesAsync(user);
         if (roles.Count > 0 && principal.Identity is ClaimsIdentity identity)
         {
-            identity.SetClaims(Claims.Role, [..roles]);
+            identity.SetClaims(Claims.Role, [.. roles]);
         }
 
         return principal;

@@ -69,7 +69,11 @@ public static class IServiceCollectionExtensions
             options.AddPolicy("ApiScope", policy =>
             {
                 policy.RequireAuthenticatedUser();
-                policy.RequireClaim("scope", "mango");
+                // Duende emits one claim per scope; OpenIddict emits a single
+                // space-delimited scope claim. Accept both formats.
+                policy.RequireAssertion(context => context.User.FindAll("scope")
+                    .SelectMany(claim => claim.Value.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+                    .Contains("mango"));
             });
         });
 

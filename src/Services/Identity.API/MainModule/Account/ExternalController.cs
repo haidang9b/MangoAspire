@@ -1,8 +1,4 @@
-﻿// Copyright (c) Duende Software. All rights reserved.
-// See LICENSE in the project root for license information.
-
-
-using Duende.IdentityModel;
+﻿using Duende.IdentityModel;
 using Duende.IdentityServer;
 using Duende.IdentityServer.Events;
 using Duende.IdentityServer.Services;
@@ -20,7 +16,6 @@ namespace Identity.API.MainModule.Account;
 [AllowAnonymous]
 public class ExternalController : Controller
 {
-
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly IIdentityServerInteractionService _interaction;
