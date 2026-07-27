@@ -16,6 +16,9 @@ This maximizes code cohesion and guarantees that changes to one feature won't in
 ## MediatR and CQRS
 We heavily use the **MediatR** library to implement the Command Query Responsibility Segregation (CQRS) pattern. HTTP endpoints do not contain business logic; they immediately dispatch a request to its corresponding handler.
 
+## Workflow Orchestration
+`Mango.Orchestrators` implements long-running saga flows for cross-service business processes. It owns a dedicated `sagaorchestratorsdb` database, consumes integration events from RabbitMQ, and coordinates downstream service interactions without tightly coupling those services to one another.
+
 ```csharp
 // Example structure using C# 14 Primary Constructors
 public record CreateProductCommand(string Name, decimal Price) : IRequest<ResultModel<Guid>>;

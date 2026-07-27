@@ -6,7 +6,7 @@
 
 ## High-Level Architecture
 
-The system is composed of several autonomous microservices, each with its own database, communicating asynchronously via an Event Bus/Message Broker.
+The system is composed of several autonomous microservices, each with its own database, communicating primarily through the gateway and asynchronously via an Event Bus/Message Broker. A dedicated saga orchestrator service coordinates long-running workflows and persists saga state in its own database.
 
 ```mermaid
 flowchart TD
@@ -29,6 +29,10 @@ flowchart TD
         Coupon["Coupons.API"]
         Payment["Payments.API"]
         Chat["ChatAgent.App (AI)"]
+    end
+
+    subgraph WorkflowSaga["Workflow / Saga"]
+        Orchestrator["Mango.Orchestrators (Saga)"]
     end
 
     subgraph Infrastructure["Infrastructure"]
@@ -59,6 +63,9 @@ flowchart TD
 
     Product -.->|CDC Events| Debezium
     Debezium -.->|Publish| RabbitMQ
+
+    Orchestrator --> RabbitMQ
+    Orchestrator --> Postgres
 
     Order -.->|Integration Events| RabbitMQ
     Payment -.->|Integration Events| RabbitMQ
