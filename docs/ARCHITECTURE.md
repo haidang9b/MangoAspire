@@ -9,37 +9,37 @@
 The system is composed of several autonomous microservices, each with its own database, communicating asynchronously via an Event Bus/Message Broker.
 
 ```mermaid
-graph TD
-    subgraph "Frontend Applications"
-        Web[Mango.Web (MVC)]
-        UI[mango-ui (React SPA)]
+flowchart TD
+    subgraph FrontendApplications["Frontend Applications"]
+        Web["Mango.Web (MVC)"]
+        UI["mango-ui (React SPA)"]
     end
 
-    subgraph "Gateway / Orchestrator"
-        AppHost[Mango.AppHost (.NET Aspire)]
-        Gateway[Mango.Gateway (YARP Proxy)]
+    subgraph GatewayOrchestrator["Gateway / Orchestrator"]
+        AppHost["Mango.AppHost (.NET Aspire)"]
+        Gateway["Mango.Gateway (YARP Proxy)"]
     end
 
-    subgraph "Core Microservices"
-        Identity[Identity.API - Duende]
-        OpenIdentity[OpenIdentity.App - OpenIddict]
-        Product[Products.API]
-        Cart[ShoppingCart.API]
-        Order[Orders.API]
-        Coupon[Coupons.API]
-        Payment[Payments.API]
-        Chat[ChatAgent.App (AI)]
+    subgraph CoreMicroservices["Core Microservices"]
+        Identity["Identity.API - Duende"]
+        OpenIdentity["OpenIdentity.App - OpenIddict"]
+        Product["Products.API"]
+        Cart["ShoppingCart.API"]
+        Order["Orders.API"]
+        Coupon["Coupons.API"]
+        Payment["Payments.API"]
+        Chat["ChatAgent.App (AI)"]
     end
 
-    subgraph "Infrastructure"
-        RabbitMQ[RabbitMQ / Azure Service Bus]
-        Postgres[(PostgreSQL)]
-        Debezium[Debezium (CDC)]
+    subgraph Infrastructure["Infrastructure"]
+        RabbitMQ["RabbitMQ / Azure Service Bus"]
+        Postgres[("PostgreSQL")]
+        Debezium["Debezium (CDC)"]
     end
 
     Web --> Gateway
     UI --> Gateway
-    
+
     Gateway -.->|IdentityType=Duende| Identity
     Gateway -.->|IdentityType=OpenIddict| OpenIdentity
     Gateway --> Product
@@ -59,7 +59,7 @@ graph TD
 
     Product -.->|CDC Events| Debezium
     Debezium -.->|Publish| RabbitMQ
-    
+
     Order -.->|Integration Events| RabbitMQ
     Payment -.->|Integration Events| RabbitMQ
     Cart -.->|Integration Events| RabbitMQ
