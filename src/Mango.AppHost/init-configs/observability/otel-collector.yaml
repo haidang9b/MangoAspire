@@ -1,0 +1,58 @@
+# OpenTelemetry Collector — the single OTLP endpoint the .NET services push to.
+# It fans logs out to Loki and metrics out to Prometheus, so services stay
+# unaware of which backend stores what.
+#
+# Container-to-container URLs below use Aspire resource names as hostnames;
+# Aspire places every container on a shared network where those resolve.
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  # Sheds load instead of OOM-killing the collector when a service floods it.
+  memory_limiter:
+    check_interval: 1s
+    limit_percentage: 75
+    spike_limit_percentage: 15
+  batch:
+    timeout: 5s
+    send_batch_size: 1024
+
+exporters:
+  # Loki 3.x ingests OTLP natively; the exporter appends /v1/logs to this URL.
+  otlp_http/loki:
+    endpoint: http://loki:3100/otlp
+    tls:
+      insecure: true
+  # Prometheus 3.x OTLP receiver, enabled by --web.enable-otlp-receiver.
+  # The exporter appends /v1/metrics to this URL.
+  otlp_http/prometheus:
+    endpoint: http://prometheus:9090/api/v1/otlp
+    tls:
+      insecure: true
+
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133
+
+service:
+  extensions: [health_check]
+  telemetry:
+    logs:
+      level: warn
+  pipelines:
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [otlp_http/loki]
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [otlp_http/prometheus]
+    # No traces pipeline: the services keep sending traces to the Aspire
+    # dashboard only. Adding one requires a trace store — see docs/OBSERVABILITY.md.

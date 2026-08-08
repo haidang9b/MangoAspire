@@ -5,6 +5,8 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using OpenTelemetry;
+using OpenTelemetry.Exporter;
+using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 
@@ -16,6 +18,17 @@ public static class Extensions
 {
     private const string HealthEndpointPath = "/health";
     private const string AlivenessEndpointPath = "/alive";
+
+    /// <summary>Aspire injects this and points it at the Aspire dashboard.</summary>
+    private const string DashboardEndpointVariable = "OTEL_EXPORTER_OTLP_ENDPOINT";
+
+    /// <summary>
+    /// The AppHost injects this when the Grafana stack is running; it points at the
+    /// OpenTelemetry Collector in front of Loki and Prometheus.
+    /// </summary>
+    private const string CollectorEndpointVariable = "OBSERVABILITY_OTLP_ENDPOINT";
+
+    private const string CollectorExporterName = "grafana-stack";
 
     public static TBuilder AddServiceDefaults<TBuilder>(this TBuilder builder) where TBuilder : IHostApplicationBuilder
     {
@@ -79,12 +92,41 @@ public static class Extensions
 
     private static TBuilder AddOpenTelemetryExporters<TBuilder>(this TBuilder builder) where TBuilder : IHostApplicationBuilder
     {
-        var useOtlpExporter = !string.IsNullOrWhiteSpace(builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"]);
+        var useDashboardExporter = !string.IsNullOrWhiteSpace(builder.Configuration[DashboardEndpointVariable]);
+        var useCollectorExporter = Uri.TryCreate(
+            builder.Configuration[CollectorEndpointVariable], UriKind.Absolute, out var collectorEndpoint);
 
-        if (useOtlpExporter)
+        if (!useCollectorExporter)
         {
-            builder.Services.AddOpenTelemetry().UseOtlpExporter();
+            if (useDashboardExporter)
+            {
+                // UseOtlpExporter reads the OTEL_EXPORTER_OTLP_* variables Aspire injects.
+                builder.Services.AddOpenTelemetry().UseOtlpExporter();
+            }
+
+            return builder;
         }
+
+        // UseOtlpExporter claims exporter registration exclusively — combining it with a
+        // signal-specific AddOtlpExporter throws NotSupportedException — so exporting to a
+        // second backend means registering every exporter explicitly.
+        if (useDashboardExporter)
+        {
+            builder.Services.AddOpenTelemetry()
+                .WithLogging(logging => logging.AddOtlpExporter())
+                .WithMetrics(metrics => metrics.AddOtlpExporter())
+                .WithTracing(tracing => tracing.AddOtlpExporter());
+        }
+
+        // Logs and metrics are mirrored to the collector. Traces are not: the collector
+        // has no trace pipeline until a trace store is added alongside Loki and Prometheus.
+        builder.Services.AddOpenTelemetry()
+            .WithLogging(logging => logging.AddOtlpExporter(
+                CollectorExporterName,
+                options => ConfigureCollectorExporter(options, collectorEndpoint!)))
+            .WithMetrics(metrics => metrics.AddOtlpExporter(
+                CollectorExporterName,
+                (options, _) => ConfigureCollectorExporter(options, collectorEndpoint!)));
 
         // Uncomment the following lines to enable the Azure Monitor exporter (requires the Azure.Monitor.OpenTelemetry.AspNetCore package)
         //if (!string.IsNullOrEmpty(builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"]))
@@ -94,6 +136,16 @@ public static class Extensions
         //}
 
         return builder;
+
+        // Named options still bind the OTEL_EXPORTER_OTLP_* variables first, so every
+        // field the collector cares about is overwritten here rather than left inherited.
+        static void ConfigureCollectorExporter(OtlpExporterOptions options, Uri endpoint)
+        {
+            options.Endpoint = endpoint;
+            options.Protocol = OtlpExportProtocol.Grpc;
+            // Drops the dashboard's API key: it is a secret for a different backend.
+            options.Headers = string.Empty;
+        }
     }
 
     public static TBuilder AddDefaultHealthChecks<TBuilder>(this TBuilder builder) where TBuilder : IHostApplicationBuilder

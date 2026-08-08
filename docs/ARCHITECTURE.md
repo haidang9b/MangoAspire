@@ -113,8 +113,10 @@ See [Architecture Overview](architecture/overview.md#identity-provider-switch) f
 - **ChatAgent.App**: A dedicated service for AI-powered interactions, utilizing **Semantic Kernel** to provide intelligent responses to user queries and conversation history persistence.
 
 ### 7. Observability
-- **OpenTelemetry**: Built-in logging, metrics, and distributed tracing.
-- **Aspire Dashboard**: Centralized view of all service health, logs, and traces.
+- **OpenTelemetry**: Built-in logging, metrics, and distributed tracing, configured once in `Mango.ServiceDefaults`.
+- **Two backends in parallel**: every service exports to the **Aspire Dashboard** (all three signals) and to an **OpenTelemetry Collector** (logs and metrics), which fans out to **Loki** and **Prometheus** behind **Grafana** on port 3000.
+- **Why both**: the Aspire dashboard is in-memory and resets with the AppHost; the Grafana stack persists history and is queryable with LogQL/PromQL.
+- **Switchable**: `UseGrafanaStack=false` starts no observability containers. See [Observability](OBSERVABILITY.md).
 
 ## Service Breakdown
 

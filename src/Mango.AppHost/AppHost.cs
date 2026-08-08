@@ -1,5 +1,11 @@
-﻿var builder = DistributedApplication.CreateBuilder(args);
+﻿using Mango.AppHost;
 
+var builder = DistributedApplication.CreateBuilder(args);
+
+// Grafana + Prometheus + Loki, fronted by an OpenTelemetry Collector. Returns null
+// (and starts nothing) when "UseGrafanaStack" is false, leaving the Aspire dashboard
+// as the only telemetry sink.
+var observability = builder.AddGrafanaObservability();
 
 // Resolved from the "Parameters" section of appsettings.json, or overridden
 // with user-secrets / environment variables (Parameters__postgres-password).
@@ -166,7 +172,7 @@ else
         .WithEnvironment("IdentityServer__Clients__1__PostLogoutRedirectUris__0", $"{webApp.GetEndpoint("https")}/signout-callback-oidc");
 }
 
-builder.AddProject<Projects.Mango_Orchestrators>("mango-saga-orchestrators")
+var sagaOrchestrators = builder.AddProject<Projects.Mango_Orchestrators>("mango-saga-orchestrators")
     .WaitFor(rabbitMq).WithReference(rabbitMq)
     .WaitFor(sagaorchestratorsdb).WithReference(sagaorchestratorsdb);
 
@@ -198,6 +204,19 @@ if (useOpenIddict)
         .WithEnvironment("OpenIddict__Clients__MangoSpa__RedirectUri", $"{mangoUiUrl}/callback")
         .WithEnvironment("OpenIddict__Clients__MangoSpa__SilentRedirectUri", $"{mangoUiUrl}/silent-callback")
         .WithEnvironment("OpenIddict__Clients__MangoSpa__PostLogoutUri", mangoUiUrl);
+}
+
+// Every .NET service also ships its logs and metrics to the collector. Kept in one
+// place so a new service only has to be added to this list.
+IResourceBuilder<ProjectResource>[] instrumentedProjects =
+[
+    identityRef, products, coupon, shoppingcart, orders, payments,
+    agentApp, webApp, sagaOrchestrators, gateway
+];
+
+foreach (var project in instrumentedProjects)
+{
+    project.WithGrafanaTelemetry(observability);
 }
 
 builder.Build().Run();

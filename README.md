@@ -36,7 +36,7 @@ The project follows a microservices architecture, leveraging .NET Aspire to simp
 - **AI Integration**: [Semantic Kernel](https://github.com/microsoft/semantic-kernel) (ChatAgent) with OpenAI support.
 - **Gateway**: [YARP Reverse Proxy](https://microsoft.github.io/reverse-proxy/)
 - **Patterns**: MediatR (CQRS), FluentValidation, Result Pattern, Vertical Slice Architecture
-- **Observability**: OpenTelemetry (Metrics, Tracing, Logging)
+- **Observability**: OpenTelemetry (Metrics, Tracing, Logging) → Aspire Dashboard + [Grafana / Prometheus / Loki](docs/OBSERVABILITY.md)
 - **CDC**: [Debezium](https://debezium.io/)
 - **Containerization**: Optimized **Alpine-based** Docker images for reduced size and enhanced security.
 
@@ -107,6 +107,11 @@ MangoAspire/
 4. **Access the Dashboard**:
    Once running, the .NET Aspire Dashboard URL will be printed in the console. Open it to monitor services, logs, and traces.
 
+5. **Access Grafana** (optional):
+   Logs and metrics are also shipped to a Grafana + Prometheus + Loki stack at
+   <http://localhost:3000>, which keeps history across restarts. Turn it off with
+   `--UseGrafanaStack false`. See [Observability](docs/OBSERVABILITY.md).
+
 ---
 
 ## 📘 Documentation
@@ -119,6 +124,7 @@ For detailed information on project-specific setups:
 - [Checkout Saga Workflow](docs/CHECKOUT_SAGA.md)
 - [Event Bus Usage & Switching](docs/EVENT_BUS.md)
 - [Change Data Capture (CDC)](docs/CDC.md)
+- [Observability: Grafana, Prometheus & Loki](docs/OBSERVABILITY.md)
 
 ---
 

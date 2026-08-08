@@ -1,0 +1,3 @@
+# Grafana logs an error at startup for every provisioning subdirectory it cannot
+# open. Bind-mounting this tree replaces the image's own (empty) directories, so
+# the ones Grafana always reads have to exist here.

@@ -1,0 +1,27 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+storage:
+  tsdb:
+    # OTLP is a push protocol, so samples from a service that briefly stalls can
+    # arrive behind ones already stored. Without this window they are rejected.
+    out_of_order_time_window: 30m
+
+otlp:
+  # Turns these OpenTelemetry resource attributes into Prometheus labels so a
+  # query can filter by service.
+  promote_resource_attributes:
+    - service.name
+    - service.namespace
+    - service.version
+    - service.instance.id
+    - deployment.environment.name
+  # Dots become underscores and units become suffixes, so
+  # http.server.request.duration is stored as http_server_request_duration_seconds.
+  translation_strategy: UnderscoreEscapingWithSuffixes
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]
