@@ -18,5 +18,9 @@ public class ProductCategoryConfiguration : IEntityTypeConfiguration<ProductCate
 
         builder.Property(x => x.UpdatedAt)
             .IsRequired();
+
+        // See ProductConfiguration — tombstoned rather than removed, so the replay fence
+        // keeps its watermark.
+        builder.HasQueryFilter(x => !x.IsDeleted);
     }
 }

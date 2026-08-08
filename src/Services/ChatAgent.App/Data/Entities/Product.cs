@@ -19,6 +19,24 @@ public class Product
     public decimal Price { get; set; }
     public int? CatalogTypeId { get; set; }
 
-    /// <summary>When this row was last written from a CDC message.</summary>
+    /// <summary>When this row was last written from a CDC message — a local processing time.</summary>
+    /// <remarks>Wall clock at write time, so it must never be used to order CDC events; that is
+    /// what <see cref="SourceLsn"/> is for.</remarks>
     public DateTime UpdatedAt { get; set; }
+
+    /// <summary>
+    /// WAL position of the CDC record this row reflects. The replay fence: an incoming event
+    /// whose LSN is not greater than this is discarded rather than applied.
+    /// </summary>
+    public long? SourceLsn { get; set; }
+
+    /// <summary>Commit time of the CDC record this row reflects; the fence's fallback.</summary>
+    public DateTime? SourceTimestamp { get; set; }
+
+    /// <summary>
+    /// Tombstone for an upstream delete. The row is kept rather than removed so that its
+    /// <see cref="SourceLsn"/> survives — otherwise a replayed older insert would silently
+    /// resurrect a deleted product. A global query filter hides these from every read path.
+    /// </summary>
+    public bool IsDeleted { get; set; }
 }

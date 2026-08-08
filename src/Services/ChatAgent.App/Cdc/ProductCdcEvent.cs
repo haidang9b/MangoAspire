@@ -1,5 +1,4 @@
 ﻿using EventBus.Abstractions;
-using EventBus.Events;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -11,12 +10,12 @@ namespace ChatAgent.App.Cdc;
 /// columns, not the upstream CLR entity, because that is what Debezium emits.
 /// </summary>
 /// <remarks>
-/// ShoppingCart.API binds its own queue to the same routing key; the direct exchange fans
-/// out to both, so the two read-models are independent.
+/// ShoppingCart.API consumes the same routing key off the shared <c>mango.cdc.stream</c> log,
+/// reading it independently from its own offset, so the two read-models never interfere.
 /// <c>available_stock</c> is excluded upstream via <c>column.exclude.list</c>.
 /// </remarks>
 [EventName("mango.public.products")]
-public record ProductCdcEvent : IntegrationEvent
+public record ProductCdcEvent : CdcIntegrationEvent
 {
     [JsonPropertyName("id")]
     public Guid ProductId { get; set; }
@@ -39,16 +38,6 @@ public record ProductCdcEvent : IntegrationEvent
 
     [JsonPropertyName("catalog_type_id")]
     public int? CatalogTypeId { get; set; }
-
-    /// <summary>
-    /// Debezium's <c>delete.handling.mode=rewrite</c> marks deletes with this flag rather
-    /// than emitting a tombstone, so it arrives as the string "true"/"false".
-    /// </summary>
-    [JsonPropertyName("__deleted")]
-    public string? DeletedRaw { get; set; }
-
-    [JsonIgnore]
-    public bool IsDeleted => string.Equals(DeletedRaw, "true", StringComparison.OrdinalIgnoreCase);
 }
 
 /// <summary>

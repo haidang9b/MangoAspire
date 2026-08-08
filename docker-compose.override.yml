@@ -15,6 +15,20 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
+    volumes:
+      # Stream retention is only meaningful if the log outlives the container.
+      - rabbitmq-data:/var/lib/rabbitmq
+
+  # Imports the CDC topology (mango-cdc-exchange, mango.cdc.stream, bindings) once the broker
+  # is up. Uses the management API rather than the broker's load_definitions setting: a node
+  # that loads definitions at boot skips seeding the default user, so RABBITMQ_DEFAULT_USER/
+  # _PASS are ignored and every client is rejected with "PLAIN login refused".
+  cdc-topology:
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PASSWORD=YourSecretPassword
+    volumes:
+      - ./src/Mango.AppHost/init-configs/rabbitmq/definitions.json:/definitions.json
 
   debezium:
     ports:
@@ -85,6 +99,8 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__chatagentdb=Host=postgres;Database=chatagentdb;Username=postgres;Password=postgres
+      # Required: the product read-model is replicated from the CDC stream on the event bus.
+      - ConnectionStrings__eventbus=rabbitmq
       - ServiceUrls__IdentityApp=http://identity.api:8080
     ports:
       - "7007:8080"
@@ -130,3 +146,4 @@ services:
 volumes:
   postgres-data:
   debezium-data:
+  rabbitmq-data:

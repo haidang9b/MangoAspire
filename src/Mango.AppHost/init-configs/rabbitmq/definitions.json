@@ -1,0 +1,49 @@
+{
+  "rabbit_version": "4.0.0",
+  "vhosts": [
+    { "name": "/" }
+  ],
+  "exchanges": [
+    {
+      "name": "mango-cdc-exchange",
+      "vhost": "/",
+      "type": "direct",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    }
+  ],
+  "queues": [
+    {
+      "name": "mango.cdc.stream",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-queue-type": "stream",
+        "x-max-age": "30D",
+        "x-max-length-bytes": 5000000000,
+        "x-stream-max-segment-size-bytes": 100000000
+      }
+    }
+  ],
+  "bindings": [
+    {
+      "source": "mango-cdc-exchange",
+      "vhost": "/",
+      "destination": "mango.cdc.stream",
+      "destination_type": "queue",
+      "routing_key": "mango.public.products",
+      "arguments": {}
+    },
+    {
+      "source": "mango-cdc-exchange",
+      "vhost": "/",
+      "destination": "mango.cdc.stream",
+      "destination_type": "queue",
+      "routing_key": "mango.public.catalog_types",
+      "arguments": {}
+    }
+  ]
+}

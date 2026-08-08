@@ -17,7 +17,11 @@ public class ProductCdcEventHandlerTests
     private static ProductCdcEventHandler CreateHandler(ChatAgentDbContext dbContext)
         => new(dbContext, new VectorIndexer(dbContext), NullLogger<ProductCdcEventHandler>.Instance);
 
-    private static ProductCdcEvent CreateEvent(Guid id, string name = "Pho Bo", decimal price = 12.5m) => new()
+    private static ProductCdcEvent CreateEvent(
+        Guid id,
+        string name = "Pho Bo",
+        decimal price = 12.5m,
+        long? sourceLsn = null) => new()
     {
         ProductId = id,
         Name = name,
@@ -26,6 +30,7 @@ public class ProductCdcEventHandlerTests
         ImageUrl = "https://example.com/pho.jpg",
         Price = price,
         CatalogTypeId = 3,
+        SourceLsn = sourceLsn,
     };
 
     [Fact]
@@ -111,20 +116,27 @@ public class ProductCdcEventHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_When_EventIsDeleted_Then_RemovesMirrorRowAndIndexEntry()
+    public async Task HandleAsync_When_EventIsDeleted_Then_HidesProductAndRemovesIndexEntry()
     {
         await using var dbContext = CreateDbContext();
         var productId = Guid.NewGuid();
         var handler = CreateHandler(dbContext);
 
-        await handler.HandleAsync(CreateEvent(productId));
+        await handler.HandleAsync(CreateEvent(productId, sourceLsn: 100));
 
-        var deleteEvent = CreateEvent(productId);
+        var deleteEvent = CreateEvent(productId, sourceLsn: 200);
         deleteEvent.DeletedRaw = "true";
         await handler.HandleAsync(deleteEvent);
 
+        // Gone from every read path, courtesy of the global query filter...
         dbContext.Products.ShouldBeEmpty();
         dbContext.VectorDocuments.ShouldBeEmpty();
+
+        // ...but the tombstone survives, carrying the LSN watermark that stops a replayed
+        // older record from resurrecting the product.
+        var tombstone = await dbContext.Products.IgnoreQueryFilters().SingleAsync();
+        tombstone.IsDeleted.ShouldBeTrue();
+        tombstone.SourceLsn.ShouldBe(200);
     }
 
     [Fact]
@@ -137,7 +149,144 @@ public class ProductCdcEventHandlerTests
 
         await Should.NotThrowAsync(() => CreateHandler(dbContext).HandleAsync(deleteEvent));
 
+        dbContext.Products.IgnoreQueryFilters().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task HandleAsync_When_EventLsnIsOlderThanRow_Then_DoesNotOverwriteMirror()
+    {
+        await using var dbContext = CreateDbContext();
+        var productId = Guid.NewGuid();
+        var handler = CreateHandler(dbContext);
+
+        await handler.HandleAsync(CreateEvent(productId, name: "Pho Bo", sourceLsn: 100));
+        await handler.HandleAsync(CreateEvent(productId, name: "Pho Ga", price: 11m, sourceLsn: 200));
+
+        // A replay re-delivers the original record. Applying it would move the read-model
+        // backwards, which is exactly what makes replay dangerous without a fence.
+        await handler.HandleAsync(CreateEvent(productId, name: "Pho Bo", sourceLsn: 100));
+
+        var product = await dbContext.Products.SingleAsync();
+        product.Name.ShouldBe("Pho Ga");
+        product.Price.ShouldBe(11m);
+        product.SourceLsn.ShouldBe(200);
+    }
+
+    [Fact]
+    public async Task HandleAsync_When_ReplayedInsertArrivesAfterDelete_Then_ProductStaysDeleted()
+    {
+        await using var dbContext = CreateDbContext();
+        var productId = Guid.NewGuid();
+        var handler = CreateHandler(dbContext);
+
+        await handler.HandleAsync(CreateEvent(productId, sourceLsn: 100));
+
+        var deleteEvent = CreateEvent(productId, sourceLsn: 200);
+        deleteEvent.DeletedRaw = "true";
+        await handler.HandleAsync(deleteEvent);
+
+        // The original insert comes round again on a replay. A hard delete would have taken
+        // the watermark with it and this would resurrect the product.
+        await handler.HandleAsync(CreateEvent(productId, sourceLsn: 100));
+
         dbContext.Products.ShouldBeEmpty();
+        dbContext.VectorDocuments.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task HandleAsync_When_ProductIsReinsertedUpstream_Then_ClearsTheTombstone()
+    {
+        await using var dbContext = CreateDbContext();
+        var productId = Guid.NewGuid();
+        var handler = CreateHandler(dbContext);
+
+        await handler.HandleAsync(CreateEvent(productId, sourceLsn: 100));
+
+        var deleteEvent = CreateEvent(productId, sourceLsn: 200);
+        deleteEvent.DeletedRaw = "true";
+        await handler.HandleAsync(deleteEvent);
+
+        // A genuine re-insert carries a newer LSN, so it is not a replay and must take effect.
+        await handler.HandleAsync(CreateEvent(productId, name: "Pho Bo Tai", sourceLsn: 300));
+
+        var product = await dbContext.Products.SingleAsync();
+        product.Name.ShouldBe("Pho Bo Tai");
+        product.IsDeleted.ShouldBeFalse();
+
+        var indexed = await dbContext.VectorDocuments.SingleAsync();
+        indexed.Content.ShouldContain("Pho Bo Tai");
+    }
+
+    [Fact]
+    public async Task HandleAsync_When_EventHasNoLsnMetadata_Then_AppliesUpdate()
+    {
+        await using var dbContext = CreateDbContext();
+        var productId = Guid.NewGuid();
+        var handler = CreateHandler(dbContext);
+
+        // Messages published before add.fields was configured carry no source metadata.
+        // They must keep working rather than being fenced out as unorderable.
+        await handler.HandleAsync(CreateEvent(productId, name: "Pho Bo"));
+        await handler.HandleAsync(CreateEvent(productId, name: "Pho Ga"));
+
+        var product = await dbContext.Products.SingleAsync();
+        product.Name.ShouldBe("Pho Ga");
+    }
+
+    [Fact]
+    public async Task HandleAsync_When_EventIsReplayedAtSameLsn_Then_KeepsTheExistingEmbedding()
+    {
+        await using var dbContext = CreateDbContext();
+        var productId = Guid.NewGuid();
+        var handler = CreateHandler(dbContext);
+
+        await handler.HandleAsync(CreateEvent(productId, sourceLsn: 100));
+
+        var embeddedAt = DateTime.UtcNow;
+        var indexed = await dbContext.VectorDocuments.SingleAsync();
+        indexed.EmbeddedAt = embeddedAt;
+        await dbContext.SaveChangesAsync();
+
+        // Rebuilding a read-model replays the whole log, so the common case is re-seeing
+        // records already applied. The fence must make that free, not just harmless.
+        await handler.HandleAsync(CreateEvent(productId, sourceLsn: 100));
+
+        var refreshed = await dbContext.VectorDocuments.SingleAsync();
+        refreshed.EmbeddedAt.ShouldBe(embeddedAt);
+    }
+
+    [Fact]
+    public async Task HandleAsync_When_EventCarriesSourceTimestamp_Then_StampsItOnTheMirror()
+    {
+        await using var dbContext = CreateDbContext();
+        var productId = Guid.NewGuid();
+
+        var cdcEvent = CreateEvent(productId, sourceLsn: 100);
+        cdcEvent.SourceTimestampMs = 1_767_225_600_000; // 2026-01-01T00:00:00Z
+
+        await CreateHandler(dbContext).HandleAsync(cdcEvent);
+
+        var product = await dbContext.Products.SingleAsync();
+        product.SourceTimestamp.ShouldBe(new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc));
+    }
+
+    [Fact]
+    public async Task HandleAsync_When_OnlyTimestampsAreAvailable_Then_FencesOnTimestamp()
+    {
+        await using var dbContext = CreateDbContext();
+        var productId = Guid.NewGuid();
+        var handler = CreateHandler(dbContext);
+
+        var newer = CreateEvent(productId, name: "Pho Ga");
+        newer.SourceTimestampMs = 2_000;
+        await handler.HandleAsync(newer);
+
+        var older = CreateEvent(productId, name: "Pho Bo");
+        older.SourceTimestampMs = 1_000;
+        await handler.HandleAsync(older);
+
+        var product = await dbContext.Products.SingleAsync();
+        product.Name.ShouldBe("Pho Ga");
     }
 }
 
@@ -184,13 +333,47 @@ public class CatalogTypeCdcEventHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_When_EventIsDeleted_Then_RemovesMirrorRowAndIndexEntry()
+    public async Task HandleAsync_When_EventIsDeleted_Then_HidesCategoryAndRemovesIndexEntry()
     {
         await using var dbContext = CreateDbContext();
         var handler = CreateHandler(dbContext);
 
-        await handler.HandleAsync(new CatalogTypeCdcEvent { CatalogTypeId = 7, Type = "Desserts" });
-        await handler.HandleAsync(new CatalogTypeCdcEvent { CatalogTypeId = 7, Type = "Desserts", DeletedRaw = "true" });
+        await handler.HandleAsync(new CatalogTypeCdcEvent { CatalogTypeId = 7, Type = "Desserts", SourceLsn = 100 });
+        await handler.HandleAsync(new CatalogTypeCdcEvent { CatalogTypeId = 7, Type = "Desserts", SourceLsn = 200, DeletedRaw = "true" });
+
+        dbContext.ProductCategories.ShouldBeEmpty();
+        dbContext.VectorDocuments.ShouldBeEmpty();
+
+        // The tombstone keeps the watermark so a replay cannot bring the category back.
+        var tombstone = await dbContext.ProductCategories.IgnoreQueryFilters().SingleAsync();
+        tombstone.IsDeleted.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task HandleAsync_When_EventLsnIsOlderThanRow_Then_DoesNotOverwriteMirror()
+    {
+        await using var dbContext = CreateDbContext();
+        var handler = CreateHandler(dbContext);
+
+        await handler.HandleAsync(new CatalogTypeCdcEvent { CatalogTypeId = 7, Type = "Desserts", SourceLsn = 100 });
+        await handler.HandleAsync(new CatalogTypeCdcEvent { CatalogTypeId = 7, Type = "Sweets", SourceLsn = 200 });
+
+        // Replayed original record.
+        await handler.HandleAsync(new CatalogTypeCdcEvent { CatalogTypeId = 7, Type = "Desserts", SourceLsn = 100 });
+
+        var category = await dbContext.ProductCategories.SingleAsync();
+        category.Name.ShouldBe("Sweets");
+    }
+
+    [Fact]
+    public async Task HandleAsync_When_ReplayedInsertArrivesAfterDelete_Then_CategoryStaysDeleted()
+    {
+        await using var dbContext = CreateDbContext();
+        var handler = CreateHandler(dbContext);
+
+        await handler.HandleAsync(new CatalogTypeCdcEvent { CatalogTypeId = 7, Type = "Desserts", SourceLsn = 100 });
+        await handler.HandleAsync(new CatalogTypeCdcEvent { CatalogTypeId = 7, Type = "Desserts", SourceLsn = 200, DeletedRaw = "true" });
+        await handler.HandleAsync(new CatalogTypeCdcEvent { CatalogTypeId = 7, Type = "Desserts", SourceLsn = 100 });
 
         dbContext.ProductCategories.ShouldBeEmpty();
         dbContext.VectorDocuments.ShouldBeEmpty();
