@@ -1,6 +1,9 @@
 services:
   postgres:
-    image: postgres:16-alpine
+    # pgvector/pgvector is stock PostgreSQL plus the "vector" extension, which
+    # chatagentdb needs. Tag stays on pg16 to match the major version this compose
+    # file already used — PostgreSQL cannot read a newer major's data directory.
+    image: pgvector/pgvector:pg16
   
   rabbitmq:
     image: rabbitmq:3-management-alpine

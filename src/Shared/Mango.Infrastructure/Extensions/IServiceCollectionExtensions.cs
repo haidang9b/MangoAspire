@@ -9,17 +9,24 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure;
 using System.Reflection;
 
 namespace Mango.Infrastructure.Extensions;
 
 public static class IServiceCollectionExtensions
 {
+    /// <param name="doMoreNpgsqlOptionsConfigure">
+    /// Hook into the Npgsql provider options, for provider plugins that cannot be reached
+    /// from the outer <see cref="DbContextOptionsBuilder"/> — ChatAgent uses it for
+    /// <c>UseVector()</c> (pgvector).
+    /// </param>
     public static IServiceCollection AddPostgresDbContext<TDbContext>(
         this IServiceCollection services,
         string connectionString,
         Action<IServiceProvider, DbContextOptionsBuilder>? doMoreDbContextOptionsConfigure = null,
-        Action<IServiceCollection>? doMoreActions = null
+        Action<IServiceCollection>? doMoreActions = null,
+        Action<NpgsqlDbContextOptionsBuilder>? doMoreNpgsqlOptionsConfigure = null
     ) where TDbContext : DbContext, IDbFacadeResolver
     {
         services.AddDbContext<TDbContext>((sp, options) =>
@@ -31,6 +38,7 @@ public static class IServiceCollectionExtensions
                         sqlOptions.MigrationsAssembly(typeof(TDbContext).Assembly.GetName().Name);
                         sqlOptions.EnableRetryOnFailure(5, TimeSpan.FromSeconds(10), null);
                         sqlOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+                        doMoreNpgsqlOptionsConfigure?.Invoke(sqlOptions);
                     }
                 ).UseSnakeCaseNamingConvention();
 

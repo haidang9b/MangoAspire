@@ -24,6 +24,9 @@
     <PackageVersion Include="Microsoft.AspNetCore.Identity.UI" Version="10.0.10" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.10" />
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
+    <!-- pgvector: vector(n) column type + cosine distance for the ChatAgent RAG index -->
+    <PackageVersion Include="Pgvector" Version="0.3.2" />
+    <PackageVersion Include="Pgvector.EntityFrameworkCore" Version="0.3.0" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.10" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.10" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.10" />
@@ -50,6 +53,8 @@
     <PackageVersion Include="OpenIddict.Server.AspNetCore" Version="7.6.0" />
     <PackageVersion Include="Quartz.Extensions.Hosting" Version="3.19.0" />
     <!-- Microsoft Extensions -->
+    <!-- Version pinned to what Microsoft.SemanticKernel 1.78.0 resolves, so IEmbeddingGenerator is one type. -->
+    <PackageVersion Include="Microsoft.Extensions.AI.Abstractions" Version="10.5.0" />
     <PackageVersion Include="Microsoft.Extensions.Caching.Hybrid" Version="10.8.0" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.10" />
     <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="10.8.0" />
@@ -61,6 +66,11 @@
     <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.17.0" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.17.0" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="1.17.0" />
+    <!-- Refit's source generator is a Roslyn analyzer, and analyzers do not flow through
+         transitive package or project references. Any project that DECLARES Refit
+         interfaces must reference Refit directly, or the generator never runs and
+         AddRefitClient falls back to a reflection builder that is not installed. -->
+    <PackageVersion Include="Refit" Version="14.0.0" />
     <PackageVersion Include="Refit.HttpClientFactory" Version="14.0.0" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="10.2.3" />
     <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.21.0" />

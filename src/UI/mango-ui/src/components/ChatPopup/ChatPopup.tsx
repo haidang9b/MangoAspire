@@ -5,6 +5,23 @@ import { useTranslation } from 'react-i18next';
 import type { ChatMessage } from '@/types/chat';
 import './ChatPopup.css';
 
+/**
+ * Three bouncing dots shown while the assistant composes a reply.
+ *
+ * The answer is generated and verified server-side before the first chunk is sent, so
+ * there is a real pause with nothing to render. Without this the bubble sits empty and
+ * reads as a failure.
+ */
+function TypingIndicator() {
+    return (
+        <span className="chat-typing" role="status" aria-label="Assistant is typing">
+            <span className="chat-typing__dot" />
+            <span className="chat-typing__dot" />
+            <span className="chat-typing__dot" />
+        </span>
+    );
+}
+
 export function ChatPopup() {
     const { chat: chatService } = useApi();
     const { user } = useAuth();
@@ -147,16 +164,29 @@ export function ChatPopup() {
 
                     <div className="chat-messages">
                         {historyLoading && <div className="chat-loading">Loading history...</div>}
-                        {messages.map((msg) => (
-                            <div key={msg.id} className={`chat-msg chat-msg--${msg.role.toLowerCase()}`}>
-                                <div className="chat-msg__bubble">
-                                    {msg.content || (isLoading && msg.role === 'Assistant' && msg.content === '' ? '...' : '')}
+                        {messages.map((msg, index) => {
+                            // The assistant bubble is inserted optimistically and stays empty
+                            // until the first chunk arrives. Restricted to the last message so
+                            // an empty reply elsewhere in the history cannot start animating.
+                            const isPending = isLoading
+                                && msg.role === 'Assistant'
+                                && !msg.content
+                                && index === messages.length - 1;
+
+                            return (
+                                <div key={msg.id} className={`chat-msg chat-msg--${msg.role.toLowerCase()}`}>
+                                    <div className={`chat-msg__bubble${isPending ? ' chat-msg__bubble--typing' : ''}`}>
+                                        {isPending ? <TypingIndicator /> : msg.content}
+                                    </div>
+                                    {/* A timestamp on a reply that has not arrived yet is noise. */}
+                                    {!isPending && (
+                                        <span className="chat-msg__time">
+                                            {formatMessageTime(msg.createdAt)}
+                                        </span>
+                                    )}
                                 </div>
-                                <span className="chat-msg__time">
-                                    {formatMessageTime(msg.createdAt)}
-                                </span>
-                            </div>
-                        ))}
+                            );
+                        })}
                         <div ref={messagesEndRef} />
                     </div>
 
@@ -169,7 +199,7 @@ export function ChatPopup() {
                             disabled={isLoading}
                         />
                         <button type="submit" disabled={isLoading || !input.trim()}>
-                            {isLoading ? '...' : '➤'}
+                            {isLoading ? <span className="chat-spinner" aria-label="Sending" /> : '➤'}
                         </button>
                     </form>
                 </div>

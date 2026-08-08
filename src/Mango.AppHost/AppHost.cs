@@ -13,8 +13,20 @@ var postgresPassword = builder.AddParameter("postgres-password", secret: true);
 var rabbitMqPassword = builder.AddParameter("rabbitmq-password", secret: true);
 
 var postgres = builder.AddPostgres("postgres", port: 5435, password: postgresPassword)
+    // pgvector/pgvector ships stock PostgreSQL plus the "vector" extension, which
+    // chatagentdb needs for its embedding index. The tag must track the same major
+    // version Aspire would otherwise start (18): PostgreSQL cannot read a data
+    // directory written by a newer major, so an existing volume would fail to mount.
+    .WithImage("pgvector/pgvector", "pg18")
     .WithLifetime(ContainerLifetime.Persistent)
-    .WithDataVolume()
+    // Explicit volume rather than WithDataVolume(). Aspire derives the mount target from
+    // the image tag, and "pg18" is not a parseable version, so it would fall back to the
+    // pre-18 target of /var/lib/postgresql/data. PostgreSQL 18 images store data in
+    // major-version-specific subdirectories under /var/lib/postgresql (PGDATA is
+    // /var/lib/postgresql/18/docker), so the mount has to sit one level up. Mounting it
+    // here also stops Docker creating a throwaway anonymous volume for the image's
+    // declared VOLUME.
+    .WithVolume("mango-postgres-data", "/var/lib/postgresql")
     .WithBindMount("./init-scripts/productdb", "/docker-entrypoint-initdb.d")
     // Debezium CDC uses the pgoutput plugin, which needs logical decoding.
     // wal_level cannot be set from SQL and postgresql.conf lives inside the
@@ -33,25 +45,6 @@ var chatagentdb = postgres.AddDatabase("chatagentdb");
 var rabbitMq = builder.AddRabbitMQ("eventbus", password: rabbitMqPassword)
     .WithLifetime(ContainerLifetime.Persistent)
     .WithManagementPlugin(port: 15672);
-
-var debezium = builder.AddContainer("debezium", "debezium/server", "2.7.3.Final")
-    .WithHttpEndpoint(port: 8083, targetPort: 8083, name: "api")
-    .WithBindMount("./init-configs/products/application.properties", "/debezium/conf/application.properties")
-    .WithVolume("debezium-data", "/debezium/data")
-    .WithLifetime(ContainerLifetime.Persistent)
-    .WithReference(productdb).WaitFor(productdb)
-    .WithReference(rabbitMq).WaitFor(rabbitMq)
-    // PostgreSQL connection
-    .WithEnvironment("DEBEZIUM_SOURCE_DATABASE_HOSTNAME", postgres.Resource.Name)
-    .WithEnvironment("DEBEZIUM_SOURCE_DATABASE_PORT", postgres.Resource.Port)
-    .WithEnvironment("DEBEZIUM_SOURCE_DATABASE_USER", "postgres")
-    .WithEnvironment("DEBEZIUM_SOURCE_DATABASE_PASSWORD", postgresPassword)
-    .WithEnvironment("DEBEZIUM_SOURCE_DATABASE_DBNAME", "productdb")
-    // RabbitMQ connection
-    .WithEnvironment("DEBEZIUM_SINK_RABBITMQ_CONNECTION_HOST", rabbitMq.Resource.Name)
-    .WithEnvironment("DEBEZIUM_SINK_RABBITMQ_CONNECTION_PORT", "5672")
-    .WithEnvironment("DEBEZIUM_SINK_RABBITMQ_CONNECTION_USERNAME", "guest")
-    .WithEnvironment("DEBEZIUM_SINK_RABBITMQ_CONNECTION_PASSWORD", rabbitMqPassword);
 
 // -----------------------------------------------------------------
 //  Identity provider feature switch
@@ -139,13 +132,42 @@ var payments = builder.AddProject<Projects.Payments_API>("payments-api")
 //.WithReference(serviceBus);
 
 
+// Products and categories are replicated into chatagentdb over Debezium CDC rather
+// than fetched from products-api per chat turn, so the only reference needed here is
+// the event bus. Carts and coupons stay direct because those are transactional writes.
 var agentApp = builder.AddProject<Projects.ChatAgent_App>("chatagent-app")
     .WithReference(chatagentdb).WaitFor(chatagentdb)
+    .WithReference(rabbitMq).WaitFor(rabbitMq)
     .WithReference(identityRef).WaitFor(identityRef)
     .WithEnvironment("ServiceUrls__IdentityApp", identityEndpoint)
     .WithReference(coupon).WaitFor(coupon)
-    .WithReference(shoppingcart).WaitFor(shoppingcart)
-    .WithReference(products).WaitFor(products);
+    .WithReference(shoppingcart).WaitFor(shoppingcart);
+
+// Declared after its consumers on purpose. mango-cdc-exchange is a direct exchange, and
+// RabbitMQ silently discards messages that match no binding — so anything Debezium
+// publishes before ShoppingCart.API and ChatAgent.App have declared their queues is lost
+// with no error anywhere. Starting Debezium last means the initial snapshot always lands
+// in bound, durable queues.
+var debezium = builder.AddContainer("debezium", "debezium/server", "2.7.3.Final")
+    .WithHttpEndpoint(port: 8083, targetPort: 8083, name: "api")
+    .WithBindMount("./init-configs/products/application.properties", "/debezium/conf/application.properties")
+    .WithVolume("debezium-data", "/debezium/data")
+    .WithLifetime(ContainerLifetime.Persistent)
+    .WithReference(productdb).WaitFor(productdb)
+    .WithReference(rabbitMq).WaitFor(rabbitMq)
+    .WaitFor(shoppingcart)
+    .WaitFor(agentApp)
+    // PostgreSQL connection
+    .WithEnvironment("DEBEZIUM_SOURCE_DATABASE_HOSTNAME", postgres.Resource.Name)
+    .WithEnvironment("DEBEZIUM_SOURCE_DATABASE_PORT", postgres.Resource.Port)
+    .WithEnvironment("DEBEZIUM_SOURCE_DATABASE_USER", "postgres")
+    .WithEnvironment("DEBEZIUM_SOURCE_DATABASE_PASSWORD", postgresPassword)
+    .WithEnvironment("DEBEZIUM_SOURCE_DATABASE_DBNAME", "productdb")
+    // RabbitMQ connection
+    .WithEnvironment("DEBEZIUM_SINK_RABBITMQ_CONNECTION_HOST", rabbitMq.Resource.Name)
+    .WithEnvironment("DEBEZIUM_SINK_RABBITMQ_CONNECTION_PORT", "5672")
+    .WithEnvironment("DEBEZIUM_SINK_RABBITMQ_CONNECTION_USERNAME", "guest")
+    .WithEnvironment("DEBEZIUM_SINK_RABBITMQ_CONNECTION_PASSWORD", rabbitMqPassword);
 
 
 var webApp = builder.AddProject<Projects.Mango_Web>("mango-web")
