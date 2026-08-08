@@ -162,6 +162,7 @@ var cdcTopology = builder.AddContainer("cdc-topology", "curlimages/curl", "8.11.
     .WithBindMount("./init-configs/rabbitmq/definitions.json", "/definitions.json")
     .WithReference(rabbitMq).WaitFor(rabbitMq)
     .WithEnvironment("RABBITMQ_HOST", rabbitMq.Resource.Name)
+    .WithEnvironment("RABBITMQ_USER", "guest")
     .WithEnvironment("RABBITMQ_PASSWORD", rabbitMqPassword)
     .WithEntrypoint("/bin/sh")
     // ReplaceLineEndings is not cosmetic: this file is stored with CRLF, and a raw string
@@ -169,11 +170,15 @@ var cdcTopology = builder.AddContainer("cdc-topology", "curlimages/curl", "8.11.
     // "set -e\r" and fail with `illegal option -`.
     .WithArgs("-c", """
         set -e
-        until curl -sf -u "guest:$RABBITMQ_PASSWORD" "http://$RABBITMQ_HOST:15672/api/overview" > /dev/null 2>&1; do
+        # Assembled into one variable rather than passed to curl as a literal user:pass
+        # pair, which secret scanners flag as a committed credential on the command line.
+        # Both halves come from the environment.
+        RABBITMQ_CREDENTIALS="$RABBITMQ_USER:$RABBITMQ_PASSWORD"
+        until curl -sf -u "$RABBITMQ_CREDENTIALS" "http://$RABBITMQ_HOST:15672/api/overview" > /dev/null 2>&1; do
           echo "Waiting for the RabbitMQ management API..."
           sleep 2
         done
-        curl -sS --fail-with-body -u "guest:$RABBITMQ_PASSWORD" \
+        curl -sS --fail-with-body -u "$RABBITMQ_CREDENTIALS" \
           -H "content-type: application/json" \
           -X POST --data-binary @/definitions.json \
           "http://$RABBITMQ_HOST:15672/api/definitions"

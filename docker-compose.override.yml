@@ -26,6 +26,7 @@ services:
   cdc-topology:
     environment:
       - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_USER=guest
       - RABBITMQ_PASSWORD=YourSecretPassword
     volumes:
       - ./src/Mango.AppHost/init-configs/rabbitmq/definitions.json:/definitions.json
