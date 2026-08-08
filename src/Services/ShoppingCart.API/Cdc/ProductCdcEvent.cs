@@ -1,11 +1,15 @@
-﻿using EventBus.Events;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace ShoppingCart.API.Cdc;
 
+/// <summary>
+/// Debezium change record for <c>productdb.public.products</c>, read off the shared
+/// <c>mango.cdc.stream</c> log. ChatAgent.App consumes the same routing key from its own
+/// offset, so the two read-models are independent.
+/// </summary>
 [EventName("mango.public.products")]
-public record ProductCdcEvent : IntegrationEvent
+public record ProductCdcEvent : CdcIntegrationEvent
 {
     [JsonPropertyName("id")]
     public Guid ProductId { get; set; }
@@ -25,12 +29,6 @@ public record ProductCdcEvent : IntegrationEvent
 
     [JsonPropertyName("image_url")]
     public string ImageUrl { get; set; } = default!;
-
-    [JsonPropertyName("__deleted")]
-    public string? DeletedRaw { get; set; }
-
-    [JsonIgnore]
-    public bool IsDeleted => DeletedRaw?.ToLower() == "true";
 }
 
 /// <summary>

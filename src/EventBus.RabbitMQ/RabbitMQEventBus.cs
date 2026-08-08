@@ -71,11 +71,7 @@ public sealed class RabbitMQEventBus(
 
     public async Task PublishAsync<TEvent>(TEvent @event) where TEvent : class
     {
-        var routingKey = @event.GetType().Name;
-        if (@event.GetType().GetCustomAttributes(typeof(EventNameAttribute), true).FirstOrDefault() is EventNameAttribute eventNameAttribute)
-        {
-            routingKey = eventNameAttribute.Name;
-        }
+        var routingKey = EventRoutingKey.For(@event);
 
         if (logger.IsEnabled(LogLevel.Trace))
         {
@@ -238,11 +234,7 @@ public sealed class RabbitMQEventBus(
                     // Make sure the exchange is created
                     await _consumerChannel.ExchangeDeclareAsync(exchange: exchangeName, type: ExchangeType.Direct);
 
-                    var routingKey = eventType.Name;
-                    if (eventType.GetCustomAttributes(typeof(EventNameAttribute), true).FirstOrDefault() is EventNameAttribute eventNameAttribute)
-                    {
-                        routingKey = eventNameAttribute.Name;
-                    }
+                    var routingKey = EventRoutingKey.For(eventType);
 
                     await _consumerChannel.QueueBindAsync(
                         queue: _queueName,
@@ -408,15 +400,8 @@ public sealed class RabbitMQEventBus(
         }
 
         await using var scope = serviceProvider.CreateAsyncScope();
-        var eventType = _rabbitMQInfo.EventTypes.FirstOrDefault(x =>
-        {
-            var routingKey = x.EventType.Name;
-            if (x.EventType.GetCustomAttributes(typeof(EventNameAttribute), true).FirstOrDefault() is EventNameAttribute eventNameAttribute)
-            {
-                routingKey = eventNameAttribute.Name;
-            }
-            return routingKey == eventName;
-        }).EventType;
+        var eventType = _rabbitMQInfo.EventTypes
+            .FirstOrDefault(x => EventRoutingKey.For(x.EventType) == eventName).EventType;
         if (eventType == null)
         {
             logger.LogWarning("Unable to resolve event type for event name {EventName}", eventName);

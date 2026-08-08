@@ -1,4 +1,5 @@
-﻿using Mango.Core.Options;
+﻿using EventBus.Abstractions;
+using Mango.Core.Options;
 using Mango.Infrastructure.Behaviors;
 using Mango.Infrastructure.Extensions;
 using Mango.Infrastructure.Interceptors;
@@ -31,6 +32,9 @@ public static class IServiceCollectionExtensions
                 });
 
             services.AddScoped<PerformanceInterceptor>();
+
+            // Where the CDC stream reader keeps its position. Delete the row to replay the log.
+            services.AddScoped<ICdcOffsetStore, CdcOffsetStore>();
 
             services.AddMediator(typeof(Program).Assembly);
             services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));

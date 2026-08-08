@@ -44,6 +44,8 @@ var chatagentdb = postgres.AddDatabase("chatagentdb");
 
 var rabbitMq = builder.AddRabbitMQ("eventbus", password: rabbitMqPassword)
     .WithLifetime(ContainerLifetime.Persistent)
+    // Stream retention is only meaningful if the log survives container recreation.
+    .WithDataVolume("mango-rabbitmq-data")
     .WithManagementPlugin(port: 15672);
 
 // -----------------------------------------------------------------
@@ -143,11 +145,50 @@ var agentApp = builder.AddProject<Projects.ChatAgent_App>("chatagent-app")
     .WithReference(coupon).WaitFor(coupon)
     .WithReference(shoppingcart).WaitFor(shoppingcart);
 
-// Declared after its consumers on purpose. mango-cdc-exchange is a direct exchange, and
-// RabbitMQ silently discards messages that match no binding — so anything Debezium
-// publishes before ShoppingCart.API and ChatAgent.App have declared their queues is lost
-// with no error anywhere. Starting Debezium last means the initial snapshot always lands
-// in bound, durable queues.
+// Imports the CDC topology — the mango.cdc.stream log, mango-cdc-exchange, and the bindings
+// between them — over the RabbitMQ management API once the broker is up.
+//
+// It has to be the HTTP API rather than the broker's own `load_definitions` setting: a node
+// configured to load definitions at boot logs "Will not seed default virtual host and user:
+// have definitions to load" and skips creating the default user entirely, so
+// RABBITMQ_DEFAULT_USER/_PASS are ignored and every service is rejected with
+// "PLAIN login refused". Definitions would then have to carry the users themselves, which is
+// impossible here because the password is a generated secret parameter.
+//
+// Declaring the topology from infrastructure rather than from a consumer is the whole point:
+// the log exists before Debezium publishes and regardless of which services are running, so a
+// service introduced months later still replays the full history.
+var cdcTopology = builder.AddContainer("cdc-topology", "curlimages/curl", "8.11.1")
+    .WithBindMount("./init-configs/rabbitmq/definitions.json", "/definitions.json")
+    .WithReference(rabbitMq).WaitFor(rabbitMq)
+    .WithEnvironment("RABBITMQ_HOST", rabbitMq.Resource.Name)
+    .WithEnvironment("RABBITMQ_USER", "guest")
+    .WithEnvironment("RABBITMQ_PASSWORD", rabbitMqPassword)
+    .WithEntrypoint("/bin/sh")
+    // ReplaceLineEndings is not cosmetic: this file is stored with CRLF, and a raw string
+    // literal keeps the source's line endings verbatim. Passing those to sh makes it read
+    // "set -e\r" and fail with `illegal option -`.
+    .WithArgs("-c", """
+        set -e
+        # Assembled into one variable rather than passed to curl as a literal user:pass
+        # pair, which secret scanners flag as a committed credential on the command line.
+        # Both halves come from the environment.
+        RABBITMQ_CREDENTIALS="$RABBITMQ_USER:$RABBITMQ_PASSWORD"
+        until curl -sf -u "$RABBITMQ_CREDENTIALS" "http://$RABBITMQ_HOST:15672/api/overview" > /dev/null 2>&1; do
+          echo "Waiting for the RabbitMQ management API..."
+          sleep 2
+        done
+        curl -sS --fail-with-body -u "$RABBITMQ_CREDENTIALS" \
+          -H "content-type: application/json" \
+          -X POST --data-binary @/definitions.json \
+          "http://$RABBITMQ_HOST:15672/api/definitions"
+        echo "CDC topology imported: mango.cdc.stream is ready."
+        """.ReplaceLineEndings("\n"));
+
+// Debezium waits for the topology, not for its consumers. mango-cdc-exchange is a direct
+// exchange and RabbitMQ silently discards messages matching no binding, so the stream must
+// exist before the initial snapshot — but nothing here depends on ShoppingCart or ChatAgent
+// being up, which is what lets a new consumer be added later without losing history.
 var debezium = builder.AddContainer("debezium", "debezium/server", "2.7.3.Final")
     .WithHttpEndpoint(port: 8083, targetPort: 8083, name: "api")
     .WithBindMount("./init-configs/products/application.properties", "/debezium/conf/application.properties")
@@ -155,8 +196,7 @@ var debezium = builder.AddContainer("debezium", "debezium/server", "2.7.3.Final"
     .WithLifetime(ContainerLifetime.Persistent)
     .WithReference(productdb).WaitFor(productdb)
     .WithReference(rabbitMq).WaitFor(rabbitMq)
-    .WaitFor(shoppingcart)
-    .WaitFor(agentApp)
+    .WaitForCompletion(cdcTopology)
     // PostgreSQL connection
     .WithEnvironment("DEBEZIUM_SOURCE_DATABASE_HOSTNAME", postgres.Resource.Name)
     .WithEnvironment("DEBEZIUM_SOURCE_DATABASE_PORT", postgres.Resource.Port)

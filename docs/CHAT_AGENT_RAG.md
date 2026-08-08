@@ -22,7 +22,8 @@ flowchart TB
         PDB[(productdb)]
     end
 
-    Deb[Debezium] -->|mango-cdc-exchange| Handlers
+    Deb[Debezium] -->|mango-cdc-exchange| Log[["mango.cdc.stream<br/>retained log"]]
+    Log -->|own offset| Handlers
     PDB -->|WAL| Deb
 
     subgraph ChatAgent["ChatAgent.App"]
@@ -325,12 +326,30 @@ queue with documents that can never be embedded.
 
 ## Operations
 
-**First run after these changes** needs the Debezium offsets discarded, because Debezium
-will not snapshot a newly included table (`catalog_types`) against existing offsets:
+**Rebuilding the read-model.** The mirror and its vector index are rebuilt by replaying the
+CDC log — delete this service's stored stream position and restart:
 
-```powershell
-docker volume rm debezium-data
+```sql
+-- in chatagentdb
+DELETE FROM cdc_stream_offsets;
 ```
+
+With no stored offset the consumer reads `mango.cdc.stream` from the beginning. The LSN fence
+makes re-applying already-current records a no-op, and `VectorIndexer` only invalidates an
+embedding when the searchable text actually changed, so a replay costs no tokens for rows that
+did not move. Dropping `chatagentdb` outright has the same effect on first boot.
+
+If the history you need has aged out of the log's retention window — or a table was only just
+added to the capture list — ask Debezium to re-read the source instead. This does **not**
+require discarding offsets or dropping the replication slot, and leaves ShoppingCart.API
+undisturbed:
+
+```http
+POST /api/products/cdc-snapshots
+{ "tables": ["public.products", "public.catalog_types"] }
+```
+
+See [CDC.md](CDC.md) for the full replay and backfill runbook.
 
 The Postgres data volume is kept. `pgvector/pgvector:pg18` is the stock PostgreSQL 18 image
 plus the extension, so it mounts the existing data directory unchanged and no dev data is

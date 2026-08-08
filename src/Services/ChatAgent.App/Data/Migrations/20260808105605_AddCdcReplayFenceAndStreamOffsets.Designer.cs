@@ -3,6 +3,7 @@ using System;
 using ChatAgent.App.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using NpgsqlTypes;
@@ -13,9 +14,11 @@ using Pgvector;
 namespace ChatAgent.App.Data.Migrations
 {
     [DbContext(typeof(ChatAgentDbContext))]
-    partial class ChatAgentDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260808105605_AddCdcReplayFenceAndStreamOffsets")]
+    partial class AddCdcReplayFenceAndStreamOffsets
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

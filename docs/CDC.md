@@ -6,6 +6,8 @@ The MangoAspire project uses **Change Data Capture (CDC)** to synchronize data b
 
 We use **[Debezium](https://debezium.io/)**, an open-source distributed platform for change data capture, to monitor database tables and stream changes to **RabbitMQ**.
 
+Change records land in **`mango.cdc.stream`**, a RabbitMQ **stream** — an append-only, retained, totally ordered log. That choice is what makes the pipeline replayable: a stream is read non-destructively, so every service reads the whole log independently from its own stored offset, and a service with no offset starts at the beginning and rebuilds its read-model from history. Introducing a new consumer months later is a non-event.
+
 ## Architecture
 
 ```mermaid
@@ -18,14 +20,16 @@ flowchart LR
 
     subgraph Infrastructure
         Deb[Debezium]
-        RMQ[RabbitMQ<br/>mango-cdc-exchange]
+        EX[mango-cdc-exchange<br/>direct, durable]
+        LOG[["mango.cdc.stream<br/>append-only log<br/>x-max-age: 30D"]]
+        EX --> LOG
     end
 
     subgraph ShoppingCart Service
         SC_API[ShoppingCart.API]
         SC_DB[(PostgreSQL<br/>shoppingcartdb)]
         SC_Handler[ProductCdcEventHandler]
-        
+
         SC_API --> SC_DB
         SC_Handler --> SC_DB
     end
@@ -40,16 +44,17 @@ flowchart LR
     end
 
     P_DB -->|"WAL (pgoutput)"| Deb
-    Deb -->|"mango.public.products<br/>mango.public.catalog_types"| RMQ
-    RMQ -->|"ProductCdcEvent"| SC_Handler
-    RMQ -->|"ProductCdcEvent<br/>CatalogTypeCdcEvent"| CA_Handler
+    Deb -->|"mango.public.products<br/>mango.public.catalog_types"| EX
+    LOG -->|"own offset"| SC_Handler
+    LOG -->|"own offset"| CA_Handler
 ```
 
 ### Components
 
 1.  **Debezium Server**: Runs as a container, connecting to the PostgreSQL source database via logical replication (pgoutput).
-2.  **RabbitMQ Exchange**: Events are published to `mango-cdc-exchange` (Topic exchange).
-3.  **Consumers**: Services bind to this exchange to receive updates using `IIntegrationEventHandler`. Each consumer declares its own queue (`carts.queue`, `chatagent.queue`), so several services can mirror the same table independently — a change to `products` is delivered to both ShoppingCart.API and ChatAgent.App.
+2.  **RabbitMQ exchange**: Change records are published to `mango-cdc-exchange`, a **direct** exchange, with the Debezium topic name as the routing key.
+3.  **The stream log**: `mango.cdc.stream` is bound to that exchange and retains everything it receives. Declared from `definitions.json` when the broker boots — see [Why the topology is declared at broker boot](#why-the-topology-is-declared-at-broker-boot).
+4.  **Consumers**: Services register `AddStreamSubscription<TEvent, THandler>("mango.cdc.stream")` and implement `IIntegrationEventHandler<T>`. Each keeps its own position in `cdc_stream_offsets`, so several services mirror the same table independently and at their own pace.
 
 ### Captured tables
 
@@ -57,17 +62,51 @@ flowchart LR
 | --- | --- | --- |
 | `public.products` | `mango.public.products` | ShoppingCart.API, ChatAgent.App |
 | `public.catalog_types` | `mango.public.catalog_types` | ChatAgent.App |
+| `public.debezium_signal` | — | Debezium itself (see [Deep backfill](#deep-backfill-incremental-snapshots)) |
 
 `available_stock` is excluded from the `products` payload (`debezium.source.column.exclude.list`) so that saga-driven stock churn does not fan out to every subscriber. Consumers therefore cannot answer stock questions.
 
+## Ordering and the replay fence
+
+Because the log is replayable, handlers **re-see records they have already applied** — that is the normal case during a rebuild, not an edge case. Applying an old record over newer state would silently corrupt the read-model, so ordering is enforced explicitly.
+
+`ExtractNewRecordState` is configured with `add.fields`, which injects source metadata into the payload:
+
+```properties
+debezium.source.transforms.unwrap.add.fields=op,source.lsn,source.ts_ms,source.txId
+```
+
+These arrive as `__op`, `__source_lsn`, `__source_ts_ms` and `__source_txId`, and deserialize onto `CdcIntegrationEvent`. They are put in the payload rather than only the AMQP headers so ordering survives deserialization and can be unit tested.
+
+Every mirror row carries the `source_lsn` and `source_timestamp` of the record it reflects. Before mutating anything, handlers call `CdcIntegrationEvent.IsStaleAgainst(rowLsn, rowTimestamp)` and skip the record if it is not strictly newer:
+
+- **LSN is authoritative.** The Postgres WAL position is monotonic per cluster, including across replication-slot recreation. Equality counts as stale, so an exact redelivery is free — no rewrite, and no needless embedding invalidation in ChatAgent.
+- **`ts_ms` is the fallback**, used only when either side lacks an LSN. Equality here does *not* count as stale: millisecond resolution means many rows share a commit timestamp, and treating those as stale would drop real changes.
+- **Neither present → apply.** Records published before `add.fields` was configured keep working.
+
+`UpdatedAt` on the mirror is the local processing time and must never be used to order events.
+
+> **Caveat.** LSN monotonicity does not survive restoring PostgreSQL from a backup, since the WAL position can move backwards. `ts_ms` is the fallback in that situation.
+
+### Deletes are tombstoned, not removed
+
+An upstream delete sets `is_deleted` rather than removing the row, because deleting it would delete its LSN watermark too — and a replayed older insert would then resurrect the product. ChatAgent's mirrors carry a global query filter (`HasQueryFilter(x => !x.IsDeleted)`), so every read path excludes them automatically; CDC handlers opt out with `IgnoreQueryFilters()` so a genuine upstream re-insert (which arrives with a higher LSN) can clear the tombstone.
+
+ShoppingCart deliberately has **no** global filter: `CartDetails.Product` is a required navigation and filtering it would break the cart projection in `GetCartHandler`. A cart keeps rendering a delisted product it already contains; `UpsertCart` is what refuses to add one.
+
 ## Configuration
 
-### 1. AppHost Setup
-The Debezium container is configured in `Mango.AppHost`. It requires:
-- **Environment Variables**: For DB and RabbitMQ credentials.
-- **Init Script**: `init-scripts/init-debezium.sql` to set up replication roles and publication.
+### 1. AppHost setup
 
-### 2. Database Setup
+The Debezium container is configured in `Mango.AppHost`. It requires:
+- **Environment variables**: for DB and RabbitMQ credentials.
+- **Init script**: `init-scripts/productdb/init-debezium.sql` to set up replication roles and publication.
+- **Connector config**: `init-configs/products/application.properties`.
+
+RabbitMQ uses a data volume so the retained log survives container recreation. The CDC topology itself is imported by a separate one-shot `cdc-topology` container (see below).
+
+### 2. Database setup
+
 PostgreSQL source tables must be configured for logical replication. The `init-debezium.sql` script handles this automatically:
 
 ```sql
@@ -79,70 +118,128 @@ GRANT SELECT ON ALL TABLES IN SCHEMA public TO debezium_user;
 CREATE PUBLICATION debezium_publication FOR ALL TABLES;
 ```
 
-### 3. Consumption (ShoppingCart.API)
+### 3. Consumption
 
-To consume CDC events, services implement an `IIntegrationEventHandler`.
+**Event definition** — inherit `CdcIntegrationEvent` so the record carries the ordering metadata and the delete marker, and use `[EventName]` to match Debezium's topic naming (`prefix.schema.table`):
 
-**Event Definition (`ProductCdcEvent.cs`):**
-Use `[EventName]` to match Debezium's topic naming convention (`prefix.schema.table`):
 ```csharp
 [EventName("mango.public.products")]
-public record ProductCdcEvent : IntegrationEvent
+public record ProductCdcEvent : CdcIntegrationEvent
 {
-    // Properties match JSON payload from Debezium
-    public Guid Id { get; set; }
+    // Properties match the JSON payload from Debezium — physical column names.
+    [JsonPropertyName("id")]
+    public Guid ProductId { get; set; }
     // ...
 }
 ```
 
-**Handler Registration (`Program.cs`):**
+**Handler registration (`Program.cs`)** — `AddStreamSubscription`, not `AddSubscription`:
+
 ```csharp
 builder.AddRabbitMQEventBus("eventbus")
-    .AddSubscription<ProductCdcEvent, ProductCdcEventHandler>("mango-cdc-exchange");
+    .AddStreamSubscription<ProductCdcEvent, ProductCdcEventHandler>("mango.cdc.stream");
 ```
 
-## Data Transformation
+The service also needs an `ICdcOffsetStore` registration to persist its position:
+
+```csharp
+services.AddScoped<ICdcOffsetStore, CdcOffsetStore>();
+```
+
+Tuning lives under `EventBus:Stream` (`PrefetchCount`, `CheckpointEveryMessages`, `CheckpointInterval`, `HandlerRetryCount`); the defaults are sensible and no service currently overrides them.
+
+## Replay
+
+Each service records the last offset it processed in its own `cdc_stream_offsets` table. **Deleting that row is the replay button.**
+
+```sql
+-- in chatagentdb or shoppingcartdb
+DELETE FROM cdc_stream_offsets;
+```
+
+Restart the service. With no stored offset the consumer attaches at `first` and re-reads the whole retained log; the LSN fence makes re-applying already-current records a no-op, so a replay against an up-to-date mirror leaves it byte-identical. Dropping the service's database entirely has the same effect on first boot — the mirror and (for ChatAgent) its `vector_documents` index rebuild from the log.
+
+Offsets are checkpointed *outside* the handler's transaction, so a crash between the two replays the last few records. That is at-least-once by design, and safe precisely because of the fence.
+
+### Onboarding a brand-new consumer
+
+1. Define the event records (inheriting `CdcIntegrationEvent`) and handlers.
+2. Register `AddStreamSubscription<T, H>("mango.cdc.stream")` and an `ICdcOffsetStore`.
+3. Start the service. With no stored offset it replays everything the log retains.
+4. Only if the required history predates the retention window, run an incremental snapshot (below).
+
+Nothing about Debezium, the exchange, or the other consumers changes.
+
+## Deep backfill: incremental snapshots
+
+Stream retention is finite (`x-max-age: 30D`). When a consumer needs history older than that — or a table was added to the capture list after the initial snapshot already ran — ask Debezium to re-read the source:
+
+```http
+POST /api/products/cdc-snapshots
+Content-Type: application/json
+
+{ "tables": ["public.products"] }
+```
+
+This inserts a row into `public.debezium_signal`, which the connector watches (`signal.enabled.channels=source`, `signal.data.collection=public.debezium_signal`). Debezium then re-emits every row of the named tables into the stream, interleaved with live changes and de-duplicated against its snapshot window.
+
+Crucially it does this **without dropping the replication slot or the offsets file**, so consumers that are already up to date are unaffected — their fence discards the re-read rows as stale. This replaces the old "delete the volume and re-snapshot everything" procedure.
+
+> The endpoint is currently **unauthenticated**, matching every other endpoint in Products.API (which has no authentication configured at all, not even on `DELETE /api/products/{id}`). It is an administrative operation and should be locked down when auth is added to that service.
+
+## Data transformation
 
 Debezium sends data in specific formats that require custom JSON converters:
 
-- **Numeric Values**: Sent as `{"scale": 2, "value": "base64..."}`. Handled by `DebeziumNumericConverter`.
-- **Deleted Flag**: Sent as string `"true"`/`"false"`. Handled by `StringToBoolConverter`.
-- **Date/Time**: Sent as microseconds since epoch (requires converter if used).
+- **Numeric values**: sent as `{"scale": 2, "value": "base64..."}` — a base64 big-endian two's-complement integer plus a scale. Handled by `DebeziumNumericConverter`.
+- **Deleted flag**: `delete.handling.mode=rewrite` marks deletes with a `__deleted` field carrying the string `"true"`/`"false"`, rather than emitting a tombstone. Exposed as `CdcIntegrationEvent.IsDeleted`.
+- **Date/time**: sent as microseconds since epoch (requires a converter if used).
 
-## Adding New CDC Streams
+## Adding a new captured table
 
-To capture changes from another table:
+1.  **Ensure the table is in the publication**: the default publication covers `ALL TABLES`, so new tables in the `public` schema are auto-included.
+2.  **Add the table to the include list**: `debezium.source.table.include.list` in `init-configs/products/application.properties` is an explicit allow-list — a table absent from it is never captured, publication or not.
+3.  **Bind the routing key to the stream**: add a binding for `mango.public.<table>` in `init-configs/rabbitmq/definitions.json`. Without it the direct exchange drops those records.
+4.  **Create the event record**: inherit `CdcIntegrationEvent` with `[EventName("mango.public.<table>")]`.
+5.  **Create the handler**: implement `IIntegrationEventHandler<T>`, fencing on `IsStaleAgainst` and tombstoning deletes.
+6.  **Register the subscription**: `.AddStreamSubscription<T, H>("mango.cdc.stream")` in `Program.cs`.
+7.  **Backfill the existing rows**: `POST /api/products/cdc-snapshots` with the new table. `snapshot.mode=initial` means Debezium only snapshots on its first run, so a table added later captures future changes but not existing rows.
 
-1.  **Ensure Table is in Publication**: The default publication covers `ALL TABLES`, so new tables in `public` schema are auto-included.
-2.  **Add the Table to the Include List**: `debezium.source.table.include.list` in `init-configs/products/application.properties` is an explicit allow-list — a table absent from it is never captured, publication or not.
-3.  **Create Event DTO**: Create a class inheriting `IntegrationEvent` with `[EventName("mango.public.tablename")]`.
-4.  **Create Handler**: Implement `IIntegrationEventHandler<T>`.
-5.  **Register Subscription**: Add `.AddSubscription<T, H>("mango-cdc-exchange")` in `Program.cs`.
+## Why the topology is declared at broker boot
 
-> **Existing deployments need a re-snapshot.** With `snapshot.mode=initial`, Debezium only snapshots on its first run. Adding a table later captures its future changes but not its existing rows. To backfill, discard the offsets and the replication slot so the connector snapshots again:
-> ```powershell
-> docker volume rm debezium-data
-> # then, in productdb:
-> # SELECT pg_drop_replication_slot('mango_debezium_slot');
+`mango-cdc-exchange` is a **direct** exchange, and RabbitMQ **silently discards messages that match no binding** — no error, no dead letter, nothing in the logs. Debezium takes its initial snapshot the moment it starts.
+
+The topology is therefore imported by a one-shot `cdc-topology` container, which POSTs `init-configs/rabbitmq/definitions.json` to the RabbitMQ **management API** once the broker is up. Debezium then `WaitForCompletion`s on it. So `mango.cdc.stream` and its bindings exist before Debezium publishes anything and regardless of which services are running — the dependency is on infrastructure, not on any consumer. The exchange is declared **durable**, so it also survives a broker restart.
+
+> **Why the HTTP API and not the broker's own `load_definitions` setting.** A node configured to import definitions at boot logs
+>
 > ```
+> Will not seed default virtual host and user: have definitions to load...
+> ```
+>
+> and **skips creating the default user entirely**. `RABBITMQ_DEFAULT_USER`/`RABBITMQ_DEFAULT_PASS` are then ignored, and every service is rejected with `PLAIN login refused: user 'guest' - invalid credentials`. Definitions become the sole source of truth for users, so the file would have to carry them — impossible here, since the password is a generated secret parameter and RabbitMQ stores only a salted hash. Importing over the API after boot avoids the interaction completely.
 
-## Startup ordering (important)
+> **Do not re-declare `mango-cdc-exchange` from application code.** The definitions declare it durable; a mismatched declare raises `406 PRECONDITION_FAILED` and kills the channel.
 
-`mango-cdc-exchange` is a **direct** exchange, and RabbitMQ **silently discards messages that match no binding** — no error, no dead letter, nothing in the logs. Debezium takes its initial snapshot the moment it starts, so anything it publishes before the consuming services have declared their queues is simply gone.
+This replaced an earlier ordering hack, where `AppHost.cs` declared the Debezium container *after* its consumers with `.WaitFor(...)` on each. That worked for services present at startup but could never help a service introduced later — which is precisely the problem the stream solves.
 
-That is why `AppHost.cs` declares the Debezium container **after** `shoppingcart-api` and `chatagent-app`, with `.WaitFor(...)` on both. Keep it last when adding new CDC consumers, and add a `WaitFor` for each one.
-
-Symptom when this is wrong: the source table has rows, Debezium's log says `Sending N records to topic mango.public.<table>`, and yet the consumer's queue shows `messages = 0` and its mirror table stays empty. Confirm with:
+Symptom when the topology is missing: the source table has rows, Debezium's log says `Sending N records to topic mango.public.<table>`, and yet the stream shows `messages = 0`. Confirm with:
 
 ```powershell
 docker exec <rabbitmq> rabbitmqctl list_bindings source_name destination_name routing_key
-docker exec <rabbitmq> rabbitmqctl list_queues name durable messages
+docker exec <rabbitmq> rabbitmqctl list_queues name type durable messages
 ```
 
-Queues are durable, so once a consumer has started at least once its queue survives restarts and will hold a later snapshot even while the service is down.
+`mango.cdc.stream` should report type `stream`.
+
+## Failure handling
+
+A stream has **no redelivery** — acking only advances the reader's position. A handler failure is therefore retried in process (`HandlerRetryCount`, exponential backoff) rather than nacked. If every attempt fails the record is copied to the service's `.dlx` dead-letter exchange, the reader advances, and an error is logged saying the read-model is now missing that change. Fix the cause, then replay.
 
 ## Troubleshooting
 
--   **"Replication slot already exists"**: Debezium tries to reuse the slot. If it gets stuck, you may need to drop the slot in PostgreSQL: `SELECT pg_drop_replication_slot('mango_debezium_slot');`
--   **"Permission denied for table"**: Ensure `debezium_user` has `SELECT` privileges on the table.
--   **Serialization Errors**: Check `DebeziumNumericConverter` and ensure property names match JSON case (Debezium uses lowercase).
+-   **"Replication slot already exists"**: Debezium tries to reuse the slot. If it gets stuck, drop it in PostgreSQL: `SELECT pg_drop_replication_slot('mango_debezium_slot');`
+-   **"Permission denied for table"**: ensure the connector's user has `SELECT` privileges on the table.
+-   **Serialization errors**: check `DebeziumNumericConverter` and ensure property names match the JSON case (Debezium emits physical column names, lowercase).
+-   **Consumer stuck at an old offset**: check `cdc_stream_offsets` in the service's database, and its logs for repeated dead-lettering.
+-   **`PRECONDITION_FAILED` on `basic.consume`**: a stream requires a non-zero prefetch. `StreamConsumerOptions.PrefetchCount` must not be 0.

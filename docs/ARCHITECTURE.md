@@ -95,8 +95,11 @@ See [Architecture Overview](architecture/overview.md#identity-provider-switch) f
 
 ### 3. Data Synchronization (CDC)
 - **Debezium**: Captures row-level changes in the `Products` database via the `pgoutput` plugin (PostgreSQL runs with `wal_level=logical`).
-- **Real-Time Sync**: Updates the `ShoppingCart` service's read model to ensure product prices and names are always current without direct service-to-service calls.
+- **Real-Time Sync**: Updates the `ShoppingCart` and `ChatAgent` read models so product prices and names are always current without direct service-to-service calls.
+- **Replayable log, not a queue**: change records land in `mango.cdc.stream`, a retained append-only RabbitMQ stream. Each consumer reads it independently from its own stored offset, so a service can rebuild its read-model from history — and a service introduced later still gets the full past. The topology is declared from the broker's `definitions.json` at boot, so nothing is lost before a consumer exists.
+- **Ordered by source LSN**: mirror rows record the Postgres WAL position they reflect, and handlers discard any record that is not strictly newer. Without that fence a replay would overwrite newer state with older. Deletes are tombstoned rather than removed so the watermark survives.
 - **Eventual consistency is explicit**: `UpsertCart` verifies the product exists in the local replica and throws `DataVerificationException` if it has not been replicated yet, rather than failing on a foreign key violation.
+- See [CDC.md](CDC.md) for the replay and backfill runbook.
 
 ### 4. Caching
 - **`ICacheManager`**: A single caching abstraction (`Mango.Core.Caching`) implemented over .NET `HybridCache`, registered with `services.AddCacheManager()`.

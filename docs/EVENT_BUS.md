@@ -6,6 +6,20 @@ This project implements an Event Bus pattern to enable asynchronous communicatio
 
 The Event Bus decouples senders (Publishers) from receivers (Subscribers) using a Publish/Subscribe model.
 
+There are **two consume models**, and they are not interchangeable:
+
+| | Classic queue — `AddSubscription` | Stream log — `AddStreamSubscription` |
+| --- | --- | --- |
+| Used for | Domain integration events (`orders.events`, `carts.events`, …) | Change data capture ([CDC.md](CDC.md)) |
+| Destination | A queue bound to an exchange | A retained, append-only log |
+| Reading | Destructive — an ack removes the message | Non-destructive — an ack advances *this* consumer's position |
+| Missed messages | Lost: a direct exchange discards anything matching no binding | Retained: read them whenever the consumer comes up |
+| Replay | Not possible | Delete the stored offset and restart |
+| Position tracked by | The broker | The service, in `cdc_stream_offsets` |
+| On handler failure | Dead-letter + ack, no retry | In-process retry, then dead-letter and advance |
+
+Domain events want dead-lettering and redelivery; they are commands about something that happened once. Read-model replication wants replay. Pick accordingly.
+
 ### Architecture
 
 ```mermaid
@@ -31,8 +45,17 @@ graph LR
 4.  **Processing**:
     -   When a message arrives, it is deserialized back to the C# Event object.
     -   A DI scope is created.
-    -   All registered handlers for that event are resolved and executed **in parallel**.
-    -   **Ack**: The message is Acknowledged (removed from queue) *only* if processing succeeds.
+    -   The handler registered for that event type is resolved and executed. Handlers are keyed by event type, so there is **exactly one handler per event type** per service.
+    -   **Ack**: on success the message is acknowledged and removed from the queue. On failure it is republished to the service's `.dlx` dead-letter exchange and then acked — so there is **no redelivery or retry** on this path.
+
+### 3. Stream subscribing flow (CDC)
+
+1.  **Registration**: `AddStreamSubscription<TEvent, THandler>("mango.cdc.stream")` names a stream *queue* to read, not an exchange to bind. The stream and its bindings are declared from the broker's `definitions.json` at boot, so the log exists before any publisher or consumer does.
+2.  **Positioning (startup)**: `RabbitMqStreamConsumer` loads the last processed offset from `ICdcOffsetStore` and attaches at `offset + 1` — or at `first` if there is none, replaying the whole retained log.
+3.  **Consuming**: records are processed strictly in order (a non-zero prefetch is mandatory on streams), and the position is checkpointed periodically.
+4.  **Failure**: retried in process with backoff, because a stream has no redelivery; then dead-lettered so the reader can advance.
+
+See [CDC.md](CDC.md) for the ordering fence that makes replay safe.
 
 ---
 
@@ -65,6 +88,13 @@ builder.AddRabbitMQEventBus("eventbus")
     .AddSubscription<OrderCreatedEvent, OrderCreatedHandler>("orders.events"); // Exchange Name
 ```
 
+**RabbitMQ streams (CDC only):**
+```csharp
+builder.AddRabbitMQEventBus("eventbus")
+    .AddStreamSubscription<ProductCdcEvent, ProductCdcEventHandler>("mango.cdc.stream"); // Stream Name
+```
+Also register `services.AddScoped<ICdcOffsetStore, CdcOffsetStore>();` so the consumer can persist its position.
+
 **Azure Service Bus:**
 ```csharp
 builder.AddServiceBusEventBus("mango")
@@ -80,7 +110,15 @@ Configure the connection settings.
 "EventBus": {
   "DomainName": "orders-events",
   "SubscriptionClientName": "orders-queue", // Queue Name
-  "RetryCount": 5
+  "RetryCount": 5,
+
+  // Optional; stream consumers only. Defaults shown.
+  "Stream": {
+    "PrefetchCount": 100,            // must be non-zero — streams reject basic.consume without it
+    "CheckpointEveryMessages": 50,
+    "CheckpointInterval": "00:00:10",
+    "HandlerRetryCount": 5
+  }
 }
 ```
 

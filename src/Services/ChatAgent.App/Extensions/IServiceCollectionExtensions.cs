@@ -5,6 +5,7 @@ using ChatAgent.App.Guards;
 using ChatAgent.App.Guards.Grounding;
 using ChatAgent.App.Guards.Interfaces;
 using ChatAgent.App.Plugins;
+using EventBus.Abstractions;
 using Mango.Core.Options;
 using Mango.Infrastructure.Behaviors;
 using Mango.Infrastructure.Extensions;
@@ -41,6 +42,9 @@ public static class IServiceCollectionExtensions
             doMoreNpgsqlOptionsConfigure: npgsqlOptions => npgsqlOptions.UseVector());
 
         services.AddScoped<PerformanceInterceptor>();
+
+        // Where the CDC stream reader keeps its position. Delete the row to replay the log.
+        services.AddScoped<ICdcOffsetStore, CdcOffsetStore>();
 
         services.AddMediator(typeof(Program).Assembly);
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));

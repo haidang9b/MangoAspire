@@ -1,0 +1,15 @@
+# Findings gitleaks has already been triaged as false positives.
+# Format: <commit-sha>:<file>:<rule-id>:<start-line>
+#
+# curl-auth-user, docker-compose.yml, commit 07004df — the CDC topology bootstrap.
+# The matched text is `-u "guest:$$RABBITMQ_PASSWORD"`: a literal username plus a shell
+# variable reference, not a password. The value comes from RABBITMQ_PASSWORD in the
+# environment and never appears in the command line. Nothing to rotate.
+#
+# The rule's own allowlist accepts `user:$VAR` but not `user:$$VAR` — the `$$` is Docker
+# Compose escaping that defers expansion to the shell inside the container, so the pattern
+# does not look like a variable to the scanner. HEAD no longer writes credentials inline
+# (both halves are assembled into one variable first), so these two entries only cover the
+# commit that is already in history.
+07004df9c09f069cd52c5d1a2ec7b3a067b67465:docker-compose.yml:curl-auth-user:21
+07004df9c09f069cd52c5d1a2ec7b3a067b67465:docker-compose.yml:curl-auth-user:25

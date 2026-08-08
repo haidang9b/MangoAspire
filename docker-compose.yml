@@ -8,11 +8,39 @@ services:
   rabbitmq:
     image: rabbitmq:3-management-alpine
 
+  # One-shot: declares the CDC topology, then exits. Debezium waits for it to finish so the
+  # initial snapshot cannot be published into a direct exchange with no bindings.
+  cdc-topology:
+    image: curlimages/curl:8.11.1
+    depends_on:
+      - rabbitmq
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -e
+        # Assembled into one variable rather than passed to curl as a literal user:pass
+        # pair, which secret scanners flag as a committed credential on the command line.
+        # Both halves come from the environment.
+        RABBITMQ_CREDENTIALS="$$RABBITMQ_USER:$$RABBITMQ_PASSWORD"
+        until curl -sf -u "$$RABBITMQ_CREDENTIALS" "http://$$RABBITMQ_HOST:15672/api/overview" > /dev/null 2>&1; do
+          echo "Waiting for the RabbitMQ management API..."
+          sleep 2
+        done
+        curl -sS --fail-with-body -u "$$RABBITMQ_CREDENTIALS" \
+          -H "content-type: application/json" \
+          -X POST --data-binary @/definitions.json \
+          "http://$$RABBITMQ_HOST:15672/api/definitions"
+        echo "CDC topology imported: mango.cdc.stream is ready."
+
   debezium:
     image: debezium/server:2.7.3.Final
     depends_on:
-      - postgres
-      - rabbitmq
+      postgres:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+      cdc-topology:
+        condition: service_completed_successfully
 
   identity.api:
     image: ${DOCKER_REGISTRY-}identityapi
@@ -72,6 +100,7 @@ services:
       dockerfile: Services/ChatAgent.App/Dockerfile
     depends_on:
       - postgres
+      - rabbitmq
 
   saga.orchestrators:
     image: ${DOCKER_REGISTRY-}sagaorchestrators

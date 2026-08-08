@@ -12,8 +12,10 @@ builder.AddApiDefaults();
 //builder.AddServiceBusEventBus("mango")
 //    .AddTopic<CartCheckedOutEvent>("checked-out-events");
 
+// Read the product read-model from the mango.cdc.stream log rather than a classic queue, so
+// the mirror can be rebuilt by replaying history from a stored offset. See ChatAgent.App.
 builder.AddRabbitMQEventBus("eventbus")
-    .AddSubscription<ProductCdcEvent, ProductCdcEventHandler>("mango-cdc-exchange");
+    .AddStreamSubscription<ProductCdcEvent, ProductCdcEventHandler>("mango.cdc.stream");
 
 var app = builder.Build();
 

@@ -20,6 +20,12 @@ public class ChatAgentDbContext : AppDbContextBase
     /// <summary>Unified retrieval index over products, categories and knowledge chunks.</summary>
     public DbSet<VectorDocument> VectorDocuments { get; set; }
 
+    /// <summary>
+    /// How far this service has read into each replayable CDC stream. Delete a row to replay
+    /// that stream from the beginning.
+    /// </summary>
+    public DbSet<CdcStreamOffset> CdcStreamOffsets { get; set; }
+
     public ChatAgentDbContext(DbContextOptions<ChatAgentDbContext> options) : base(options)
     {
     }

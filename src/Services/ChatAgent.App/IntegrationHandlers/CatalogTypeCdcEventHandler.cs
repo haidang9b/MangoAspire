@@ -42,6 +42,7 @@ public class CatalogTypeCdcEventHandler : IIntegrationEventHandler<CatalogTypeCd
     private async Task HandleUpsertAsync(CatalogTypeCdcEvent cdcEvent)
     {
         var category = await _dbContext.ProductCategories
+            .IgnoreQueryFilters()
             .FirstOrDefaultAsync(c => c.Id == cdcEvent.CatalogTypeId);
 
         if (category is null)
@@ -51,6 +52,8 @@ public class CatalogTypeCdcEventHandler : IIntegrationEventHandler<CatalogTypeCd
                 Id = cdcEvent.CatalogTypeId,
                 Name = cdcEvent.Type,
                 UpdatedAt = DateTime.UtcNow,
+                SourceLsn = cdcEvent.SourceLsn,
+                SourceTimestamp = cdcEvent.SourceTimestamp,
             };
 
             _dbContext.ProductCategories.Add(category);
@@ -58,8 +61,19 @@ public class CatalogTypeCdcEventHandler : IIntegrationEventHandler<CatalogTypeCd
         }
         else
         {
+            if (cdcEvent.IsStaleAgainst(category.SourceLsn, category.SourceTimestamp))
+            {
+                _logger.LogDebug(
+                    "CDC: skipped stale event for category {CategoryId} (incoming LSN {IncomingLsn} <= current {CurrentLsn})",
+                    cdcEvent.CatalogTypeId, cdcEvent.SourceLsn, category.SourceLsn);
+                return;
+            }
+
             category.Name = cdcEvent.Type;
             category.UpdatedAt = DateTime.UtcNow;
+            category.SourceLsn = cdcEvent.SourceLsn;
+            category.SourceTimestamp = cdcEvent.SourceTimestamp;
+            category.IsDeleted = false;
 
             _logger.LogInformation("CDC: updated category {CategoryId} - {CategoryName}", cdcEvent.CatalogTypeId, cdcEvent.Type);
         }
@@ -73,9 +87,14 @@ public class CatalogTypeCdcEventHandler : IIntegrationEventHandler<CatalogTypeCd
         await _dbContext.SaveChangesAsync();
     }
 
+    /// <summary>
+    /// Tombstones the mirror row rather than deleting it, so the LSN watermark survives and a
+    /// replayed older record cannot resurrect the category.
+    /// </summary>
     private async Task HandleDeleteAsync(CatalogTypeCdcEvent cdcEvent)
     {
         var category = await _dbContext.ProductCategories
+            .IgnoreQueryFilters()
             .FirstOrDefaultAsync(c => c.Id == cdcEvent.CatalogTypeId);
 
         if (category is null)
@@ -83,7 +102,19 @@ public class CatalogTypeCdcEventHandler : IIntegrationEventHandler<CatalogTypeCd
             return;
         }
 
-        _dbContext.ProductCategories.Remove(category);
+        if (cdcEvent.IsStaleAgainst(category.SourceLsn, category.SourceTimestamp))
+        {
+            _logger.LogDebug(
+                "CDC: skipped stale delete for category {CategoryId} (incoming LSN {IncomingLsn} <= current {CurrentLsn})",
+                cdcEvent.CatalogTypeId, cdcEvent.SourceLsn, category.SourceLsn);
+            return;
+        }
+
+        category.IsDeleted = true;
+        category.UpdatedAt = DateTime.UtcNow;
+        category.SourceLsn = cdcEvent.SourceLsn;
+        category.SourceTimestamp = cdcEvent.SourceTimestamp;
+
         await _vectorIndexer.RemoveAsync(VectorSourceType.ProductCategory, cdcEvent.CatalogTypeId.ToString());
         await _dbContext.SaveChangesAsync();
 

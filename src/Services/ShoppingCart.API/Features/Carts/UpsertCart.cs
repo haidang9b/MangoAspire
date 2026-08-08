@@ -28,9 +28,11 @@ public class UpsertCart
             // product is present before inserting, so a product this service
             // has not replicated yet surfaces as a business error rather than
             // a foreign key violation from SaveChangesAsync.
+            // Upstream deletes tombstone the row instead of removing it (the replay fence
+            // needs the LSN watermark), so a delisted product must be excluded explicitly.
             var productExists = await dbContext.Products
                 .AsNoTracking()
-                .AnyAsync(p => p.Id == request.Cart.ProductId, cancellationToken);
+                .AnyAsync(p => p.Id == request.Cart.ProductId && !p.IsDeleted, cancellationToken);
 
             if (!productExists)
             {

@@ -32,6 +32,12 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.Property(x => x.UpdatedAt)
             .IsRequired();
 
+        // Deleted products are tombstoned rather than removed so the replay fence keeps its
+        // watermark. Filtering globally means no read path (ProductsPlugin, RelevanceGuard)
+        // has to remember to exclude them; CDC handlers opt out with IgnoreQueryFilters()
+        // so a genuine re-insert upstream can resurrect the row.
+        builder.HasQueryFilter(x => !x.IsDeleted);
+
         builder.HasIndex(x => x.CategoryName);
         builder.HasIndex(x => x.CatalogTypeId);
     }

@@ -12,6 +12,12 @@ namespace ChatAgent.App.IntegrationHandlers;
 /// The mirror row and the index entry are committed together, so the agent can never see a
 /// product that has no searchable text (or vice versa).
 /// </summary>
+/// <remarks>
+/// The CDC log is replayable, so this handler must be safe to run against old records: every
+/// path fences on <c>SourceLsn</c> and skips anything that would move the row backwards.
+/// Lookups use <c>IgnoreQueryFilters()</c> because a tombstoned row still has to be found —
+/// both to keep its watermark and to let a genuine upstream re-insert resurrect it.
+/// </remarks>
 public class ProductCdcEventHandler : IIntegrationEventHandler<ProductCdcEvent>
 {
     private readonly ChatAgentDbContext _dbContext;
@@ -43,6 +49,7 @@ public class ProductCdcEventHandler : IIntegrationEventHandler<ProductCdcEvent>
     private async Task HandleUpsertAsync(ProductCdcEvent cdcEvent)
     {
         var product = await _dbContext.Products
+            .IgnoreQueryFilters()
             .FirstOrDefaultAsync(p => p.Id == cdcEvent.ProductId);
 
         if (product is null)
@@ -57,6 +64,8 @@ public class ProductCdcEventHandler : IIntegrationEventHandler<ProductCdcEvent>
                 Price = cdcEvent.Price,
                 CatalogTypeId = cdcEvent.CatalogTypeId,
                 UpdatedAt = DateTime.UtcNow,
+                SourceLsn = cdcEvent.SourceLsn,
+                SourceTimestamp = cdcEvent.SourceTimestamp,
             };
 
             _dbContext.Products.Add(product);
@@ -64,6 +73,14 @@ public class ProductCdcEventHandler : IIntegrationEventHandler<ProductCdcEvent>
         }
         else
         {
+            if (cdcEvent.IsStaleAgainst(product.SourceLsn, product.SourceTimestamp))
+            {
+                _logger.LogDebug(
+                    "CDC: skipped stale event for product {ProductId} (incoming LSN {IncomingLsn} <= current {CurrentLsn})",
+                    cdcEvent.ProductId, cdcEvent.SourceLsn, product.SourceLsn);
+                return;
+            }
+
             product.Name = cdcEvent.Name;
             product.Description = cdcEvent.Description;
             product.CategoryName = cdcEvent.CategoryName;
@@ -71,6 +88,11 @@ public class ProductCdcEventHandler : IIntegrationEventHandler<ProductCdcEvent>
             product.Price = cdcEvent.Price;
             product.CatalogTypeId = cdcEvent.CatalogTypeId;
             product.UpdatedAt = DateTime.UtcNow;
+            product.SourceLsn = cdcEvent.SourceLsn;
+            product.SourceTimestamp = cdcEvent.SourceTimestamp;
+
+            // An upstream re-insert of a previously deleted id clears the tombstone.
+            product.IsDeleted = false;
 
             _logger.LogInformation("CDC: updated product {ProductId} - {ProductName}", cdcEvent.ProductId, cdcEvent.Name);
         }
@@ -90,17 +112,36 @@ public class ProductCdcEventHandler : IIntegrationEventHandler<ProductCdcEvent>
         await _dbContext.SaveChangesAsync();
     }
 
+    /// <summary>
+    /// Tombstones the mirror row rather than deleting it. Dropping the row would drop its LSN
+    /// watermark with it, and a replayed older insert would then resurrect the product.
+    /// </summary>
     private async Task HandleDeleteAsync(ProductCdcEvent cdcEvent)
     {
         var product = await _dbContext.Products
+            .IgnoreQueryFilters()
             .FirstOrDefaultAsync(p => p.Id == cdcEvent.ProductId);
 
         if (product is null)
         {
+            // Nothing replicated yet — a delete for an unknown id needs no tombstone, because
+            // any later record for it must carry a higher LSN and is safe to apply.
             return;
         }
 
-        _dbContext.Products.Remove(product);
+        if (cdcEvent.IsStaleAgainst(product.SourceLsn, product.SourceTimestamp))
+        {
+            _logger.LogDebug(
+                "CDC: skipped stale delete for product {ProductId} (incoming LSN {IncomingLsn} <= current {CurrentLsn})",
+                cdcEvent.ProductId, cdcEvent.SourceLsn, product.SourceLsn);
+            return;
+        }
+
+        product.IsDeleted = true;
+        product.UpdatedAt = DateTime.UtcNow;
+        product.SourceLsn = cdcEvent.SourceLsn;
+        product.SourceTimestamp = cdcEvent.SourceTimestamp;
+
         await _vectorIndexer.RemoveAsync(VectorSourceType.Product, cdcEvent.ProductId.ToString());
         await _dbContext.SaveChangesAsync();
 
