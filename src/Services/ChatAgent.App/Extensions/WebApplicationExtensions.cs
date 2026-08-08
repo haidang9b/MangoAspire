@@ -41,4 +41,32 @@ public static class WebApplicationExtensions
 
         return app;
     }
+
+    /// <summary>
+    /// Ingests the markdown store documents. Unchanged files are skipped by content hash,
+    /// so this is cheap on every restart but the first.
+    /// </summary>
+    /// <remarks>
+    /// Chunks are written without embeddings; <see cref="Services.EmbeddingBackfillService"/>
+    /// fills those in afterwards, so startup never waits on Azure OpenAI. A failure here is
+    /// logged rather than thrown — the agent is still useful without store documents.
+    /// </remarks>
+    public static async Task<WebApplication> SeedKnowledgeBaseAsync(this WebApplication app)
+    {
+        using var scope = app.Services.CreateScope();
+
+        var seeder = scope.ServiceProvider.GetRequiredService<IKnowledgeBaseSeeder>();
+
+        try
+        {
+            await seeder.SeedAsync(app.Lifetime.ApplicationStopping);
+        }
+        catch (Exception ex)
+        {
+            var logger = app.Services.GetRequiredService<ILogger<WebApplication>>();
+            logger.LogError(ex, "Knowledge base seeding failed; store information will be unavailable.");
+        }
+
+        return app;
+    }
 }

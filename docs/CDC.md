@@ -30,16 +30,35 @@ flowchart LR
         SC_Handler --> SC_DB
     end
 
+    subgraph ChatAgent Service
+        CA_App[ChatAgent.App]
+        CA_DB[(PostgreSQL + pgvector<br/>chatagentdb)]
+        CA_Handler[ProductCdcEventHandler<br/>CatalogTypeCdcEventHandler]
+
+        CA_App --> CA_DB
+        CA_Handler --> CA_DB
+    end
+
     P_DB -->|"WAL (pgoutput)"| Deb
-    Deb -->|"mango.public.products"| RMQ
+    Deb -->|"mango.public.products<br/>mango.public.catalog_types"| RMQ
     RMQ -->|"ProductCdcEvent"| SC_Handler
+    RMQ -->|"ProductCdcEvent<br/>CatalogTypeCdcEvent"| CA_Handler
 ```
 
 ### Components
 
 1.  **Debezium Server**: Runs as a container, connecting to the PostgreSQL source database via logical replication (pgoutput).
 2.  **RabbitMQ Exchange**: Events are published to `mango-cdc-exchange` (Topic exchange).
-3.  **Consumers**: Services bind to this exchange to receive updates using `IIntegrationEventHandler`.
+3.  **Consumers**: Services bind to this exchange to receive updates using `IIntegrationEventHandler`. Each consumer declares its own queue (`carts.queue`, `chatagent.queue`), so several services can mirror the same table independently — a change to `products` is delivered to both ShoppingCart.API and ChatAgent.App.
+
+### Captured tables
+
+| Table | Routing key | Consumed by |
+| --- | --- | --- |
+| `public.products` | `mango.public.products` | ShoppingCart.API, ChatAgent.App |
+| `public.catalog_types` | `mango.public.catalog_types` | ChatAgent.App |
+
+`available_stock` is excluded from the `products` payload (`debezium.source.column.exclude.list`) so that saga-driven stock churn does not fan out to every subscriber. Consumers therefore cannot answer stock questions.
 
 ## Configuration
 
@@ -95,9 +114,32 @@ Debezium sends data in specific formats that require custom JSON converters:
 To capture changes from another table:
 
 1.  **Ensure Table is in Publication**: The default publication covers `ALL TABLES`, so new tables in `public` schema are auto-included.
-2.  **Create Event DTO**: Create a class inheriting `IntegrationEvent` with `[EventName("mango.public.tablename")]`.
-3.  **Create Handler**: Implement `IIntegrationEventHandler<T>`.
-4.  **Register Subscription**: Add `.AddSubscription<T, H>("mango-cdc-exchange")` in `Program.cs`.
+2.  **Add the Table to the Include List**: `debezium.source.table.include.list` in `init-configs/products/application.properties` is an explicit allow-list — a table absent from it is never captured, publication or not.
+3.  **Create Event DTO**: Create a class inheriting `IntegrationEvent` with `[EventName("mango.public.tablename")]`.
+4.  **Create Handler**: Implement `IIntegrationEventHandler<T>`.
+5.  **Register Subscription**: Add `.AddSubscription<T, H>("mango-cdc-exchange")` in `Program.cs`.
+
+> **Existing deployments need a re-snapshot.** With `snapshot.mode=initial`, Debezium only snapshots on its first run. Adding a table later captures its future changes but not its existing rows. To backfill, discard the offsets and the replication slot so the connector snapshots again:
+> ```powershell
+> docker volume rm debezium-data
+> # then, in productdb:
+> # SELECT pg_drop_replication_slot('mango_debezium_slot');
+> ```
+
+## Startup ordering (important)
+
+`mango-cdc-exchange` is a **direct** exchange, and RabbitMQ **silently discards messages that match no binding** — no error, no dead letter, nothing in the logs. Debezium takes its initial snapshot the moment it starts, so anything it publishes before the consuming services have declared their queues is simply gone.
+
+That is why `AppHost.cs` declares the Debezium container **after** `shoppingcart-api` and `chatagent-app`, with `.WaitFor(...)` on both. Keep it last when adding new CDC consumers, and add a `WaitFor` for each one.
+
+Symptom when this is wrong: the source table has rows, Debezium's log says `Sending N records to topic mango.public.<table>`, and yet the consumer's queue shows `messages = 0` and its mirror table stays empty. Confirm with:
+
+```powershell
+docker exec <rabbitmq> rabbitmqctl list_bindings source_name destination_name routing_key
+docker exec <rabbitmq> rabbitmqctl list_queues name durable messages
+```
+
+Queues are durable, so once a consumer has started at least once its queue survives restarts and will hold a later snapshot even while the service is down.
 
 ## Troubleshooting
 

@@ -16,11 +16,25 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.AI.Abstractions" />
     <PackageReference Include="Microsoft.SemanticKernel" />
     <PackageReference Include="Microsoft.SemanticKernel.Connectors.AzureOpenAI" />
     <PackageReference Include="Microsoft.SemanticKernel.Connectors.OpenAI" />
     <PackageReference Include="Microsoft.SemanticKernel.Core" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="Pgvector" />
+    <PackageReference Include="Pgvector.EntityFrameworkCore" />
+    <!-- Direct reference so Refit's source generator runs over ICartApi/ICouponsApi.
+         It arrives transitively via Mango.Infrastructure, but analyzers do not flow
+         transitively, so without this the clients fall back to the reflection request
+         builder and throw at resolution time. -->
+    <PackageReference Include="Refit" />
 
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Markdown sources for the knowledge base, ingested on startup by KnowledgeBaseSeeder. -->
+    <Content Include="KnowledgeBase\**\*.md" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

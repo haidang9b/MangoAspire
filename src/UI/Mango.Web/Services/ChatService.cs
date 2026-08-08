@@ -1,10 +1,13 @@
 ﻿using Mango.Core.Pagination;
 using Mango.Web.Models;
+using System.Text.Json;
 
 namespace Mango.Web.Services;
 
 public class ChatService
 {
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+
     private readonly HttpClient _httpClient;
 
     public ChatService(HttpClient httpClient)
@@ -23,15 +26,23 @@ public class ChatService
         var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
         response.EnsureSuccessStatusCode();
 
-        var stream = response.Content.ReadFromJsonAsAsyncEnumerable<PromptResponse>();
-        if (stream != null)
+        // The endpoint streams newline-delimited JSON, one PromptResponse per line.
+        // ReadFromJsonAsAsyncEnumerable cannot be used here: it expects a single JSON
+        // array, which does not surface an item until the array closes.
+        var stream = await response.Content.ReadAsStreamAsync();
+        using var reader = new StreamReader(stream);
+
+        while (await reader.ReadLineAsync() is { } line)
         {
-            await foreach (var item in stream)
+            if (string.IsNullOrWhiteSpace(line))
             {
-                if (item != null)
-                {
-                    yield return item;
-                }
+                continue;
+            }
+
+            var item = JsonSerializer.Deserialize<PromptResponse>(line, JsonOptions);
+            if (item != null)
+            {
+                yield return item;
             }
         }
     }

@@ -1,9 +1,12 @@
-﻿namespace ChatAgent.App.Plugins.Interfaces;
+﻿using ChatAgent.App.Dtos;
+
+namespace ChatAgent.App.Plugins.Interfaces;
 
 public interface IProductsPlugin
 {
-    Task<IEnumerable<ProductDto>?> GetAllProductsAsync();
-    Task<IEnumerable<ProductDto>?> SearchProductsAsync(string searchTerm);
-    Task<ProductDto?> GetProductByIdAsync(Guid productId);
-    Task<string> RefreshProductCacheAsync();
+    Task<IEnumerable<ProductSummaryDto>> GetAllProductsAsync();
+    Task<IEnumerable<ProductSummaryDto>> SearchProductsAsync(string searchTerm);
+    Task<ProductSummaryDto?> GetProductByIdAsync(Guid productId);
+    Task<IEnumerable<string>> GetCategoriesAsync();
+    Task<string> SearchStoreInfoAsync(string question);
 }

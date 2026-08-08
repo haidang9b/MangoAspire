@@ -111,6 +111,10 @@ See [Architecture Overview](architecture/overview.md#identity-provider-switch) f
 
 ### 6. AI Integration
 - **ChatAgent.App**: A dedicated service for AI-powered interactions, utilizing **Semantic Kernel** to provide intelligent responses to user queries and conversation history persistence.
+- **Local read-model, not cross-service calls**: products and categories are replicated into `chatagentdb` over Debezium CDC, so a chat turn never blocks on Products.API. Carts and coupons remain live HTTP calls because they are transactional writes.
+- **Retrieval**: products, categories and markdown store documents share one pgvector index. Search is semantic when embeddings are configured and Postgres full-text search when they are not — `chatagentdb` therefore runs on the `pgvector/pgvector` image.
+- **Guardrails**: a cheap relevance check runs before the agent (blocking off-topic questions and prompt injection before any tool executes), and every drafted answer is verified against the captured tool results before the customer sees it.
+- See [ChatAgent Retrieval and Guardrails](CHAT_AGENT_RAG.md).
 
 ### 7. Observability
 - **OpenTelemetry**: Built-in logging, metrics, and distributed tracing, configured once in `Mango.ServiceDefaults`.
@@ -129,7 +133,7 @@ See [Architecture Overview](architecture/overview.md#identity-provider-switch) f
 | **Coupons.API** | Discount codes & promotions | `coupondb` |
 | **Orders.API** | Order lifecycle management | `orderdb` |
 | **Payments.API** | Payment processing simulation | `N/A` (Stateless) |
-| **ChatAgent.App** | AI assistant for user queries | `chatagentdb` |
+| **ChatAgent.App** | AI assistant for user queries; CDC read-model + pgvector retrieval | `chatagentdb` |
 | **Mango.Orchestrators** | Complex transaction management (Sagas) | `sagaorchestratorsdb` |
 
 > The two identity rows are alternatives, not peers — exactly one runs per launch.
