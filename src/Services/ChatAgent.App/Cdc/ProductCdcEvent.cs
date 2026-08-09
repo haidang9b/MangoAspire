@@ -12,7 +12,6 @@ namespace ChatAgent.App.Cdc;
 /// <remarks>
 /// ShoppingCart.API consumes the same routing key off the shared <c>mango.cdc.stream</c> log,
 /// reading it independently from its own offset, so the two read-models never interfere.
-/// <c>available_stock</c> is excluded upstream via <c>column.exclude.list</c>.
 /// </remarks>
 [EventName("mango.public.products")]
 public record ProductCdcEvent : CdcIntegrationEvent
@@ -38,6 +37,21 @@ public record ProductCdcEvent : CdcIntegrationEvent
 
     [JsonPropertyName("catalog_type_id")]
     public int? CatalogTypeId { get; set; }
+
+    /// <summary>Units on hand upstream.</summary>
+    /// <remarks>
+    /// Nullable, and that is load-bearing rather than cosmetic. Records published before this
+    /// column joined the connector's capture list carry no such field, and on a replay those are
+    /// exactly the records a rebuild sees first — with a non-nullable <c>int</c>, System.Text.Json
+    /// would leave the member at its default and silently turn "not known" into "zero in stock"
+    /// for the entire menu.
+    ///
+    /// No converter: <c>DebeziumNumericConverter</c> exists because <c>decimal.handling.mode</c>
+    /// encodes <c>numeric</c> columns as an object, whereas a Postgres <c>integer</c> arrives as
+    /// a plain JSON number.
+    /// </remarks>
+    [JsonPropertyName("available_stock")]
+    public int? AvailableStock { get; set; }
 }
 
 /// <summary>

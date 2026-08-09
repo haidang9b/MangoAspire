@@ -45,6 +45,18 @@ public class GlobalExceptionHandler : IExceptionHandler
             return true;
         }
 
+        if (exception is ForbiddenException forbiddenException)
+        {
+            var apiResult = new ResultModel<string>(string.Empty, true, forbiddenException.Message);
+
+            httpContext.Response.StatusCode = StatusCodes.Status403Forbidden;
+
+            await httpContext.Response
+                    .WriteAsJsonAsync(apiResult, cancellationToken);
+
+            return true;
+        }
+
         if (exception is DataVerificationException ex)
         {
             var apiResult = new ResultModel<string>(string.Empty, true, ex.Message);

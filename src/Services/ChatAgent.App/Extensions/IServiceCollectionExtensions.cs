@@ -2,8 +2,11 @@
 using ChatAgent.App.Data;
 using ChatAgent.App.Data.EntityTypeConfigurations;
 using ChatAgent.App.Guards;
+using ChatAgent.App.Guards.Authorization;
 using ChatAgent.App.Guards.Grounding;
 using ChatAgent.App.Guards.Interfaces;
+using ChatAgent.App.Guards.Output;
+using ChatAgent.App.Guards.Untrusted;
 using ChatAgent.App.Plugins;
 using EventBus.Abstractions;
 using Mango.Core.Options;
@@ -18,11 +21,15 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Refit;
 using System.ClientModel;
+using System.ClientModel.Primitives;
 
 namespace ChatAgent.App.Extensions;
 
 public static class IServiceCollectionExtensions
 {
+    /// <summary>Named client carrying the resilience pipeline for Azure OpenAI calls.</summary>
+    private const string AzureOpenAiClientName = "azure-openai";
+
     public static IServiceCollection AddServices(this IServiceCollection services, IConfiguration configuration)
     {
         // Add services to the container.
@@ -93,6 +100,8 @@ public static class IServiceCollectionExtensions
 
         services.AddCurrentUserContext();
 
+        services.AddChatRateLimiting(configuration);
+
         // Backs the relevance guard's cached category lexicon.
         services.AddCacheManager();
 
@@ -138,6 +147,20 @@ public static class IServiceCollectionExtensions
         services.AddScoped<IGroundingContext, GroundingContext>();
         services.AddScoped<GroundingCaptureFilter>();
 
+        // Scoped for the same reason, and for one more: the fence's strength comes from a nonce
+        // the untrusted content cannot predict, and a nonce shared across requests is one an
+        // earlier conversation could have taught an attacker.
+        services.AddScoped<IUntrustedFence, UntrustedFence>();
+
+        // Stateless and pure, so a singleton costs nothing.
+        services.AddSingleton<IAnswerFactChecker, AnswerFactChecker>();
+
+        // Pre-execution authorization. Scoped because the rules depend on the signed-in customer
+        // and the budget is per turn.
+        services.AddScoped<IToolAuthorizer, ToolAuthorizer>();
+        services.AddScoped<ToolAuthorizationFilter>();
+        services.AddScoped<ToolWriteBudget>();
+
         return services;
     }
 
@@ -176,14 +199,53 @@ public static class IServiceCollectionExtensions
         var config = configuration.GetSection(AIAgentConfiguration.SectionName).Get<AIAgentConfiguration>()
             ?? throw new ArgumentNullException(AIAgentConfiguration.SectionName);
 
-        var client = new AzureOpenAIClient(
-            new Uri(config.ApiUrl ?? throw new ArgumentNullException(nameof(AIAgentConfiguration.ApiUrl))),
-            new ApiKeyCredential(config.ApiKey ?? throw new ArgumentNullException(nameof(AIAgentConfiguration.ApiKey))));
+        var apiUrl = config.ApiUrl ?? throw new ArgumentNullException(nameof(AIAgentConfiguration.ApiUrl));
+        var apiKey = config.ApiKey ?? throw new ArgumentNullException(nameof(AIAgentConfiguration.ApiKey));
+
+        // Routed through IHttpClientFactory so AddServiceDefaults' standard resilience handler
+        // actually applies. Constructed bare, the SDK uses its own pipeline and never sees that
+        // handler, which is why model calls had no timeout at all: a wedged request held the
+        // customer's turn open for as long as their browser stayed connected.
+        services.AddHttpClient(AzureOpenAiClientName)
+            .ConfigureHttpClient(client => client.Timeout = Timeout.InfiniteTimeSpan)
+            .AddStandardResilienceHandler(resilience =>
+            {
+                resilience.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(config.Http.TotalTimeoutSeconds);
+                resilience.AttemptTimeout.Timeout = TimeSpan.FromSeconds(config.Http.AttemptTimeoutSeconds);
+                resilience.Retry.MaxRetryAttempts = config.Http.MaxRetries;
+
+                // The handler refuses to start unless the sampling window is at least twice the
+                // attempt timeout, so this has to move with it rather than keeping its default.
+                resilience.CircuitBreaker.SamplingDuration =
+                    TimeSpan.FromSeconds(config.Http.AttemptTimeoutSeconds * 2);
+            });
+
+        // Deferred to resolution time, which is the earliest point IHttpClientFactory exists.
+        services.AddSingleton(serviceProvider =>
+        {
+            var httpClient = serviceProvider
+                .GetRequiredService<IHttpClientFactory>()
+                .CreateClient(AzureOpenAiClientName);
+
+            return new AzureOpenAIClient(
+                new Uri(apiUrl),
+                new ApiKeyCredential(apiKey),
+                new AzureOpenAIClientOptions
+                {
+                    Transport = new HttpClientPipelineTransport(httpClient),
+
+                    // Retries belong to the resilience handler; leaving them on here as well
+                    // would multiply out to attempts nobody budgeted for.
+                    RetryPolicy = new ClientRetryPolicy(maxRetries: 0),
+                });
+        });
 
         var modelId = config.ModelId ?? throw new ArgumentNullException(nameof(AIAgentConfiguration.ModelId));
 
+        // A null client means "resolve one from the service provider", which is what lets the
+        // registration above supply the factory-built transport.
         var kernelBuilder = services.AddKernel()
-            .AddAzureOpenAIChatCompletion(modelId, client);
+            .AddAzureOpenAIChatCompletion(modelId, azureOpenAIClient: null);
 
         // A separate, usually cheaper, deployment for guard calls. Registered under a
         // service key so GuardChatClient can pick it up without disturbing the main
@@ -192,7 +254,7 @@ public static class IServiceCollectionExtensions
         {
             kernelBuilder.AddAzureOpenAIChatCompletion(
                 config.Guard.ModelId,
-                client,
+                azureOpenAIClient: null,
                 serviceId: GuardChatClient.GuardServiceKey);
         }
 
@@ -213,7 +275,8 @@ public static class IServiceCollectionExtensions
             // AddAzureOpenAITextEmbeddingGeneration, so the diagnostic is suppressed here
             // rather than avoided.
 #pragma warning disable SKEXP0010
-            kernelBuilder.AddAzureOpenAIEmbeddingGenerator(config.Embedding.DeploymentName!, client);
+            kernelBuilder.AddAzureOpenAIEmbeddingGenerator(
+                config.Embedding.DeploymentName!, azureOpenAIClient: null);
 #pragma warning restore SKEXP0010
         }
 

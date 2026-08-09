@@ -2,6 +2,7 @@
 using ChatAgent.App.Data.Enums;
 using ChatAgent.App.Dtos;
 using ChatAgent.App.Guards;
+using ChatAgent.App.Guards.Authorization;
 using ChatAgent.App.Guards.Grounding;
 using ChatAgent.App.Guards.Interfaces;
 using ChatAgent.App.Plugins;
@@ -109,11 +110,15 @@ public class AgentServiceHistoryTests
             new ProductsPlugin(TestChatAgentDbContext.Create(), searchService.Object),
             new CouponsPlugin(Mock.Of<ICouponsApi>()),
             new CheckoutPlugin(),
-            new WebSearchPlugin(httpClientFactory.Object, new Microsoft.Extensions.Configuration.ConfigurationBuilder().Build()),
+            new WebSearchPlugin(httpClientFactory.Object, new Microsoft.Extensions.Configuration.ConfigurationBuilder().Build(), NullLogger<WebSearchPlugin>.Instance),
             relevanceGuard.Object,
             responseGuard.Object,
             groundingContext,
             new GroundingCaptureFilter(groundingContext, config, NullLogger<GroundingCaptureFilter>.Instance),
+            new ToolAuthorizationFilter(
+                Mock.Of<IToolAuthorizer>(),
+                config,
+                NullLogger<ToolAuthorizationFilter>.Instance),
             config,
             Mock.Of<IHostEnvironment>(e => e.EnvironmentName == "Production"),
             NullLogger<AgentService>.Instance);
@@ -123,13 +128,17 @@ public class AgentServiceHistoryTests
     {
         public ChatHistory History { get; } = new();
 
-        public List<(ChatMessageRole Role, string Content)> Saved { get; } = [];
+        public List<(ChatMessageRole Role, string Content, ReviewVerdictKind? Verdict)> Saved { get; } = [];
 
         public Task<ChatHistory> GetChatHistoryAsync(string userId) => Task.FromResult(History);
 
-        public Task SaveMessageAsync(string userId, ChatMessageRole role, string content)
+        public Task SaveMessageAsync(
+            string userId,
+            ChatMessageRole role,
+            string content,
+            ReviewVerdictKind? reviewVerdict = null)
         {
-            Saved.Add((role, content));
+            Saved.Add((role, content, reviewVerdict));
             return Task.CompletedTask;
         }
 

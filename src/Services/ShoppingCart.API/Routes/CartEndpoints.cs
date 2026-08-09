@@ -11,8 +11,12 @@ public static class CartEndpoints
     {
         public RouteGroupBuilder MapCartApi()
         {
+            // Applied to the group rather than per endpoint so a route added later cannot
+            // silently ship unauthenticated. The whole cart API was previously reachable
+            // anonymously, which made every ownership check below unenforceable.
             var group = routeGroupBuilder.MapGroup("/api/carts")
-                .WithTags("Carts");
+                .WithTags("Carts")
+                .RequireAuthorization("ApiScope");
 
             group.MapGet("/{userId}", async (string userId, ISender sender) =>
             {

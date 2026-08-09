@@ -1,4 +1,6 @@
-﻿using ShoppingCart.API.Features.Carts.GetCarts;
+﻿using Moq;
+using Mango.Core.Auth;
+using ShoppingCart.API.Features.Carts.GetCarts;
 
 namespace ShoppingCart.API.Tests.Features.Carts;
 
@@ -39,7 +41,7 @@ public class GetCartHandlerTests
         _dbContext.CartDetails.Add(existingDetail);
         await _dbContext.SaveChangesAsync();
 
-        var handler = new GetCartHandler(_dbContext);
+        var handler = new GetCartHandler(_dbContext, CurrentUser(userId));
         var query = new GetCardQuery(userId);
 
         // Act
@@ -69,8 +71,8 @@ public class GetCartHandlerTests
     [Fact]
     public async Task HandleAsync_When_CartDoesNotExist_Then_ReturnsNull()
     {
-        // Arrange
-        var handler = new GetCartHandler(_dbContext);
+        // Arrange - the caller asks for their own cart, which simply has nothing in it.
+        var handler = new GetCartHandler(_dbContext, CurrentUser("nonexistent-user"));
         var query = new GetCardQuery("nonexistent-user");
 
         // Act
@@ -81,4 +83,8 @@ public class GetCartHandlerTests
         result.IsError.ShouldBeFalse();
         result.Data.ShouldBeNull();
     }
+
+    /// <summary>A signed-in customer with the given id.</summary>
+    private static ICurrentUserContext CurrentUser(string userId)
+        => Mock.Of<ICurrentUserContext>(u => u.UserId == userId && u.IsAuthenticated == true);
 }

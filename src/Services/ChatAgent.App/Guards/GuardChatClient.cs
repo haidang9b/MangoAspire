@@ -23,13 +23,14 @@ public class GuardChatClient
     public const string GuardServiceKey = "guard";
 
     private readonly Kernel _kernel;
+    private readonly GuardOptions _options;
     private readonly ILogger<GuardChatClient> _logger;
 
     public GuardChatClient(Kernel kernel, IOptions<AIAgentConfiguration> options, ILogger<GuardChatClient> logger)
     {
         _kernel = kernel;
+        _options = options.Value.Guard;
         _logger = logger;
-        _ = options;
     }
 
     /// <returns>The model's raw reply, or null if the call failed.</returns>
@@ -39,6 +40,12 @@ public class GuardChatClient
         string userPrompt,
         CancellationToken cancellationToken)
     {
+        // A guard is a small, fast call sitting on the customer's critical path, so it gets its
+        // own budget rather than inheriting the turn's. Timing out here lands on the existing
+        // "no usable verdict" path, so it needs no new branch in either guard.
+        using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeoutCts.CancelAfter(TimeSpan.FromSeconds(_options.GuardTimeoutSeconds));
+
         try
         {
             var chatService = ResolveChatService();
@@ -52,13 +59,19 @@ public class GuardChatClient
                 history,
                 executionSettings: null,
                 kernel: null,
-                cancellationToken: cancellationToken);
+                cancellationToken: timeoutCts.Token);
 
             return response.Content;
         }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            // The caller gave up, or the client disconnected. Not ours to swallow.
+            throw;
+        }
         catch (OperationCanceledException)
         {
-            throw;
+            _logger.LogWarning("Guard model call timed out after {Seconds}s.", _options.GuardTimeoutSeconds);
+            return null;
         }
         catch (Exception ex)
         {

@@ -1,4 +1,6 @@
-﻿using System.Text.Json.Serialization;
+﻿using ChatAgent.App.Guards.Input;
+using ChatAgent.App.Guards.Untrusted;
+using System.Text.Json.Serialization;
 
 namespace ChatAgent.App.Plugins;
 
@@ -6,11 +8,16 @@ public class WebSearchPlugin : IWebSearchPlugin
 {
     private readonly HttpClient _httpClient;
     private readonly string _searchApiKey;
+    private readonly ILogger<WebSearchPlugin> _logger;
 
-    public WebSearchPlugin(IHttpClientFactory httpClientFactory, IConfiguration configuration)
+    public WebSearchPlugin(
+        IHttpClientFactory httpClientFactory,
+        IConfiguration configuration,
+        ILogger<WebSearchPlugin> logger)
     {
         _httpClient = httpClientFactory.CreateClient("BingSearch");
         _searchApiKey = configuration["WebSearch:ApiKey"] ?? "";
+        _logger = logger;
     }
 
     [KernelFunction]
@@ -35,15 +42,33 @@ public class WebSearchPlugin : IWebSearchPlugin
             if (result?.WebPages?.Value == null || result.WebPages.Value.Count == 0)
                 return $"No results found for: {query}";
 
+            // Web pages are the least trustworthy input this agent has: anyone can publish one,
+            // and ranking for a food query is a solved problem for whoever wants to. A result
+            // carrying injection markers is dropped outright rather than neutralised, because
+            // unlike a product description or a store document it has no value worth preserving.
             var results = result.WebPages.Value.Take(3)
-                .Select(r => $"**{r.Name}**\n{r.Snippet}\nSource: {r.Url}")
+                .Where(r => !PromptSecurityScanner.IsSuspicious($"{r.Name}\n{r.Snippet}"))
+                .Select(r => string.Join(
+                    '\n',
+                    $"**{UntrustedText.Neutralize(r.Name)}**",
+                    UntrustedText.Neutralize(r.Snippet),
+                    $"Source: {UntrustedText.Neutralize(r.Url)}"))
                 .ToList();
+
+            if (results.Count == 0)
+            {
+                return $"No usable results found for: {query}";
+            }
 
             return string.Join("\n\n---\n\n", results);
         }
         catch (Exception ex)
         {
-            return $"Search failed: {ex.Message}";
+            // The message itself is not returned: it lands in the model's context and from there
+            // can be quoted to a customer, and an HTTP failure message can carry a URL, a header,
+            // or an upstream error body.
+            _logger.LogWarning(ex, "Web search failed for query {Query}.", query);
+            return "Web search is unavailable right now.";
         }
     }
 }

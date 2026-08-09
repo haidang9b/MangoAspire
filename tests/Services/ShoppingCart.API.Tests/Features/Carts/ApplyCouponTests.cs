@@ -31,7 +31,7 @@ public class ApplyCouponTests
         _couponsApiMock.Setup(api => api.GetCouponAsync("SAVE10"))
             .ReturnsAsync(ResultModel<CouponDto>.Create(new CouponDto { Code = "SAVE10", DiscountAmount = 10 }));
 
-        var handler = new ApplyCoupon.Handler(_dbContext, _currentUserContextMock.Object);
+        var handler = new ApplyCoupon.Handler(_dbContext, _couponsApiMock.Object, _currentUserContextMock.Object);
         var command = new ApplyCoupon.Command { CouponCode = "SAVE10" };
 
         // Act

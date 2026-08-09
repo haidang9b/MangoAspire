@@ -25,7 +25,9 @@ public static class WebApplicationExtensions
 
             app.UseHttpsRedirection();
 
-            app.UseAuthorization();
+            // UseAuthentication was missing and UseAuthorization appeared twice. Order matters:
+            // CurrentUserContextMiddleware reads HttpContext.User, so it has to run last.
+            app.UseAuthentication();
             app.UseAuthorization();
             app.UseCurrentUserContext();
 

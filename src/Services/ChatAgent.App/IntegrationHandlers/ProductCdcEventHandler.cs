@@ -2,6 +2,7 @@
 using ChatAgent.App.Data;
 using ChatAgent.App.Data.Entities;
 using ChatAgent.App.Data.Enums;
+using ChatAgent.App.Guards.Input;
 using EventBus.Abstractions;
 using Microsoft.EntityFrameworkCore;
 
@@ -52,6 +53,18 @@ public class ProductCdcEventHandler : IIntegrationEventHandler<ProductCdcEvent>
             .IgnoreQueryFilters()
             .FirstOrDefaultAsync(p => p.Id == cdcEvent.ProductId);
 
+        // Product text is authored in another service, so it is untrusted here. The row still
+        // replicates either way: letting upstream text decide whether a product appears would
+        // hand an attacker a way to remove a competitor's dish from the menu by poisoning it.
+        var contentFlagged = PromptSecurityScanner.IsSuspicious($"{cdcEvent.Name}\n{cdcEvent.Description}");
+        if (contentFlagged)
+        {
+            _logger.LogWarning(
+                "CDC: product {ProductId} carries text matching the injection scanner; replicated with its "
+                    + "description withheld from the agent.",
+                cdcEvent.ProductId);
+        }
+
         if (product is null)
         {
             product = new Product
@@ -63,6 +76,8 @@ public class ProductCdcEventHandler : IIntegrationEventHandler<ProductCdcEvent>
                 ImageUrl = cdcEvent.ImageUrl,
                 Price = cdcEvent.Price,
                 CatalogTypeId = cdcEvent.CatalogTypeId,
+                AvailableStock = cdcEvent.AvailableStock,
+                ContentFlagged = contentFlagged,
                 UpdatedAt = DateTime.UtcNow,
                 SourceLsn = cdcEvent.SourceLsn,
                 SourceTimestamp = cdcEvent.SourceTimestamp,
@@ -87,6 +102,8 @@ public class ProductCdcEventHandler : IIntegrationEventHandler<ProductCdcEvent>
             product.ImageUrl = cdcEvent.ImageUrl;
             product.Price = cdcEvent.Price;
             product.CatalogTypeId = cdcEvent.CatalogTypeId;
+            product.AvailableStock = cdcEvent.AvailableStock;
+            product.ContentFlagged = contentFlagged;
             product.UpdatedAt = DateTime.UtcNow;
             product.SourceLsn = cdcEvent.SourceLsn;
             product.SourceTimestamp = cdcEvent.SourceTimestamp;
@@ -152,6 +169,13 @@ public class ProductCdcEventHandler : IIntegrationEventHandler<ProductCdcEvent>
     /// Name and category lead so that both the embedding and the tsvector weight them
     /// ahead of the long-tail description text.
     /// </summary>
+    /// <remarks>
+    /// Stock is deliberately not part of this. <see cref="VectorIndexer"/> nulls a document's
+    /// embedding whenever its content changes, so including a value the checkout saga rewrites on
+    /// every purchase would mean an embedding call per order — and a window after each one where
+    /// the dish is missing from semantic search entirely. It would also buy nothing: nobody
+    /// searches for "dishes with seven left".
+    /// </remarks>
     private static string BuildSearchableText(Product product)
         => $"{product.Name}\nCategory: {product.CategoryName}\n{product.Description}";
 }
