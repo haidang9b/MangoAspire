@@ -50,7 +50,9 @@ public static class IServiceCollectionExtensions
 
             services.AddDocumentApi("ShoppingCart API", "v1", "ShoppingCart API");
 
-            services.AddRefitClient<ICouponsApi>();
+            // A second AddRefitClient<ICouponsApi> further down configures the base address and
+            // token forwarding, and overwrote this one. Harmless, but it registered a client that
+            // could never reach anything.
             services.AddCurrentUserContext();
 
             // Configure ServiceUrls options

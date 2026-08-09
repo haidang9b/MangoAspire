@@ -1,5 +1,8 @@
 ﻿using ChatAgent.App.Data.Entities;
 using ChatAgent.App.Data.Enums;
+using ChatAgent.App.Data.EntityTypeConfigurations;
+using ChatAgent.App.Guards;
+using ChatAgent.App.Guards.Input;
 using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel.ChatCompletion;
 using System.Collections.Concurrent;
@@ -63,14 +66,21 @@ public class ChatHistoryMemoryStorage : IChatHistoryMemoryStorage
         }
     }
 
-    public async Task SaveMessageAsync(string userId, ChatMessageRole role, string content)
+    public async Task SaveMessageAsync(
+        string userId,
+        ChatMessageRole role,
+        string content,
+        ReviewVerdictKind? reviewVerdict = null)
     {
         var message = new ChatMessage
         {
             Id = Guid.NewGuid(),
             UserId = userId,
             Role = role,
-            Content = content,
+            // Last line of defence on the column width. Customer messages are already bounded by
+            // the input guard, but an assistant answer is whatever the model produced.
+            Content = PromptFormatValidator.Truncate(content, ChatMessageConfiguration.MaxContentLength),
+            ReviewVerdict = reviewVerdict,
             CreatedAt = DateTime.UtcNow
         };
 

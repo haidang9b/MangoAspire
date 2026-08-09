@@ -25,6 +25,11 @@ public static class WebApplicationExtensions
 
         app.UseAuthentication();
         app.UseAuthorization();
+
+        // After authentication so the limiter partitions by customer rather than by a shared
+        // NAT address, which would let one customer's traffic throttle everyone behind it.
+        app.UseRateLimiter();
+
         app.UseCurrentUserContext();
 
         app.MapDefaultEndpoints();

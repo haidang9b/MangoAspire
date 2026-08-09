@@ -1,4 +1,6 @@
-﻿namespace ShoppingCart.API.Tests.Features.Carts;
+﻿using Moq;
+using Mango.Core.Auth;
+namespace ShoppingCart.API.Tests.Features.Carts;
 
 public class RemoveFromCartTests
 {
@@ -29,7 +31,7 @@ public class RemoveFromCartTests
         _dbContext.CartDetails.Add(detail);
         await _dbContext.SaveChangesAsync();
 
-        var handler = new RemoveFromCart.Handler(_dbContext);
+        var handler = new RemoveFromCart.Handler(_dbContext, _currentUserContextMock.Object);
         var command = new RemoveFromCart.Command { CartDetailsId = detail.Id };
 
         // Act
@@ -57,7 +59,7 @@ public class RemoveFromCartTests
         _dbContext.CartDetails.Add(detail2);
         await _dbContext.SaveChangesAsync();
 
-        var handler = new RemoveFromCart.Handler(_dbContext);
+        var handler = new RemoveFromCart.Handler(_dbContext, _currentUserContextMock.Object);
         var command = new RemoveFromCart.Command { CartDetailsId = detail1.Id };
 
         // Act

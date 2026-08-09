@@ -1,6 +1,7 @@
 ﻿using ChatAgent.App.Data;
 using ChatAgent.App.Data.Entities;
 using ChatAgent.App.Data.Enums;
+using ChatAgent.App.Guards.Input;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.Security.Cryptography;
@@ -105,6 +106,21 @@ public class KnowledgeBaseSeeder : IKnowledgeBaseSeeder
         if (chunks.Count == 0)
         {
             _logger.LogWarning("Knowledge base document {File} produced no chunks.", relativePath);
+            return;
+        }
+
+        // Store documents are untrusted: they are edited outside this service, and whatever they
+        // contain is retrieved and handed to the model as authoritative store policy. Scanning
+        // here rather than per query means a poisoned document never becomes retrievable at all,
+        // and the cost is paid once at ingest instead of on every customer question.
+        var scan = PromptSecurityScanner.Scan(content);
+        if (scan.Blocked)
+        {
+            _logger.LogError(
+                "Refusing to index knowledge base document {File}: rule {RuleId} matched ({Reason}). "
+                    + "Review the document; nothing from it will be retrievable.",
+                relativePath, scan.RuleId, scan.Reason);
+
             return;
         }
 

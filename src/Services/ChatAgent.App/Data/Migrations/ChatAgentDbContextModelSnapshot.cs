@@ -55,12 +55,17 @@ namespace ChatAgent.App.Data.Migrations
 
                     b.Property<string>("Content")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)")
                         .HasColumnName("content");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
+
+                    b.Property<int?>("ReviewVerdict")
+                        .HasColumnType("integer")
+                        .HasColumnName("review_verdict");
 
                     b.Property<int>("Role")
                         .HasColumnType("integer")
@@ -133,6 +138,10 @@ namespace ChatAgent.App.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<int?>("AvailableStock")
+                        .HasColumnType("integer")
+                        .HasColumnName("available_stock");
+
                     b.Property<int?>("CatalogTypeId")
                         .HasColumnType("integer")
                         .HasColumnName("catalog_type_id");
@@ -142,6 +151,10 @@ namespace ChatAgent.App.Data.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)")
                         .HasColumnName("category_name");
+
+                    b.Property<bool>("ContentFlagged")
+                        .HasColumnType("boolean")
+                        .HasColumnName("content_flagged");
 
                     b.Property<string>("Description")
                         .IsRequired()

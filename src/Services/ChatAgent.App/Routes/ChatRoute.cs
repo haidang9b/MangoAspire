@@ -1,4 +1,5 @@
-using ChatAgent.App.Dtos;
+﻿using ChatAgent.App.Dtos;
+using ChatAgent.App.Extensions;
 using Mango.Core.Auth;
 using System.Text.Json;
 
@@ -17,9 +18,13 @@ public static class ChatRoute
         // The ApiScope policy was configured but never applied here. Without it the only
         // check was a throw inside the handler, which surfaces as a broken stream after
         // the response has started rather than a clean 401.
+        // Rate limited, unlike the history read below: one turn costs several model calls, so
+        // authentication alone still leaves a valid token able to run up an unbounded bill.
         group.MapPost("/chat", HandleChatPrompt)
         .WithName("ChatPrompt")
-        .RequireAuthorization("ApiScope");
+        .RequireAuthorization("ApiScope")
+        .RequireRateLimiting(RateLimitingExtensions.ChatPolicyName)
+        .RequireRateLimiting(RateLimitingExtensions.ChatConcurrencyPolicyName);
 
         group.MapGet("/chat-histories", GetChatHistory)
         .WithName("GetChatHistory")

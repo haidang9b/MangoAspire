@@ -66,7 +66,10 @@ public class UpsertCartTests
 
         var savedHeader = await _dbContext.CartHeaders.FirstOrDefaultAsync(h => h.UserId == userId);
         savedHeader.ShouldNotBeNull();
-        savedHeader.CouponCode.ShouldBe("DISCOUNT10");
+        // UpsertCart no longer honours a coupon code on the request. ApplyCoupon is the only
+        // path that sets one, and it verifies the code exists first; accepting it here was a way
+        // to store an unverified code by a side door.
+        savedHeader.CouponCode.ShouldBe(string.Empty);
 
         var savedDetails = await _dbContext.CartDetails.FirstOrDefaultAsync(d => d.CartHeaderId == savedHeader.Id);
         savedDetails.ShouldNotBeNull();
@@ -110,7 +113,7 @@ public class UpsertCartTests
 
         var updatedHeader = await _dbContext.CartHeaders.FirstOrDefaultAsync(h => h.UserId == userId);
         updatedHeader.ShouldNotBeNull();
-        updatedHeader.CouponCode.ShouldBe("NEWDISCOUNT");
+        updatedHeader.CouponCode.ShouldBe("OLDCODE");
 
         var updatedDetail = await _dbContext.CartDetails.FirstOrDefaultAsync(d => d.CartHeaderId == updatedHeader.Id && d.ProductId == productId);
         updatedDetail.ShouldNotBeNull();
@@ -160,7 +163,7 @@ public class UpsertCartTests
         newDetail.Count.ShouldBe(5);
 
         var updatedHeader = await _dbContext.CartHeaders.FirstOrDefaultAsync(h => h.UserId == userId);
-        updatedHeader.CouponCode.ShouldBe("FREESHIPPING");
+        updatedHeader.CouponCode.ShouldBe("OLDCODE");
     }
 
     [Fact]

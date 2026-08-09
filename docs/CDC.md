@@ -64,7 +64,21 @@ flowchart LR
 | `public.catalog_types` | `mango.public.catalog_types` | ChatAgent.App |
 | `public.debezium_signal` | — | Debezium itself (see [Deep backfill](#deep-backfill-incremental-snapshots)) |
 
-`available_stock` is excluded from the `products` payload (`debezium.source.column.exclude.list`) so that saga-driven stock churn does not fan out to every subscriber. Consumers therefore cannot answer stock questions.
+`available_stock` **is** captured. It was previously excluded via `debezium.source.column.exclude.list` to keep saga-driven stock churn from fanning out to every subscriber, but that also left the chat agent unable to answer "do you have any left?" with anything other than a refusal.
+
+The churn is real, and it is handled on the consumer side rather than by dropping the column:
+
+- **The column is mapped as `int?`, and null means "not known" — not zero.** Records published before the column joined the capture list carry no such field, and on a replay those are the first thing a rebuild sees. With a non-nullable `int`, `System.Text.Json` would leave the member at its default and silently report the entire menu as out of stock.
+- **Stock is deliberately not part of the indexed text.** `ProductCdcEventHandler.BuildSearchableText` covers name, category and description only. `VectorIndexer` nulls a document's embedding whenever its content changes, so including a value the checkout saga rewrites on every purchase would cost an embedding call per order and briefly drop the dish out of semantic search. `HandleAsync_When_OnlyStockChanges_Then_KeepsTheExistingEmbedding` pins this.
+
+After enabling the column, existing mirror rows still hold null until they are re-emitted — see [Deep backfill](#deep-backfill-incremental-snapshots), then confirm with:
+
+```sql
+-- in chatagentdb
+SELECT count(*) FROM products WHERE available_stock IS NULL;   -- expect 0
+```
+
+Note that `available_stock` was `0` for every seeded product in `productdb` (nothing in the seed path ever set it), so `Products.API`'s `SeedProductStock` migration corrects that first. Replicating before that fix would have the agent truthfully report the whole menu as unavailable.
 
 ## Ordering and the replay fence
 

@@ -1,6 +1,7 @@
 ﻿using ChatAgent.App.Data;
 using ChatAgent.App.Data.Enums;
 using ChatAgent.App.Dtos;
+using ChatAgent.App.Guards.Untrusted;
 using Microsoft.EntityFrameworkCore;
 
 namespace ChatAgent.App.Plugins;
@@ -42,10 +43,13 @@ public class ProductsPlugin : IProductsPlugin
             {
                 Id = p.Id,
                 Name = p.Name,
-                Description = p.Description,
+                // Withheld when the replicated text tripped the injection scanner: the dish
+                // stays orderable, but its description never reaches the model as menu copy.
+                Description = p.ContentFlagged ? string.Empty : p.Description,
                 CategoryName = p.CategoryName,
                 Price = p.Price,
                 ImageUrl = p.ImageUrl,
+                AvailableStock = p.AvailableStock,
             })
             .ToListAsync();
     }
@@ -84,10 +88,13 @@ public class ProductsPlugin : IProductsPlugin
             {
                 Id = p.Id,
                 Name = p.Name,
-                Description = p.Description,
+                // Withheld when the replicated text tripped the injection scanner: the dish
+                // stays orderable, but its description never reaches the model as menu copy.
+                Description = p.ContentFlagged ? string.Empty : p.Description,
                 CategoryName = p.CategoryName,
                 Price = p.Price,
                 ImageUrl = p.ImageUrl,
+                AvailableStock = p.AvailableStock,
             })
             .ToListAsync();
 
@@ -108,10 +115,13 @@ public class ProductsPlugin : IProductsPlugin
             {
                 Id = p.Id,
                 Name = p.Name,
-                Description = p.Description,
+                // Withheld when the replicated text tripped the injection scanner: the dish
+                // stays orderable, but its description never reaches the model as menu copy.
+                Description = p.ContentFlagged ? string.Empty : p.Description,
                 CategoryName = p.CategoryName,
                 Price = p.Price,
                 ImageUrl = p.ImageUrl,
+                AvailableStock = p.AvailableStock,
             })
             .FirstOrDefaultAsync();
     }
@@ -142,6 +152,10 @@ public class ProductsPlugin : IProductsPlugin
             return "No store information was found for that question.";
         }
 
-        return string.Join("\n\n---\n\n", hits.Select(h => h.Content));
+        // Store documents are edited outside this service, so their text is untrusted: neutralised
+        // before it reaches the model, and again on capture into the grounding context.
+        return string.Join(
+            "\n\n---\n\n",
+            hits.Select(h => UntrustedText.Neutralize(h.Content)).Where(c => c.Length > 0));
     }
 }

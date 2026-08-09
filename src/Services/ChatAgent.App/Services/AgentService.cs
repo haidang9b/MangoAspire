@@ -1,7 +1,9 @@
 ﻿using ChatAgent.App.Data.Enums;
 using ChatAgent.App.Dtos;
 using ChatAgent.App.Guards;
+using ChatAgent.App.Guards.Authorization;
 using ChatAgent.App.Guards.Grounding;
+using ChatAgent.App.Guards.Input;
 using ChatAgent.App.Guards.Interfaces;
 using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel.ChatCompletion;
@@ -40,6 +42,7 @@ public class AgentService : IAgentService
     private readonly IResponseGuard _responseGuard;
     private readonly IGroundingContext _groundingContext;
     private readonly GroundingCaptureFilter _groundingFilter;
+    private readonly ToolAuthorizationFilter _toolAuthorizationFilter;
     private readonly GuardOptions _guardOptions;
     private readonly IHostEnvironment _environment;
     private readonly ILogger<AgentService> _logger;
@@ -56,6 +59,7 @@ public class AgentService : IAgentService
         IResponseGuard responseGuard,
         IGroundingContext groundingContext,
         GroundingCaptureFilter groundingFilter,
+        ToolAuthorizationFilter toolAuthorizationFilter,
         IOptions<AIAgentConfiguration> options,
         IHostEnvironment environment,
         ILogger<AgentService> logger)
@@ -72,6 +76,7 @@ public class AgentService : IAgentService
         _responseGuard = responseGuard;
         _groundingContext = groundingContext;
         _groundingFilter = groundingFilter;
+        _toolAuthorizationFilter = toolAuthorizationFilter;
         _guardOptions = options.Value.Guard;
         _logger = logger;
     }
@@ -100,27 +105,33 @@ public class AgentService : IAgentService
         var question = promptRequest.Content ?? string.Empty;
         var chatHistory = await _chatHistory.GetChatHistoryAsync(userId);
 
-        // Persisted before the guard runs so the transcript reflects what the customer
-        // actually asked, including questions that were turned away.
-        await _chatHistory.SaveMessageAsync(userId, ChatMessageRole.User, question);
-
         var verdict = await _relevanceGuard.EvaluateAsync(
             question,
             [.. chatHistory.TakeLast(_guardOptions.HistoryLookback).Select(m => $"{m.Role}: {m.Content}")],
             cancellationToken);
 
+        // Persisted after validation but regardless of the verdict, so the transcript still
+        // reflects what the customer actually asked — including questions that were turned away —
+        // without an oversized or control-character payload ever reaching the column.
+        var storedQuestion = PromptFormatValidator.Truncate(question, _guardOptions.MaxStoredMessageChars);
+        await _chatHistory.SaveMessageAsync(userId, ChatMessageRole.User, storedQuestion);
+
         if (!verdict.Allowed)
         {
             _logger.LogInformation(
-                "Relevance guard blocked a question as {Category}: {Reason}", verdict.Category, verdict.Reason);
+                "Relevance guard blocked a question as {Category} ({Rules}): {Reason}",
+                verdict.Category, string.Join(", ", verdict.RuleIds), verdict.Reason);
 
-            var refusal = verdict.Category == GuardCategory.OffTopic
-                ? _guardOptions.OffTopicMessage
-                : _guardOptions.BlockedMessage;
+            var refusal = verdict.Category switch
+            {
+                GuardCategory.OffTopic => _guardOptions.OffTopicMessage,
+                GuardCategory.Malformed => _guardOptions.MalformedMessage,
+                _ => _guardOptions.BlockedMessage,
+            };
 
             // The agent is never invoked, so no tools run and no tokens are spent on it.
             // Both turns still go into history so the conversation stays coherent.
-            chatHistory.AddUserMessage(question);
+            chatHistory.AddUserMessage(storedQuestion);
             chatHistory.AddAssistantMessage(refusal);
             await _chatHistory.SaveMessageAsync(userId, ChatMessageRole.Assistant, refusal);
 
@@ -129,7 +140,13 @@ public class AgentService : IAgentService
 
         chatHistory.AddUserMessage(question);
 
+        // The turn's own deadline. Without it the only cancellation is the client disconnecting,
+        // so a wedged model call holds the request open for as long as the browser tab stays open.
+        using var turnCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        turnCts.CancelAfter(TimeSpan.FromSeconds(_guardOptions.TurnTimeoutSeconds));
+
         string answer;
+        ReviewVerdictKind? reviewKind = null;
         try
         {
             // A copy, never the cached instance. Automatic function calling appends the
@@ -139,16 +156,32 @@ public class AgentService : IAgentService
             // part-way through invocation would strand a tool_calls message with no
             // matching tool result — a shape Azure OpenAI rejects, poisoning every later
             // turn for that user until the process restarts.
-            var draft = await GenerateDraftAsync(new ChatHistory(chatHistory), cancellationToken);
+            var draft = await GenerateDraftAsync(new ChatHistory(chatHistory), turnCts.Token);
 
             var review = await _responseGuard.ReviewAsync(
-                question, draft, _groundingContext.Snapshot(), cancellationToken);
+                question, draft, _groundingContext.Snapshot(), turnCts.Token);
 
             answer = review.Content;
+            reviewKind = review.Kind;
+
+            _logger.Log(
+                review.Kind == ReviewVerdictKind.Approved ? LogLevel.Information : LogLevel.Warning,
+                "Response guard returned {Kind} for user {UserId} ({Rules}): {Reason}",
+                review.Kind, userId, string.Join(", ", review.RuleIds), review.Reason);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            // A real client disconnect. Distinguished from the timeout below by the filter
+            // keying off the original token rather than the linked one.
+            throw;
         }
         catch (OperationCanceledException)
         {
-            throw;
+            _logger.LogWarning(
+                "Turn for user {UserId} exceeded the {Seconds}s budget.",
+                userId, _guardOptions.TurnTimeoutSeconds);
+
+            answer = _guardOptions.TimeoutMessage;
         }
         catch (Exception ex)
         {
@@ -167,9 +200,11 @@ public class AgentService : IAgentService
         }
 
         // Store what the customer was actually shown, not the pre-verification draft, so
-        // the next turn reasons from the same text the customer saw.
+        // the next turn reasons from the same text the customer saw. The verdict travels with
+        // it: without that, an approved answer and a guard-rejected fallback are indistinguishable
+        // in the transcript, which is exactly the distinction an audit needs.
         chatHistory.AddAssistantMessage(answer);
-        await _chatHistory.SaveMessageAsync(userId, ChatMessageRole.Assistant, answer);
+        await _chatHistory.SaveMessageAsync(userId, ChatMessageRole.Assistant, answer, reviewKind);
 
         return answer;
     }
@@ -186,7 +221,11 @@ public class AgentService : IAgentService
         scopedKernel.ImportPluginFromObject(_checkoutPlugin);
         scopedKernel.ImportPluginFromObject(_webSearchPlugin);
 
+        // Two filters with different jobs, and the distinction is the point. The grounding filter
+        // runs next() first and records what came back; the authorization filter runs before
+        // next() and can decline to call it at all, which is the only way to stop a write.
         scopedKernel.AutoFunctionInvocationFilters.Add(_groundingFilter);
+        scopedKernel.FunctionInvocationFilters.Add(_toolAuthorizationFilter);
 
         var settings = new OpenAIPromptExecutionSettings
         {
@@ -195,11 +234,16 @@ public class AgentService : IAgentService
 
         var chatService = scopedKernel.GetRequiredService<IChatCompletionService>();
 
+        // Inside the turn budget rather than alongside it, so a hung draft fails while there is
+        // still time to fall back rather than taking the whole turn down with it.
+        using var draftCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        draftCts.CancelAfter(TimeSpan.FromSeconds(_guardOptions.DraftTimeoutSeconds));
+
         var response = await chatService.GetChatMessageContentAsync(
             chatHistory,
             settings,
             scopedKernel,
-            cancellationToken);
+            draftCts.Token);
 
         return response.Content ?? string.Empty;
     }

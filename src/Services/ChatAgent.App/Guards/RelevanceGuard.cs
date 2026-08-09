@@ -1,6 +1,8 @@
 ﻿using ChatAgent.App.Configurations;
 using ChatAgent.App.Data;
+using ChatAgent.App.Guards.Input;
 using ChatAgent.App.Guards.Interfaces;
+using ChatAgent.App.Guards.Untrusted;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Options;
@@ -11,14 +13,28 @@ namespace ChatAgent.App.Guards;
 
 /// <inheritdoc cref="IRelevanceGuard"/>
 /// <remarks>
-/// Two tiers, so the common case is free:
+/// <para>Four tiers, in this order:</para>
 /// <list type="number">
+/// <item><b>Format</b> — size and character legality. Deterministic.</item>
+/// <item><b>Security</b> — injection and exfiltration patterns. Deterministic.</item>
 /// <item><b>Lexicon</b> — an on-topic word list plus the live category names from the
 /// replicated catalogue. Most real customer questions ("do you have pho?", "where are
 /// you?", "cancel my order") hit this and skip the model entirely.</item>
-/// <item><b>Model</b> — a short classification call for everything else, which is also
-/// what catches prompt-injection and abuse rather than merely off-topic questions.</item>
+/// <item><b>Model</b> — a short classification call for everything else.</item>
 /// </list>
+/// <para>
+/// The first two tiers run before the lexicon can allow, and that ordering is the point. The
+/// lexicon short-circuits the model call, and it matches on words as ordinary as "open", "table"
+/// and "return" — so while it was the first tier, a message only had to mention the menu to skip
+/// the classifier that owns injection and abuse detection entirely. Its breadth is justified on
+/// the off-topic axis, where a false "on topic" only means the agent runs as it would have
+/// anyway; that argument does not transfer to the security axis, so security no longer depends
+/// on it.
+/// </para>
+/// <para>
+/// Tiers 1 and 2 are also outside <see cref="GuardOptions.FailOpen"/>: they have no external
+/// dependency that could make them unavailable.
+/// </para>
 /// </remarks>
 public class RelevanceGuard : IRelevanceGuard
 {
@@ -51,6 +67,7 @@ public class RelevanceGuard : IRelevanceGuard
     private readonly ChatAgentDbContext _dbContext;
     private readonly GuardChatClient _chatClient;
     private readonly HybridCache _cache;
+    private readonly IUntrustedFence _fence;
     private readonly GuardOptions _options;
     private readonly ILogger<RelevanceGuard> _logger;
 
@@ -58,12 +75,14 @@ public class RelevanceGuard : IRelevanceGuard
         ChatAgentDbContext dbContext,
         GuardChatClient chatClient,
         HybridCache cache,
+        IUntrustedFence fence,
         IOptions<AIAgentConfiguration> options,
         ILogger<RelevanceGuard> logger)
     {
         _dbContext = dbContext;
         _chatClient = chatClient;
         _cache = cache;
+        _fence = fence;
         _options = options.Value.Guard;
         _logger = logger;
     }
@@ -78,12 +97,36 @@ public class RelevanceGuard : IRelevanceGuard
             return GuardVerdict.Allow("guard disabled");
         }
 
-        if (string.IsNullOrWhiteSpace(question))
+        if (_options.DeterministicEnabled)
         {
-            return GuardVerdict.Block(GuardCategory.OffTopic, "empty question");
+            var format = PromptFormatValidator.Validate(question, _options);
+            if (!format.IsValid)
+            {
+                _logger.LogInformation(
+                    "Relevance guard blocked a malformed message: {Failure}.", format.Failure);
+
+                return GuardVerdict.Block(
+                    GuardCategory.Malformed, format.Failure.ToString(), format.RuleId);
+            }
+
+            var scan = PromptSecurityScanner.Scan(question);
+            if (scan.Blocked)
+            {
+                _logger.LogWarning(
+                    "Relevance guard blocked a message on rule {RuleId}: {Reason}.", scan.RuleId, scan.Reason);
+
+                return GuardVerdict.Block(scan.Category, scan.Reason, scan.RuleId);
+            }
+        }
+        else if (string.IsNullOrWhiteSpace(question))
+        {
+            return GuardVerdict.Block(GuardCategory.Malformed, "empty question");
         }
 
-        if (await MatchesLexiconAsync(question, cancellationToken))
+        // Bounded to short messages: a genuine customer question is well under the limit, while a
+        // padded injection payload cannot buy its way past the classifier by mentioning the menu.
+        if (question.Length <= _options.LexiconMaxChars
+            && await MatchesLexiconAsync(question, cancellationToken))
         {
             return GuardVerdict.Allow("lexicon match");
         }
@@ -232,15 +275,20 @@ public class RelevanceGuard : IRelevanceGuard
             ? string.Join("\n", recentTurns.TakeLast(_options.HistoryLookback))
             : "(no earlier messages)";
 
+        // Both halves are customer-authored. Unfenced, a message containing the literal text
+        // "Message to classify:" could append a second, innocuous message for the classifier to
+        // rule on instead of the real one.
         var userPrompt = $"""
             Recent conversation:
-            {context}
+            {_fence.Wrap("conversation history", context)}
 
             Message to classify:
-            {question}
+            {_fence.Wrap("customer message", question)}
             """;
 
-        var raw = await _chatClient.CompleteAsync(ClassificationPrompt, userPrompt, cancellationToken);
+        var systemPrompt = $"{ClassificationPrompt}\n\n{_fence.SystemPromptDirective}";
+
+        var raw = await _chatClient.CompleteAsync(systemPrompt, userPrompt, cancellationToken);
         var json = GuardChatClient.ExtractJson(raw);
 
         if (json is null)

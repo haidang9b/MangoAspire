@@ -14,17 +14,35 @@ public enum GuardCategory
 
     /// <summary>Harmful, abusive, or otherwise inappropriate for a customer channel.</summary>
     Unsafe = 3,
+
+    /// <summary>
+    /// Empty, oversized, or structurally illegal. Kept distinct from <see cref="OffTopic"/> so
+    /// that metric stays a count of legitimate-but-unrelated questions.
+    /// </summary>
+    Malformed = 4,
 }
 
 /// <param name="Allowed">False means the agent is never invoked for this turn.</param>
 /// <param name="Reason">Short rationale, for logs only — never shown to the customer.</param>
 public record GuardVerdict(bool Allowed, GuardCategory Category, string? Reason = null)
 {
+    /// <summary>
+    /// Deterministic rules that fired, for logs and metrics. Empty for an LLM verdict.
+    /// </summary>
+    /// <remarks>
+    /// An init-only property rather than a positional member on purpose: adding a positional
+    /// parameter changes the constructor arity that existing call sites and tests depend on.
+    /// </remarks>
+    public IReadOnlyList<string> RuleIds { get; init; } = [];
+
     public static GuardVerdict Allow(string? reason = null)
         => new(true, GuardCategory.OnTopic, reason);
 
     public static GuardVerdict Block(GuardCategory category, string? reason = null)
         => new(false, category, reason);
+
+    public static GuardVerdict Block(GuardCategory category, string? reason, params string[] ruleIds)
+        => new(false, category, reason) { RuleIds = ruleIds };
 }
 
 /// <summary>Outcome of verifying a drafted answer.</summary>
@@ -44,6 +62,15 @@ public enum ReviewVerdictKind
 /// <param name="Reason">Short rationale, for logs only — never shown to the customer.</param>
 public record ReviewVerdict(ReviewVerdictKind Kind, string Content, string? Reason = null)
 {
+    /// <summary>Deterministic fact-check rules that fired, for logs and metrics.</summary>
+    public IReadOnlyList<string> RuleIds { get; init; } = [];
+
     public static ReviewVerdict Approve(string content, string? reason = null)
         => new(ReviewVerdictKind.Approved, content, reason);
+
+    public static ReviewVerdict Revise(string content, string? reason = null, params string[] ruleIds)
+        => new(ReviewVerdictKind.Revised, content, reason) { RuleIds = ruleIds };
+
+    public static ReviewVerdict Reject(string fallback, string? reason = null, params string[] ruleIds)
+        => new(ReviewVerdictKind.Rejected, fallback, reason) { RuleIds = ruleIds };
 }
