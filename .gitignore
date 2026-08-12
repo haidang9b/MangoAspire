@@ -413,3 +413,8 @@ FodyWeavers.xsd
 .env
 .env.*
 !.env.example
+
+# Trivy's vulnerability database, downloaded by .github/scripts/trivy-scan.sh.
+# Cached between CI runs, and dropped here too if the script is run locally.
+.trivycache/
+

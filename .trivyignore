@@ -1,0 +1,15 @@
+# Trivy accepted-risk register (SEC-CI-001).
+#
+# Applied to the *gating* steps of .github/workflows/trivy.yml only, never to the
+# SARIF steps. A suppression therefore stops a finding blocking a pull request but
+# leaves it visible under Security > Code scanning, so nothing disappears quietly.
+#
+# One CVE per line, and every entry needs a comment saying who accepted it, why,
+# and when it should be revisited. An entry with no expiry is a decision nobody
+# will ever revisit.
+#
+# Format:
+#   CVE-2024-12345 exp:2026-12-31   # <who> — <why it is not exploitable here>
+#
+# Note: advisories with no fixed version published are already excluded from the
+# gate by `ignore-unfixed: true`. They do not need an entry here.

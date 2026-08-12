@@ -1,0 +1,246 @@
+name: Dependency & Container Scan
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  schedule:
+    # Offset an hour from the gitleaks sweep so the two do not contend for runners.
+    # A scheduled run is the only way a CVE published *after* merge gets noticed —
+    # nothing in the repository has to change for this to start reporting.
+    - cron: "0 4 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: trivy-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Every scan runs through .github/scripts/trivy-scan.sh, which reads these.
+  TRIVY_IMAGE: ghcr.io/aquasecurity/trivy:0.73.0
+  TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db:2
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # SPA packages. Cheap, runs on every pull request.
+  #
+  # .NET is not scanned here: Trivy's NuGet analysers need packages.lock.json,
+  # packages.config, a *.deps.json, or a Version= attribute on a PackageReference,
+  # and this solution has none of those in the working tree — Central Package
+  # Management holds every version in Directory.Packages.props, which Trivy does
+  # not read. Pointed at the repository root, it would report the .NET side clean
+  # because it found nothing to scan. NuGet is covered instead by the post-build
+  # scan in build.yml and by the app-images job below, both of which read the
+  # *.deps.json that dotnet publish produces.
+  # ---------------------------------------------------------------------------
+  npm-dependencies:
+    name: trivy (npm dependencies)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # Publish findings to the Security > Code scanning tab.
+      security-events: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        # Deliberately no fetch-depth: 0 — unlike gitleaks, Trivy scans the working
+        # tree rather than history, so a full clone would only slow the job down.
+
+      - name: Cache Trivy database
+        uses: actions/cache@v4
+        with:
+          path: .trivycache
+          key: trivy-db-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: trivy-db-${{ runner.os }}-
+
+      - name: Scan SPA lockfile (SARIF)
+        run: bash .github/scripts/trivy-scan.sh sarif fs src/UI/mango-ui trivy-npm.sarif
+
+      - name: Upload SARIF to code scanning
+        # Same non-fatal pattern the gitleaks workflow already uses: SARIF upload
+        # needs GitHub Advanced Security on private repositories, and the job
+        # should not go red just for that.
+        if: always() && hashFiles('trivy-npm.sarif') != ''
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-npm.sarif
+          # Distinct category per job, otherwise each upload replaces the last and
+          # the Security tab only shows whichever job finished most recently.
+          category: trivy-npm
+
+      - name: Fail on HIGH/CRITICAL
+        run: bash .github/scripts/trivy-scan.sh gate fs src/UI/mango-ui
+
+  # ---------------------------------------------------------------------------
+  # Base images. Also cheap — a pull and a scan, no build. Runs on every PR.
+  #
+  # Every Dockerfile under src/ resolves to one of two shipped bases, so scanning
+  # the images we build would report the same OS CVE list ten times over. The
+  # build stages (dotnet/sdk, node) are deliberately absent: they never ship, so a
+  # finding there cannot reach production and would only teach the team to ignore
+  # this job.
+  # ---------------------------------------------------------------------------
+  base-images:
+    # Quoted: the ": " inside the name would otherwise parse as a YAML mapping.
+    name: "trivy (base image: ${{ matrix.id }})"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Final stage of all ten .NET Dockerfiles.
+          - id: aspnet
+            image: mcr.microsoft.com/dotnet/aspnet:10.0-alpine
+          # Final stage of src/UI/mango-ui/Dockerfile.
+          - id: nginx
+            image: nginx:alpine
+          # Third-party runtime images from docker-compose.yml. Not built here, but
+          # they run alongside the services and carry their own CVEs.
+          - id: postgres
+            image: pgvector/pgvector:pg16
+          - id: rabbitmq
+            image: rabbitmq:3-management-alpine
+          - id: debezium
+            image: debezium/server:2.7.3.Final
+          - id: curl
+            image: curlimages/curl:8.11.1
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache Trivy database
+        uses: actions/cache@v4
+        with:
+          path: .trivycache
+          key: trivy-db-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: trivy-db-${{ runner.os }}-
+
+      - name: Scan ${{ matrix.image }} (SARIF)
+        run: |
+          bash .github/scripts/trivy-scan.sh sarif image \
+            "${{ matrix.image }}" "trivy-base-${{ matrix.id }}.sarif"
+
+      - name: Upload SARIF to code scanning
+        if: always() && hashFiles(format('trivy-base-{0}.sarif', matrix.id)) != ''
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-base-${{ matrix.id }}.sarif
+          category: trivy-base-${{ matrix.id }}
+
+      - name: Fail on HIGH/CRITICAL
+        # --ignore-unfixed is load-bearing here, not a nicety (see trivy-scan.sh):
+        # distro bases routinely carry HIGH CVEs with no fixed package published,
+        # and without it this job is red on day one for something nobody can act on.
+        run: bash .github/scripts/trivy-scan.sh gate image "${{ matrix.image }}"
+
+  # ---------------------------------------------------------------------------
+  # Application images. Scans the whole shipped artefact: the OS layer *and* the
+  # NuGet graph, which Trivy reads from the <Project>.deps.json that dotnet publish
+  # writes into /app — fully resolved, transitives included, exactly as deployed.
+  #
+  # Not run on pull requests. Ten multi-stage .NET builds is minutes of runner time
+  # for a signal that only moves when a dependency or a base image moves; the two
+  # jobs above plus the post-build scan in build.yml are the pull-request gate.
+  # ---------------------------------------------------------------------------
+  app-images:
+    name: "trivy (app image: ${{ matrix.id }})"
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # The ten .NET services build from the src/ context: their Dockerfiles
+          # COPY project files by paths relative to it (see docker-compose.yml).
+          - id: identity-api
+            context: src
+            dockerfile: src/Services/Identity.API/Dockerfile
+          - id: products-api
+            context: src
+            dockerfile: src/Services/Products.API/Dockerfile
+          - id: coupons-api
+            context: src
+            dockerfile: src/Services/Coupons.API/Dockerfile
+          - id: shoppingcart-api
+            context: src
+            dockerfile: src/Services/ShoppingCart.API/Dockerfile
+          - id: orders-api
+            context: src
+            dockerfile: src/Services/Orders.API/Dockerfile
+          - id: payments-api
+            context: src
+            dockerfile: src/Services/Payments.API/Dockerfile
+          - id: chatagent-app
+            context: src
+            dockerfile: src/Services/ChatAgent.App/Dockerfile
+          - id: saga-orchestrators
+            context: src
+            dockerfile: src/Services/Mango.Orchestrators/Dockerfile
+          - id: gateway
+            context: src
+            dockerfile: src/Gateway/Mango.Gateway/Dockerfile
+          - id: mango-web
+            context: src
+            dockerfile: src/UI/Mango.Web/Dockerfile
+          # The SPA is the odd one out: its Dockerfile COPYs package.json from the
+          # context root, so it builds from its own directory, not from src/.
+          - id: mango-ui
+            context: src/UI/mango-ui
+            dockerfile: src/UI/mango-ui/Dockerfile
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache Trivy database
+        uses: actions/cache@v4
+        with:
+          path: .trivycache
+          key: trivy-db-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: trivy-db-${{ runner.os }}-
+
+      # Required for the gha cache exporter below.
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build ${{ matrix.id }}
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
+          push: false
+          # Exported as a tarball rather than loaded into the daemon, so the Trivy
+          # container can read it from the mounted workspace instead of being given
+          # the Docker socket.
+          outputs: type=docker,dest=image.tar
+          tags: mangoaspire/${{ matrix.id }}:ci
+          # Scoped per image, otherwise every matrix entry writes over the same
+          # cache key and each build starts cold.
+          cache-from: type=gha,scope=${{ matrix.id }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.id }}
+
+      - name: Scan ${{ matrix.id }} (SARIF)
+        run: |
+          bash .github/scripts/trivy-scan.sh sarif tar \
+            image.tar "trivy-app-${{ matrix.id }}.sarif"
+
+      - name: Upload SARIF to code scanning
+        if: always() && hashFiles(format('trivy-app-{0}.sarif', matrix.id)) != ''
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-app-${{ matrix.id }}.sarif
+          category: trivy-app-${{ matrix.id }}
+
+      - name: Fail on HIGH/CRITICAL
+        run: bash .github/scripts/trivy-scan.sh gate tar image.tar
