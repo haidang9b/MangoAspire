@@ -13,10 +13,19 @@ concurrency:
   group: build-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  # Read by .github/scripts/trivy-scan.sh. Kept in step with trivy.yml.
+  TRIVY_IMAGE: ghcr.io/aquasecurity/trivy:0.73.0
+  TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db:2
+
 jobs:
   backend:
     name: .NET build & test
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # The Trivy scan below publishes to Security > Code scanning.
+      security-events: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -39,8 +48,104 @@ jobs:
       - name: Restore
         run: dotnet restore MangoAspire.sln
 
+      - name: Audit NuGet packages
+        # Placed before Build so a vulnerable package fails ahead of the slower
+        # compile and test steps.
+        #
+        # This is how .NET gets dependency coverage in this repository: Trivy's
+        # filesystem scan cannot read Central Package Management, so it is scoped to
+        # the SPA in trivy.yml. See SEC-CI-001.
+        #
+        # HIGH/CRITICAL matches the Trivy severity floor.
+        run: |
+          set -uo pipefail
+
+          # Two things about "dotnet list package --vulnerable", both verified
+          # against this solution rather than assumed:
+          #   1. It exits 0 when it *does* find vulnerabilities, so the exit code
+          #      cannot be the gate — the JSON has to be inspected.
+          #   2. It exits 1 when any project cannot be analysed, and
+          #      docker-compose.dcproj is in MangoAspire.sln and uses
+          #      packages.config. That happens on every single run, so failing the
+          #      step on a non-zero exit would make this check permanently red.
+          # Hence: ignore the exit code and decide from the JSON.
+          # --format json needs the .NET 9+ SDK; this job installs 10.0.x above.
+          dotnet list MangoAspire.sln package --vulnerable --include-transitive \
+            --format json > nuget-audit.json || true
+
+          # A genuine tooling failure (no network, wrong SDK, MSBuild noise on
+          # stdout) produces no valid JSON. That must fail loudly rather than pass
+          # as "nothing found", which is how a broken audit turns into a green tick.
+          if ! jq -e . nuget-audit.json > /dev/null 2>&1; then
+            echo "::error::dotnet list package did not emit valid JSON. Raw output follows."
+            cat nuget-audit.json
+            exit 1
+          fi
+
+          # Projects that could not be analysed are reported, not swallowed — if a
+          # real service ever lands here, the warning is the only trace.
+          jq -r '.problems[]? | "::warning::Not audited — \(.project): \(.text)"' \
+            nuget-audit.json
+
+          jq -r '
+            [ .projects[]?.frameworks[]?
+              | ((.topLevelPackages // []) + (.transitivePackages // []))[]
+              | . as $pkg
+              | ($pkg.vulnerabilities // [])[]
+              | select((.severity | ascii_downcase) == "high"
+                    or (.severity | ascii_downcase) == "critical")
+              | "\($pkg.id) \($pkg.resolvedVersion) [\(.severity)] \(.advisoryurl)"
+            ] | unique | .[]' nuget-audit.json | tee vulnerable-packages.txt
+
+          if [ -s vulnerable-packages.txt ]; then
+            echo "::error::High or critical NuGet advisories found. Bump the affected versions in Directory.Packages.props."
+            exit 1
+          fi
+
+          echo "No high or critical NuGet advisories."
+
       - name: Build
         run: dotnet build MangoAspire.sln --configuration Release --no-restore
+
+      # -----------------------------------------------------------------------
+      # Trivy over the .NET build output. This is the only point in CI where
+      # Trivy can see NuGet on a pull request: its analysers need a *.deps.json,
+      # which does not exist until the solution is built, and Central Package
+      # Management means there is nothing version-shaped in the working tree for
+      # it to read instead. Running it here rather than in trivy.yml reuses the
+      # build above instead of paying for a second one.
+      #
+      # It overlaps with the audit step earlier in this job on purpose: that one
+      # reads the restore graph against NuGet's advisory database before anything
+      # compiles, this one reads the resolved output against Trivy's (GHSA plus
+      # NVD). Different inputs, different databases — expect the two to disagree
+      # at the margins rather than assuming one is broken.
+      # -----------------------------------------------------------------------
+      - name: Cache Trivy database
+        uses: actions/cache@v4
+        with:
+          path: .trivycache
+          key: trivy-db-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: trivy-db-${{ runner.os }}-
+
+      - name: Scan .NET build output (SARIF)
+        # The SPA is skipped: its pnpm-lock.yaml is scanned by the dedicated job
+        # in trivy.yml, and scanning it twice would file every SPA finding under
+        # two Security-tab categories.
+        run: |
+          bash .github/scripts/trivy-scan.sh sarif fs src trivy-dotnet.sarif \
+            --skip-dirs src/UI/mango-ui
+
+      - name: Upload SARIF to code scanning
+        if: always() && hashFiles('trivy-dotnet.sarif') != ''
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-dotnet.sarif
+          category: trivy-dotnet
+
+      - name: Fail on HIGH/CRITICAL
+        run: bash .github/scripts/trivy-scan.sh gate fs src --skip-dirs src/UI/mango-ui
 
       - name: Test
         run: dotnet test MangoAspire.sln --configuration Release --no-build
