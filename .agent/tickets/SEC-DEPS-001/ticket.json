@@ -57,7 +57,7 @@
       "title": "Documentation, memory and completion",
       "done": false,
       "tasks": [
-        { "id": "step-4.1", "title": "Conventional commit created", "done": false },
+        { "id": "step-4.1", "title": "Conventional commit created", "done": true, "note": "42f5e55 on branch fix/sec-deps-001-npm-advisories." },
         { "id": "step-4.2", "title": "File the deferred-majors follow-up ticket (eslint 10, plugin-react 6, TS 7, i18next 26)", "done": false },
         { "id": "step-4.3", "title": "File the CI audit-gate follow-up ticket (pnpm audit --audit-level=high)", "done": false },
         { "id": "step-4.6", "title": "Follow-up: adopt eslint-plugin-react-hooks 7.1.1 and fix the 6 purity/refs/effect errors", "done": false, "note": "CartContext.tsx:24; useFetch.ts:46,62,77; CheckoutPage.tsx:42,150." },
@@ -69,6 +69,8 @@
   "blockers": [],
   "links": {
     "plan": ".agent/tickets/SEC-DEPS-001/plan.md",
+    "branch": "fix/sec-deps-001-npm-advisories",
+    "commits": ["42f5e55"],
     "files": [
       "src/UI/mango-ui/package.json",
       "src/UI/mango-ui/pnpm-lock.yaml"
