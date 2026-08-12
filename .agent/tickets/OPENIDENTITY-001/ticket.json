@@ -1,0 +1,66 @@
+{
+  "$schema": "../../schemas/ticket.schema.json",
+  "schemaVersion": 1,
+  "id": "OPENIDENTITY-001",
+  "title": "Add OpenIdentity.App — an OpenIddict authorization server alongside Identity.API",
+  "status": "completed",
+  "priority": "normal",
+  "createdUtc": "2026-03-11T00:00:00Z",
+  "updatedUtc": "2026-03-11T00:00:00Z",
+  "completedUtc": "2026-03-11T00:00:00Z",
+  "tags": ["backend", "identity", "apphost"],
+  "steps": [
+    {
+      "id": "step-1",
+      "title": "Business analysis and technical planning",
+      "done": true,
+      "tasks": [
+        { "id": "step-1.1", "title": "Impact map: new service, own database, OpenIddict entities", "done": true },
+        { "id": "step-1.2", "title": "Write the technical blueprint", "done": true },
+        { "id": "step-1.3", "title": "Resolve clarifying questions (UI, endpoints, orchestration, refactor)", "done": true },
+        { "id": "step-1.4", "title": "Blueprint approved by the user", "done": true }
+      ]
+    },
+    {
+      "id": "step-2",
+      "title": "Implementation",
+      "done": true,
+      "tasks": [
+        { "id": "step-2.1", "title": "New OpenIdentity.App project with EF Core, ASP.NET Identity and OpenIddict", "done": true },
+        { "id": "step-2.2", "title": "Own database for users, roles, tokens and authorizations", "done": true },
+        { "id": "step-2.3", "title": "Razor login/register UI plus the /connect/* endpoints", "done": true },
+        { "id": "step-2.4", "title": "Management APIs (clients, resources, roles) as Minimal APIs", "done": true },
+        { "id": "step-2.5", "title": "Register the service in the Aspire AppHost", "done": true }
+      ]
+    },
+    {
+      "id": "step-3",
+      "title": "Verification and quality",
+      "done": true,
+      "tasks": [
+        { "id": "step-3.1", "title": "Code review completed", "done": true },
+        { "id": "step-3.2", "title": "All 10 code-review fixes applied (security, architecture, quality)", "done": true },
+        { "id": "step-3.3", "title": "Secrets removed from DbInitializer", "done": true }
+      ]
+    },
+    {
+      "id": "step-4",
+      "title": "Documentation, memory and completion",
+      "done": true,
+      "tasks": [
+        { "id": "step-4.1", "title": "Walkthrough written", "done": true },
+        { "id": "step-4.2", "title": "Conventional commit created", "done": true },
+        { "id": "step-4.3", "title": "Findings promoted into project memory", "done": true }
+      ]
+    }
+  ],
+  "blockers": [],
+  "links": {
+    "plan": ".agent/tickets/OPENIDENTITY-001/plan.md",
+    "branch": "feature/open-identity",
+    "files": ["src/Services/OpenIdentity.App", "src/Mango.AppHost/Program.cs"],
+    "docs": ["docs/architecture/overview.md"],
+    "memory": [".agent/memory/domains/identity.md"]
+  },
+  "notes": ".agent/tickets/OPENIDENTITY-001/notes.md"
+}

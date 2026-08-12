@@ -54,6 +54,9 @@ if (-not $SkipRestore) {
 Write-Host "`nGenerating Claude Code harness from .agent/ ..." -ForegroundColor Cyan
 & (Join-Path $scripts 'sync-agent-harness.ps1')
 
+Write-Host "`nRendering the ticket board from .agent/tickets/ ..." -ForegroundColor Cyan
+& (Join-Path $scripts 'update-ticket-board.ps1')
+
 if (-not $SkipMcp) {
     if ($haveDocker) {
         Write-Host "`nStarting Serena MCP server..." -ForegroundColor Cyan
@@ -70,3 +73,4 @@ Write-Host "  1. Open this repo in Claude Code; approve the project MCP server (
 Write-Host "  2. Run '/mcp' to confirm Serena is connected, and check skills/commands are listed."
 Write-Host "  3. Launch the app:   ./scripts/run-app.ps1"
 Write-Host "  4. Run tests:        ./scripts/test.ps1"
+Write-Host "  5. Current work:     open .agent/ui/board.html (and .agent/README.md for the harness layout)"

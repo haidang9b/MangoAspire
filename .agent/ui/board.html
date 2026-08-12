@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MangoAspire — Ticket Board</title>
+<script>
+  // Applied before first paint so the board never flashes the wrong theme.
+  (function () {
+    try {
+      var t = localStorage.getItem('mango-board-theme');
+      if (t === 'dark' || t === 'light') { document.documentElement.setAttribute('data-theme', t); }
+    } catch (e) { /* private mode: fall back to the OS preference */ }
+  })();
+</script>
+<style>
+  :root {
+    --primary: #10B981; --accent: #F59E0B;
+    --bg: #F7F8F7; --surface: #FFFFFF; --surface-2: #F1F3F2;
+    --text: #1B2420; --muted: #5C6B64; --border: #DDE3E0;
+    --danger: #DC2626; --info: #2563EB; --pending: #8B7355;
+    --shadow: 0 1px 2px rgba(16, 36, 28, .06), 0 4px 12px rgba(16, 36, 28, .05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #121715; --surface: #1A211E; --surface-2: #222A26;
+      --text: #E6EDE9; --muted: #9AAAA2; --border: #2E3833;
+      --danger: #F87171; --info: #60A5FA; --pending: #C9A227;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 4px 14px rgba(0, 0, 0, .3);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #121715; --surface: #1A211E; --surface-2: #222A26;
+    --text: #E6EDE9; --muted: #9AAAA2; --border: #2E3833;
+    --danger: #F87171; --info: #60A5FA; --pending: #C9A227;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 4px 14px rgba(0, 0, 0, .3);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 0 1.25rem 4rem;
+    background: var(--bg); color: var(--text);
+    font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; }
+  a { color: var(--info); }
+
+  header.top {
+    display: flex; flex-wrap: wrap; gap: .75rem 1rem; align-items: center;
+    padding: 1.5rem 0 1rem; border-bottom: 3px solid var(--primary); margin-bottom: 1.5rem;
+  }
+  header.top h1 { margin: 0; font-size: 1.35rem; letter-spacing: -.01em; }
+  header.top h1 .dot { color: var(--primary); }
+  .spacer { flex: 1 1 auto; }
+  .stamp { color: var(--muted); font-size: .8rem; }
+
+  button, input[type=search] {
+    font: inherit; color: inherit; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 6px; padding: .35rem .7rem;
+  }
+  button { cursor: pointer; }
+  button:hover { border-color: var(--primary); }
+  .chip[aria-pressed="true"] { background: var(--primary); border-color: var(--primary); color: #04120C; font-weight: 600; }
+  .filters { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; margin-bottom: 1.5rem; }
+  .filters .count { color: var(--muted); font-size: .8rem; }
+
+  .pill {
+    display: inline-flex; align-items: center; gap: .3rem; white-space: nowrap;
+    font-size: .74rem; font-weight: 600; letter-spacing: .02em;
+    padding: .12rem .5rem; border-radius: 999px; border: 1px solid currentColor;
+  }
+  .st-progress { color: var(--primary); }
+  .st-blocked  { color: var(--danger); }
+  .st-approval { color: var(--accent); }
+  .st-new      { color: var(--muted); }
+  .st-done     { color: var(--info); }
+  .st-abandoned{ color: var(--muted); opacity: .7; }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 1rem 1.1rem; box-shadow: var(--shadow);
+  }
+  .hero { border-left: 4px solid var(--primary); margin-bottom: 2rem; }
+  .hero h2 { margin: .1rem 0 .1rem; font-size: 1.15rem; }
+  .hero .id { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: .8rem; color: var(--muted); }
+  .next {
+    margin: .9rem 0 0; padding: .6rem .8rem; border-radius: 6px;
+    background: var(--surface-2); border-left: 3px solid var(--accent);
+  }
+  .next b { color: var(--accent); }
+
+  .bar { height: 7px; border-radius: 4px; background: var(--surface-2); overflow: hidden; margin: .55rem 0 .3rem; }
+  .bar > i { display: block; height: 100%; background: var(--primary); }
+  .bar-label { font-size: .76rem; color: var(--muted); }
+
+  h3.section { font-size: .8rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin: 2rem 0 .75rem; }
+  .grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); }
+  .grid .card h4 { margin: .35rem 0 .1rem; font-size: .98rem; }
+  .meta { display: flex; flex-wrap: wrap; gap: .35rem; align-items: center; margin-top: .55rem; }
+  .tag { font-size: .7rem; color: var(--muted); background: var(--surface-2); border-radius: 4px; padding: .05rem .4rem; }
+
+  details { margin-top: .7rem; }
+  summary { cursor: pointer; font-size: .8rem; color: var(--muted); }
+  summary:hover { color: var(--text); }
+  ul.steps { list-style: none; margin: .6rem 0 0; padding: 0; font-size: .85rem; }
+  ul.steps li { padding: .12rem 0; }
+  ul.steps .g { display: inline-block; width: 1.1em; }
+  ul.steps .tasks { list-style: none; margin: 0; padding-left: 1.5rem; color: var(--muted); }
+  .is-done { color: var(--muted); }
+  .is-skipped { color: var(--muted); text-decoration: line-through; }
+
+  .blockers { margin: .7rem 0 0; padding: .5rem .7rem; border-radius: 6px;
+              border: 1px solid var(--danger); color: var(--danger); font-size: .84rem; }
+  .blockers ul { margin: .3rem 0 0; padding-left: 1.1rem; }
+
+  .links { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .8rem; }
+  .links a {
+    font-size: .78rem; text-decoration: none; color: var(--text);
+    border: 1px solid var(--border); border-radius: 6px; padding: .2rem .55rem; background: var(--surface-2);
+  }
+  .links a:hover { border-color: var(--primary); color: var(--primary); }
+
+  .memory { columns: 2 260px; column-gap: 1.5rem; font-size: .87rem; }
+  .memory a { display: block; padding: .18rem 0; }
+  .empty { color: var(--muted); font-style: italic; padding: 2rem 0; }
+  footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--border);
+           color: var(--muted); font-size: .76rem; }
+  code { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: .92em; }
+</style>
+</head>
+<body>
+<!-- GENERATED from .agent/tickets/ by scripts/update-ticket-board.ps1 - do not edit directly -->
+<div class="wrap">
+  <header class="top">
+    <h1>MangoAspire <span class="dot">·</span> Ticket Board</h1>
+    <span class="spacer"></span>
+    <span class="stamp" id="stamp"></span>
+    <button id="theme" type="button" title="Toggle light/dark">◐</button>
+  </header>
+
+  <div class="filters" id="filters">
+    <input type="search" id="q" placeholder="Filter by id, title or tag…" style="min-width:220px">
+    <span id="chips"></span>
+    <span class="count" id="count"></span>
+  </div>
+
+  <div id="hero"></div>
+
+  <h3 class="section">All tickets</h3>
+  <div class="grid" id="grid"></div>
+
+  <h3 class="section">Project memory</h3>
+  <div class="memory" id="memory"></div>
+
+  <footer>
+    Generated from <code>.agent/tickets/*/ticket.json</code> by
+    <code>scripts/update-ticket-board.ps1</code> — do not edit this file directly.
+  </footer>
+</div>
+
+<script id="board-data" type="application/json">{"generatedFrom":".agent/tickets","activeTicketId":"IDENTITY-TOGGLE-001","updatedUtc":"2026-08-12T00:00:00Z","tickets":[{"$schema":"../../schemas/ticket.schema.json","schemaVersion":1,"id":"IDENTITY-TOGGLE-001","title":"Toggle the identity provider between Duende (Identity.API) and OpenIddict (OpenIdentity.App)","status":"in_progress","priority":"high","createdUtc":"2026-03-12T00:00:00Z","updatedUtc":"2026-08-12T00:00:00Z","completedUtc":null,"tags":["backend","identity","apphost","gateway"],"steps":[{"id":"step-1","title":"Analysis and planning","done":true,"tasks":[{"id":"step-1.1","title":"Review the analyze-requirement workflow and analyze-po-requirement skill","done":true},{"id":"step-1.2","title":"Analyse the impact on Mango.AppHost (orchestration)","done":true},{"id":"step-1.3","title":"Analyse the impact on the microservices (authentication middleware)","done":true},{"id":"step-1.4","title":"Analyse the impact on the frontends (Mango.Web and mango-ui)","done":true},{"id":"step-1.5","title":"Write the technical blueprint and clarifying questions","done":true},{"id":"step-1.6","title":"Blueprint approved by the user","done":true}]},{"id":"step-2","title":"Implementation — core infrastructure","done":true,"tasks":[{"id":"step-2.1","title":"Conditional service registration in Mango.AppHost behind the IdentityType flag","done":true},{"id":"step-2.2","title":"Shared authentication configuration that respects the flag","done":true}]},{"id":"step-3","title":"Implementation — microservices","done":true,"tasks":[{"id":"step-3.1","title":"Update Products.API, ShoppingCart.API, Orders.API and the rest","done":true},{"id":"step-3.2","title":"WebApplicationBuilderExtensions handles both OIDC providers","done":true}]},{"id":"step-4","title":"Implementation — frontend and gateway","done":true,"tasks":[{"id":"step-4.1","title":"Update Mango.Gateway (YARP) routing","done":false,"skipped":true,"skipReason":"no change required — the gateway proxies the business APIs and both frontends reach the identity provider directly"},{"id":"step-4.2","title":"Point Mango.Web and mango-ui at the resolved authority","done":true}]},{"id":"step-5","title":"Verification","done":false,"tasks":[{"id":"step-5.1","title":"Verify system functionality end-to-end with Identity.API (Duende) enabled","done":false},{"id":"step-5.2","title":"Verify system functionality end-to-end with OpenIdentity.App (OpenIddict) enabled","done":false},{"id":"step-5.3","title":"Final documentation update and walkthrough","done":true}]}],"blockers":[],"links":{"plan":".agent/tickets/IDENTITY-TOGGLE-001/plan.md","files":["src/Mango.AppHost/Program.cs","src/Shared/Mango.Core/Options/SeedUsersOptions.cs"],"docs":["docs/architecture/overview.md","docs/api/endpoints.md","docs/ARCHITECTURE.md"],"memory":[".agent/memory/domains/identity.md"]},"notes":".agent/tickets/IDENTITY-TOGGLE-001/notes.md"},{"$schema":"../../schemas/ticket.schema.json","schemaVersion":1,"id":"I18N-REACT","title":"Internationalization (EN/VI) for the mango-ui React SPA","status":"completed","priority":"normal","createdUtc":"2026-03-10T00:00:00Z","updatedUtc":"2026-03-10T00:00:00Z","completedUtc":"2026-03-10T00:00:00Z","tags":["frontend","spa","i18n"],"steps":[{"id":"step-1","title":"Business analysis and technical planning","done":true,"tasks":[{"id":"step-1.1","title":"Analyse the requirement","done":true},{"id":"step-1.2","title":"Context search across UI components and the main flow","done":true},{"id":"step-1.3","title":"Write the technical blueprint","done":true},{"id":"step-1.4","title":"Blueprint approved by the user","done":true}]},{"id":"step-2","title":"Component and page localization","done":true,"tasks":[{"id":"step-2.1","title":"Shared components: Navbar, ProductCard, SearchBox, Pagination, ChatPopup","done":true},{"id":"step-2.2","title":"Store pages: Products, ProductDetails, Cart, Checkout, Confirmation","done":true},{"id":"step-2.3","title":"Order pages: Orders, OrderDetails","done":true},{"id":"step-2.4","title":"Admin pages: AdminProducts, ProductFormModal, DeleteDialog","done":true}]},{"id":"step-3","title":"Verification and quality","done":true,"tasks":[{"id":"step-3.1","title":"TypeScript build passes","done":true},{"id":"step-3.2","title":"Lint passes","done":true},{"id":"step-3.3","title":"Language switching tested manually in the dev server","done":true}]},{"id":"step-4","title":"Documentation, memory and completion","done":true,"tasks":[{"id":"step-4.1","title":"i18n behaviour documented","done":true},{"id":"step-4.2","title":"Conventional commit created","done":true},{"id":"step-4.3","title":"Findings promoted into project memory","done":true}]}],"blockers":[],"links":{"plan":".agent/tickets/I18N-REACT/plan.md","files":["src/UI/mango-ui/src"],"docs":["docs/frontend/i18n.md"],"memory":[".agent/memory/domains/frontend-spa.md"]},"notes":".agent/tickets/I18N-REACT/notes.md"},{"$schema":"../../schemas/ticket.schema.json","schemaVersion":1,"id":"OPENIDENTITY-001","title":"Add OpenIdentity.App — an OpenIddict authorization server alongside Identity.API","status":"completed","priority":"normal","createdUtc":"2026-03-11T00:00:00Z","updatedUtc":"2026-03-11T00:00:00Z","completedUtc":"2026-03-11T00:00:00Z","tags":["backend","identity","apphost"],"steps":[{"id":"step-1","title":"Business analysis and technical planning","done":true,"tasks":[{"id":"step-1.1","title":"Impact map: new service, own database, OpenIddict entities","done":true},{"id":"step-1.2","title":"Write the technical blueprint","done":true},{"id":"step-1.3","title":"Resolve clarifying questions (UI, endpoints, orchestration, refactor)","done":true},{"id":"step-1.4","title":"Blueprint approved by the user","done":true}]},{"id":"step-2","title":"Implementation","done":true,"tasks":[{"id":"step-2.1","title":"New OpenIdentity.App project with EF Core, ASP.NET Identity and OpenIddict","done":true},{"id":"step-2.2","title":"Own database for users, roles, tokens and authorizations","done":true},{"id":"step-2.3","title":"Razor login/register UI plus the /connect/* endpoints","done":true},{"id":"step-2.4","title":"Management APIs (clients, resources, roles) as Minimal APIs","done":true},{"id":"step-2.5","title":"Register the service in the Aspire AppHost","done":true}]},{"id":"step-3","title":"Verification and quality","done":true,"tasks":[{"id":"step-3.1","title":"Code review completed","done":true},{"id":"step-3.2","title":"All 10 code-review fixes applied (security, architecture, quality)","done":true},{"id":"step-3.3","title":"Secrets removed from DbInitializer","done":true}]},{"id":"step-4","title":"Documentation, memory and completion","done":true,"tasks":[{"id":"step-4.1","title":"Walkthrough written","done":true},{"id":"step-4.2","title":"Conventional commit created","done":true},{"id":"step-4.3","title":"Findings promoted into project memory","done":true}]}],"blockers":[],"links":{"plan":".agent/tickets/OPENIDENTITY-001/plan.md","branch":"feature/open-identity","files":["src/Services/OpenIdentity.App","src/Mango.AppHost/Program.cs"],"docs":["docs/architecture/overview.md"],"memory":[".agent/memory/domains/identity.md"]},"notes":".agent/tickets/OPENIDENTITY-001/notes.md"},{"$schema":"../../schemas/ticket.schema.json","schemaVersion":1,"id":"UI-REDESIGN-001","title":"Emerald Calm UI redesign — Identity.API and Mango.Web","status":"completed","priority":"normal","createdUtc":"2026-03-10T00:00:00Z","updatedUtc":"2026-03-10T19:55:00Z","completedUtc":"2026-03-10T19:55:00Z","tags":["frontend","razor","design-system"],"steps":[{"id":"step-1","title":"Business analysis and technical planning","done":true,"doneUtc":"2026-03-10T00:00:00Z","tasks":[{"id":"step-1.1","title":"Run the analyze-requirement sub-workflow","done":true},{"id":"step-1.2","title":"Context search across Identity.API and Mango.Web views/CSS","done":true},{"id":"step-1.3","title":"Write the technical blueprint","done":true},{"id":"step-1.4","title":"Present theme/font/dark-mode/layout options to the user","done":true},{"id":"step-1.5","title":"Blueprint approved — Option C: Emerald Calm + Montserrat","done":true}]},{"id":"step-2","title":"Implementation (full-stack)","done":true,"doneUtc":"2026-03-10T00:00:00Z","tasks":[{"id":"step-2.1","title":"Identity.API: BEM design system, custom properties, dark/light tokens","done":true},{"id":"step-2.2","title":"Identity.API: layout, sticky nav, auth pages on .auth-card","done":true},{"id":"step-2.3","title":"Mango.Web: same tokens in a separate file, full BEM block set","done":true},{"id":"step-2.4","title":"Mango.Web: layout, LoginPartial, TempData alerts, dark toggle","done":true},{"id":"step-2.5","title":"Home, Product, Cart and Order views restyled","done":true}]},{"id":"step-3","title":"Verification and quality","done":true,"doneUtc":"2026-03-10T19:55:00Z","tasks":[{"id":"step-3.1","title":"dotnet build Identity.API and Mango.Web succeed","done":true},{"id":"step-3.2","title":"Fix 4 view bugs found during verification","done":true},{"id":"step-3.3","title":"Apply code-review fixes (checkout guard, XSS, line-clamp)","done":true},{"id":"step-3.4","title":"Run fix-warnings for C# 14 compiler warnings","done":false,"skipped":true,"skipReason":"deferred at completion"}]},{"id":"step-4","title":"Documentation, memory and completion","done":true,"doneUtc":"2026-03-10T19:55:00Z","tasks":[{"id":"step-4.1","title":"Blueprint written to plan.md","done":true},{"id":"step-4.2","title":"Conventional commit created","done":true},{"id":"step-4.3","title":"Findings promoted into project memory","done":true}]}],"blockers":[],"links":{"plan":".agent/tickets/UI-REDESIGN-001/plan.md","files":["src/Services/Identity.API/wwwroot/css/site.css","src/Web/Mango.Web/wwwroot/css/site.css"],"docs":[],"memory":[".agent/memory/domains/ui-web.md",".agent/memory/domains/cart-checkout.md"]},"notes":".agent/tickets/UI-REDESIGN-001/notes.md"}],"memory":[{"path":".agent/memory/index.md","title":"Project Memory Index"},{"path":".agent/memory/architecture.md","title":"Architecture — source map and invariants"},{"path":".agent/memory/domains/cart-checkout.md","title":"Cart and Checkout (`Mango.Web`)"},{"path":".agent/memory/domains/checkout-saga.md","title":"Checkout Saga (`Mango.Orchestrators`)"},{"path":".agent/memory/domains/frontend-spa.md","title":"Frontend SPA — `src/UI/mango-ui`"},{"path":".agent/memory/domains/identity.md","title":"Identity — the Duende / OpenIddict provider switch"},{"path":".agent/memory/domains/ui-web.md","title":"Razor UI — `Identity.API` and `Mango.Web`"},{"path":".agent/memory/MEMORY_GUIDE.md","title":"Memory Guide"},{"path":".agent/memory/ops/commands.md","title":"Command Reference"},{"path":".agent/memory/ops/task-completion.md","title":"Task Completion Checklist"},{"path":".agent/memory/stack.md","title":"Tech Stack"}]}</script>
+<script>
+(function () {
+  'use strict';
+
+  var raw = document.getElementById('board-data').textContent.replace(/^\s*\/\*__BOARD_DATA__\*\/\s*/, '');
+  var DATA = JSON.parse(raw) || {};
+
+  // PowerShell's ConvertTo-Json collapses single-element arrays to a scalar.
+  function arr(v) { return v === null || v === undefined ? [] : (Array.isArray(v) ? v : [v]); }
+  function esc(s) {
+    return String(s === null || s === undefined ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  function href(repoPath) { return '../../' + String(repoPath).replace(/^\.\//, ''); }
+  function day(iso) { return iso ? String(iso).slice(0, 10) : ''; }
+
+  var STATUS = {
+    in_progress:       { label: 'In progress',       glyph: '●', cls: 'st-progress' },
+    blocked:           { label: 'Blocked',           glyph: '▲', cls: 'st-blocked' },
+    awaiting_approval: { label: 'Awaiting approval', glyph: '◆', cls: 'st-approval' },
+    not_started:       { label: 'Not started',       glyph: '○', cls: 'st-new' },
+    completed:         { label: 'Completed',         glyph: '✓', cls: 'st-done' },
+    abandoned:         { label: 'Abandoned',         glyph: '✕', cls: 'st-abandoned' }
+  };
+  var ORDER = ['in_progress', 'blocked', 'awaiting_approval', 'not_started', 'completed', 'abandoned'];
+
+  var TICKETS = arr(DATA.tickets);
+  TICKETS.sort(function (a, b) {
+    var d = ORDER.indexOf(a.status) - ORDER.indexOf(b.status);
+    return d !== 0 ? d : String(a.id).localeCompare(String(b.id));
+  });
+
+  function pill(status) {
+    var s = STATUS[status] || { label: status, glyph: '·', cls: 'st-new' };
+    return '<span class="pill ' + s.cls + '">' + s.glyph + ' ' + esc(s.label) + '</span>';
+  }
+  function progress(t) {
+    var steps = arr(t.steps);
+    var done = steps.filter(function (s) { return s.done; }).length;
+    return { done: done, total: steps.length, pct: steps.length ? Math.round(done / steps.length * 100) : 0 };
+  }
+  function bar(t) {
+    var p = progress(t);
+    return '<div class="bar"><i style="width:' + p.pct + '%"></i></div>' +
+           '<div class="bar-label">' + p.done + ' / ' + p.total + ' steps' +
+           (t.updatedUtc ? ' · updated ' + esc(day(t.updatedUtc)) : '') + '</div>';
+  }
+  // Resume: first step not done, then its first task that is neither done nor skipped.
+  function nextUp(t) {
+    var step = arr(t.steps).filter(function (s) { return !s.done; })[0];
+    if (!step) { return null; }
+    var task = arr(step.tasks).filter(function (k) { return !k.done && !k.skipped; })[0];
+    return { step: step, task: task || null };
+  }
+  function openBlockers(t) {
+    return arr(t.blockers).filter(function (b) { return !b.resolvedUtc; });
+  }
+  function blockerBox(t) {
+    var open = openBlockers(t);
+    if (!open.length) { return ''; }
+    return '<div class="blockers"><b>▲ Blocked</b><ul>' + open.map(function (b) {
+      return '<li>' + esc(b.summary) + ' <span style="opacity:.7">(' + esc(b.severity) + ', since ' + esc(day(b.openedUtc)) + ')</span></li>';
+    }).join('') + '</ul></div>';
+  }
+  function linkRow(t) {
+    var l = t.links || {}, out = [];
+    if (l.plan)  { out.push('<a href="' + esc(href(l.plan)) + '">Blueprint</a>'); }
+    if (t.notes) { out.push('<a href="' + esc(href(t.notes)) + '">Notes</a>'); }
+    arr(l.prs).forEach(function (p) { out.push('<a href="' + esc(p.url) + '">PR #' + esc(p.number) + '</a>'); });
+    if (l.branch) { out.push('<span class="tag">' + esc(l.branch) + '</span>'); }
+    arr(l.memory).forEach(function (m) {
+      out.push('<a href="' + esc(href(m)) + '">' + esc(String(m).split('/').pop()) + '</a>');
+    });
+    return out.length ? '<div class="links">' + out.join('') + '</div>' : '';
+  }
+  function stepTree(t) {
+    var steps = arr(t.steps);
+    if (!steps.length) { return '<p class="empty">No steps recorded.</p>'; }
+    return '<ul class="steps">' + steps.map(function (s) {
+      var tasks = arr(s.tasks);
+      return '<li class="' + (s.done ? 'is-done' : '') + '"><span class="g">' + (s.done ? '✓' : '○') + '</span>' +
+        esc(s.title) + '</li>' +
+        (tasks.length ? '<ul class="tasks">' + tasks.map(function (k) {
+          var cls = k.skipped ? 'is-skipped' : (k.done ? 'is-done' : '');
+          var g = k.skipped ? '⊘' : (k.done ? '✓' : '○');
+          var why = k.skipped && k.skipReason ? ' (' + esc(k.skipReason) + ')' : '';
+          return '<li class="' + cls + '"><span class="g">' + g + '</span>' + esc(k.title) + why + '</li>';
+        }).join('') + '</ul>' : '');
+    }).join('') + '</ul>';
+  }
+
+  function heroCard(t) {
+    var n = nextUp(t);
+    var next = '';
+    if (n) {
+      next = '<p class="next"><b>Next:</b> ' + esc(n.step.title) +
+             (n.task ? ' — ' + esc(n.task.title) : '') + '</p>';
+    } else if (t.status !== 'completed') {
+      next = '<p class="next"><b>Next:</b> all steps done — ready to complete.</p>';
+    }
+    return '<div class="card hero">' +
+      '<div class="id">' + esc(t.id) + '</div>' +
+      '<h2>' + esc(t.title) + '</h2>' +
+      pill(t.status) + bar(t) + next + blockerBox(t) + stepTree(t) + linkRow(t) +
+    '</div>';
+  }
+  function smallCard(t) {
+    return '<div class="card">' +
+      '<div class="id" style="font-family:ui-monospace,Consolas,monospace;font-size:.76rem;color:var(--muted)">' + esc(t.id) + '</div>' +
+      '<h4>' + esc(t.title) + '</h4>' +
+      pill(t.status) + bar(t) +
+      '<div class="meta">' + arr(t.tags).map(function (g) { return '<span class="tag">' + esc(g) + '</span>'; }).join('') + '</div>' +
+      blockerBox(t) +
+      '<details><summary>Steps</summary>' + stepTree(t) + '</details>' +
+      linkRow(t) +
+    '</div>';
+  }
+
+  // --- active ticket: explicit pointer first, then a deterministic fallback ---
+  function pickActive() {
+    var byId = TICKETS.filter(function (t) { return t.id === DATA.activeTicketId; })[0];
+    if (byId) { return byId; }
+    for (var i = 0; i < 3; i++) {
+      var hit = TICKETS.filter(function (t) { return t.status === ORDER[i]; })[0];
+      if (hit) { return hit; }
+    }
+    return null;
+  }
+
+  var active = pickActive();
+  document.getElementById('hero').innerHTML = active
+    ? heroCard(active)
+    : '<p class="empty">No active ticket. Start one with <code>/implement-ticket</code>.</p>';
+
+  document.getElementById('stamp').textContent = DATA.updatedUtc ? 'Latest activity ' + day(DATA.updatedUtc) : '';
+
+  // --- filters ---
+  var state = { q: '', status: null };
+  var present = ORDER.filter(function (s) { return TICKETS.some(function (t) { return t.status === s; }); });
+  document.getElementById('chips').innerHTML = present.map(function (s) {
+    var n = TICKETS.filter(function (t) { return t.status === s; }).length;
+    return '<button class="chip" type="button" data-status="' + s + '" aria-pressed="false">' +
+           STATUS[s].glyph + ' ' + esc(STATUS[s].label) + ' ' + n + '</button> ';
+  }).join('');
+
+  function render() {
+    var q = state.q.toLowerCase();
+    var list = TICKETS.filter(function (t) {
+      if (state.status && t.status !== state.status) { return false; }
+      if (!q) { return true; }
+      return (t.id + ' ' + t.title + ' ' + arr(t.tags).join(' ')).toLowerCase().indexOf(q) >= 0;
+    });
+    document.getElementById('grid').innerHTML = list.length
+      ? list.map(smallCard).join('')
+      : '<p class="empty">Nothing matches this filter.</p>';
+    document.getElementById('count').textContent = list.length + ' of ' + TICKETS.length + ' shown';
+  }
+
+  document.getElementById('q').addEventListener('input', function (e) { state.q = e.target.value; render(); });
+  document.getElementById('chips').addEventListener('click', function (e) {
+    var btn = e.target.closest('button[data-status]');
+    if (!btn) { return; }
+    state.status = state.status === btn.dataset.status ? null : btn.dataset.status;
+    Array.prototype.forEach.call(this.querySelectorAll('button'), function (b) {
+      b.setAttribute('aria-pressed', String(b.dataset.status === state.status));
+    });
+    render();
+  });
+  render();
+
+  // --- project memory links ---
+  document.getElementById('memory').innerHTML = arr(DATA.memory).map(function (m) {
+    return '<a href="' + esc(href(m.path)) + '">' + esc(m.title) + '</a>';
+  }).join('') || '<p class="empty">No memory files found.</p>';
+
+  // --- theme toggle ---
+  document.getElementById('theme').addEventListener('click', function () {
+    var root = document.documentElement;
+    var dark = root.getAttribute('data-theme') === 'dark' ||
+      (!root.hasAttribute('data-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    var next = dark ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    try { localStorage.setItem('mango-board-theme', next); } catch (e) { /* ignore */ }
+  });
+})();
+</script>
+</body>
+</html>

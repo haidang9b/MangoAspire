@@ -1,0 +1,115 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://mangoaspire.local/schemas/ticket.schema.json",
+  "title": "MangoAspire ticket state",
+  "description": "Canonical machine-readable state for one ticket. Prose lives in the sibling notes.md; this file owns status, progress and links. Never store derived values (progress %, step counts) here.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "id", "title", "status", "createdUtc", "updatedUtc", "steps", "blockers", "links", "notes"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "schemaVersion": { "const": 1 },
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9]*(-[A-Z0-9]+)*$",
+      "description": "Must equal the containing directory name."
+    },
+    "title": { "type": "string", "minLength": 1 },
+    "status": {
+      "enum": ["not_started", "in_progress", "awaiting_approval", "blocked", "completed", "abandoned"]
+    },
+    "priority": { "enum": ["low", "normal", "high"], "default": "normal" },
+    "createdUtc": { "type": "string", "format": "date-time" },
+    "updatedUtc": { "type": "string", "format": "date-time" },
+    "completedUtc": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "Set if and only if status is 'completed'."
+    },
+    "tags": { "type": "array", "items": { "type": "string" } },
+    "steps": {
+      "type": "array",
+      "description": "Ordered. Array order IS the execution sequence.",
+      "items": { "$ref": "#/definitions/step" }
+    },
+    "blockers": { "type": "array", "items": { "$ref": "#/definitions/blocker" } },
+    "links": { "$ref": "#/definitions/links" },
+    "notes": {
+      "type": "string",
+      "description": "Repo-relative path to the prose companion file."
+    }
+  },
+  "definitions": {
+    "step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "done"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^step-[0-9]+$" },
+        "title": { "type": "string", "minLength": 1 },
+        "done": {
+          "type": "boolean",
+          "description": "Must be true if and only if every task is done or skipped."
+        },
+        "startedUtc": { "type": "string", "format": "date-time" },
+        "doneUtc": { "type": "string", "format": "date-time" },
+        "tasks": { "type": "array", "items": { "$ref": "#/definitions/task" } }
+      }
+    },
+    "task": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "done"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^step-[0-9]+\\.[0-9]+$" },
+        "title": { "type": "string", "minLength": 1 },
+        "done": { "type": "boolean" },
+        "skipped": { "type": "boolean" },
+        "skipReason": { "type": "string" },
+        "note": { "type": "string" }
+      }
+    },
+    "blocker": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "openedUtc", "resolvedUtc", "severity", "summary"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^blk-[0-9]+$" },
+        "openedUtc": { "type": "string", "format": "date-time" },
+        "resolvedUtc": { "type": ["string", "null"], "format": "date-time" },
+        "severity": { "enum": ["low", "medium", "high"] },
+        "summary": {
+          "type": "string",
+          "description": "ONE line. Diagnostics, stack traces and analysis belong in notes.md."
+        },
+        "notesAnchor": { "type": "string", "description": "e.g. '#blk-1' in notes.md" }
+      }
+    },
+    "links": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "All paths repo-relative with forward slashes.",
+      "properties": {
+        "plan": { "type": "string" },
+        "branch": { "type": "string" },
+        "commits": { "type": "array", "items": { "type": "string" } },
+        "prs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["number", "url"],
+            "properties": {
+              "number": { "type": "integer" },
+              "url": { "type": "string" },
+              "state": { "type": "string" }
+            }
+          }
+        },
+        "files": { "type": "array", "items": { "type": "string" } },
+        "docs": { "type": "array", "items": { "type": "string" } },
+        "memory": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}

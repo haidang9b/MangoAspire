@@ -1,0 +1,85 @@
+{
+  "$schema": "../../schemas/ticket.schema.json",
+  "schemaVersion": 1,
+  "id": "IDENTITY-TOGGLE-001",
+  "title": "Toggle the identity provider between Duende (Identity.API) and OpenIddict (OpenIdentity.App)",
+  "status": "in_progress",
+  "priority": "high",
+  "createdUtc": "2026-03-12T00:00:00Z",
+  "updatedUtc": "2026-08-12T00:00:00Z",
+  "completedUtc": null,
+  "tags": ["backend", "identity", "apphost", "gateway"],
+  "steps": [
+    {
+      "id": "step-1",
+      "title": "Analysis and planning",
+      "done": true,
+      "tasks": [
+        { "id": "step-1.1", "title": "Review the analyze-requirement workflow and analyze-po-requirement skill", "done": true },
+        { "id": "step-1.2", "title": "Analyse the impact on Mango.AppHost (orchestration)", "done": true },
+        { "id": "step-1.3", "title": "Analyse the impact on the microservices (authentication middleware)", "done": true },
+        { "id": "step-1.4", "title": "Analyse the impact on the frontends (Mango.Web and mango-ui)", "done": true },
+        { "id": "step-1.5", "title": "Write the technical blueprint and clarifying questions", "done": true },
+        { "id": "step-1.6", "title": "Blueprint approved by the user", "done": true }
+      ]
+    },
+    {
+      "id": "step-2",
+      "title": "Implementation — core infrastructure",
+      "done": true,
+      "tasks": [
+        { "id": "step-2.1", "title": "Conditional service registration in Mango.AppHost behind the IdentityType flag", "done": true },
+        { "id": "step-2.2", "title": "Shared authentication configuration that respects the flag", "done": true }
+      ]
+    },
+    {
+      "id": "step-3",
+      "title": "Implementation — microservices",
+      "done": true,
+      "tasks": [
+        { "id": "step-3.1", "title": "Update Products.API, ShoppingCart.API, Orders.API and the rest", "done": true },
+        { "id": "step-3.2", "title": "WebApplicationBuilderExtensions handles both OIDC providers", "done": true }
+      ]
+    },
+    {
+      "id": "step-4",
+      "title": "Implementation — frontend and gateway",
+      "done": true,
+      "tasks": [
+        {
+          "id": "step-4.1",
+          "title": "Update Mango.Gateway (YARP) routing",
+          "done": false,
+          "skipped": true,
+          "skipReason": "no change required — the gateway proxies the business APIs and both frontends reach the identity provider directly"
+        },
+        { "id": "step-4.2", "title": "Point Mango.Web and mango-ui at the resolved authority", "done": true }
+      ]
+    },
+    {
+      "id": "step-5",
+      "title": "Verification",
+      "done": false,
+      "tasks": [
+        { "id": "step-5.1", "title": "Verify system functionality end-to-end with Identity.API (Duende) enabled", "done": false },
+        { "id": "step-5.2", "title": "Verify system functionality end-to-end with OpenIdentity.App (OpenIddict) enabled", "done": false },
+        { "id": "step-5.3", "title": "Final documentation update and walkthrough", "done": true }
+      ]
+    }
+  ],
+  "blockers": [],
+  "links": {
+    "plan": ".agent/tickets/IDENTITY-TOGGLE-001/plan.md",
+    "files": [
+      "src/Mango.AppHost/Program.cs",
+      "src/Shared/Mango.Core/Options/SeedUsersOptions.cs"
+    ],
+    "docs": [
+      "docs/architecture/overview.md",
+      "docs/api/endpoints.md",
+      "docs/ARCHITECTURE.md"
+    ],
+    "memory": [".agent/memory/domains/identity.md"]
+  },
+  "notes": ".agent/tickets/IDENTITY-TOGGLE-001/notes.md"
+}

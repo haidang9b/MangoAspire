@@ -33,7 +33,10 @@ $SafeReplacements = [ordered]@{
     'src/frontend' = 'src/UI/mango-ui'
 }
 # Terms that indicate conceptual staleness vs AGENTS.md - warned, never auto-edited.
-$WarnPatterns = @('npm run', 'npm install', 'src/backend', 'Vitest', 'Clean Architecture', 'Onion', 'Repository pattern', 'React Query')
+# The docs/* entries catch anything reintroducing the retired memory/ticket locations, which now
+# live under .agent/memory and .agent/tickets.
+$WarnPatterns = @('npm run', 'npm install', 'src/backend', 'Vitest', 'Clean Architecture', 'Onion', 'Repository pattern', 'React Query',
+    'docs/tracking', 'docs/memory/', 'docs/plans/', 'docs/archive/')
 
 function Write-FileNoBom {
     param([string]$Path, [string]$Content)

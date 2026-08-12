@@ -1,0 +1,6 @@
+{
+  "schemaVersion": 1,
+  "activeTicketId": "IDENTITY-TOGGLE-001",
+  "activeSince": "2026-08-12T00:00:00Z",
+  "note": "Derived cache for disambiguating the active ticket. If this disagrees with .agent/tickets/**, the tickets win."
+}

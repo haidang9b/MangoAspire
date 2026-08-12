@@ -10,6 +10,8 @@
       "Bash(pnpm --dir src/UI/mango-ui lint:*)",
       "Bash(pnpm --dir src/UI/mango-ui build:*)",
       "Bash(pnpm install --dir src/UI/mango-ui:*)",
+      "Bash(pwsh ./scripts/update-ticket-board.ps1:*)",
+      "Bash(pwsh ./scripts/sync-agent-harness.ps1:*)",
       "Bash(docker compose -f docker-compose.mcp.yaml:*)",
       "Bash(git status:*)",
       "Bash(git diff:*)",

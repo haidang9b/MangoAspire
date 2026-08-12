@@ -405,6 +405,9 @@ FodyWeavers.xsd
 # Serena MCP local state
 .serena/project.local.yml
 .serena/cache/
+# Project memory lives in .agent/memory/ — Serena's own memory store was retired.
+# Ignored so its write_memory/onboarding tools cannot silently resurrect a second store.
+.serena/memories/
 
 # Environment files (never commit secrets)
 .env

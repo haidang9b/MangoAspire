@@ -10,4 +10,7 @@ Description: Orchestrates the transformation of PO requirements into a developer
 2. **Analysis:** Run the 'analyze-po-requirement' skill.
 3. **Review:** Present the "Technical Blueprint" and the "Clarifying Questions."
 4. **Approval:** Once the questions are answered, update the blueprint.
-5. **Next Step:** Suggest running `implement-ticket` using this blueprint as the source of truth.
+5. **Persist:** Write the blueprint to `.agent/tickets/<TICKET-ID>/plan.md`. If the ticket directory
+   does not exist yet, create it from `.agent/tickets/_template/` first — see the `implement-ticket`
+   workflow for the state contract.
+6. **Next Step:** Suggest running `implement-ticket` using this blueprint as the source of truth.

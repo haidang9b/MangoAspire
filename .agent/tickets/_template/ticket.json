@@ -1,0 +1,65 @@
+{
+  "$schema": "../../schemas/ticket.schema.json",
+  "schemaVersion": 1,
+  "id": "TICKET-ID",
+  "title": "One-line title, no markdown",
+  "status": "not_started",
+  "priority": "normal",
+  "createdUtc": "1970-01-01T00:00:00Z",
+  "updatedUtc": "1970-01-01T00:00:00Z",
+  "completedUtc": null,
+  "tags": [],
+  "steps": [
+    {
+      "id": "step-1",
+      "title": "Business analysis and technical planning",
+      "done": false,
+      "tasks": [
+        { "id": "step-1.1", "title": "Run the analyze-requirement sub-workflow", "done": false },
+        { "id": "step-1.2", "title": "Context search: identify backend and frontend touchpoints", "done": false },
+        { "id": "step-1.3", "title": "Write the technical blueprint to plan.md", "done": false },
+        { "id": "step-1.4", "title": "Present clarifying questions to the user", "done": false },
+        { "id": "step-1.5", "title": "Blueprint approved by the user", "done": false }
+      ]
+    },
+    {
+      "id": "step-2",
+      "title": "Implementation (full-stack)",
+      "done": false,
+      "tasks": [
+        { "id": "step-2.1", "title": "Backend slice: command/query, handler, validator, DTOs, route", "done": false },
+        { "id": "step-2.2", "title": "Persistence: DbContext configuration and EF Core migration", "done": false },
+        { "id": "step-2.3", "title": "Frontend: React UI and api/ client calls", "done": false },
+        { "id": "step-2.4", "title": "Sync TypeScript interfaces with backend DTOs", "done": false }
+      ]
+    },
+    {
+      "id": "step-3",
+      "title": "Verification and quality",
+      "done": false,
+      "tasks": [
+        { "id": "step-3.1", "title": "Backend tests written and dotnet test passing", "done": false },
+        { "id": "step-3.2", "title": "pnpm lint and pnpm build passing for the SPA", "done": false },
+        { "id": "step-3.3", "title": "Zero compiler warnings (fix-warnings)", "done": false }
+      ]
+    },
+    {
+      "id": "step-4",
+      "title": "Documentation, memory and completion",
+      "done": false,
+      "tasks": [
+        { "id": "step-4.1", "title": "Sync /docs with the implementation", "done": false },
+        { "id": "step-4.2", "title": "Conventional commit created", "done": false },
+        { "id": "step-4.3", "title": "Promote Decisions/Gotchas from notes.md into .agent/memory/domains/", "done": false }
+      ]
+    }
+  ],
+  "blockers": [],
+  "links": {
+    "plan": ".agent/tickets/TICKET-ID/plan.md",
+    "files": [],
+    "docs": [],
+    "memory": []
+  },
+  "notes": ".agent/tickets/TICKET-ID/notes.md"
+}
