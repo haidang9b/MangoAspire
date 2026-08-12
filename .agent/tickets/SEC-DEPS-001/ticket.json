@@ -1,0 +1,80 @@
+{
+  "$schema": "../../schemas/ticket.schema.json",
+  "schemaVersion": 1,
+  "id": "SEC-DEPS-001",
+  "title": "Clear 38 npm advisories in mango-ui via lockfile refresh and react-router-dom bump",
+  "status": "in_progress",
+  "priority": "high",
+  "createdUtc": "2026-08-12T00:00:00Z",
+  "updatedUtc": "2026-08-12T00:00:00Z",
+  "completedUtc": null,
+  "tags": ["security", "dependencies", "frontend"],
+  "steps": [
+    {
+      "id": "step-1",
+      "title": "Business analysis and technical planning",
+      "done": true,
+      "startedUtc": "2026-08-12T00:00:00Z",
+      "doneUtc": "2026-08-12T00:00:00Z",
+      "tasks": [
+        { "id": "step-1.1", "title": "Run the analyze-requirement sub-workflow", "done": true },
+        { "id": "step-1.2", "title": "Triage all 38 pnpm audit advisories: runtime vs build-only exposure", "done": true, "note": "11 react-router advisories; only #57 open redirect is reachable in a BrowserRouter-only SPA." },
+        { "id": "step-1.3", "title": "Prove every fix is reachable in-range (resolution evidence table)", "done": true, "note": "Only react-router-dom needs a manifest bump; the rest are stale-lockfile." },
+        { "id": "step-1.4", "title": "Write the technical blueprint to plan.md", "done": true },
+        { "id": "step-1.5", "title": "Present clarifying questions to the user", "done": true },
+        { "id": "step-1.6", "title": "Blueprint approved by the user", "done": true, "note": "User approved the recommended minimal scope; majors deferred." }
+      ]
+    },
+    {
+      "id": "step-2",
+      "title": "Implementation (frontend dependencies only)",
+      "done": true,
+      "startedUtc": "2026-08-12T00:00:00Z",
+      "doneUtc": "2026-08-12T00:00:00Z",
+      "tasks": [
+        { "id": "step-2.1", "title": "Bump react-router-dom to ^7.18.2 in package.json", "done": true },
+        { "id": "step-2.2", "title": "Move vite off the ^8.0.0-beta.13 prerelease pin to stable ^8.2.1", "done": true, "note": "Resolved to vite 8.2.1 stable; build verified on it." },
+        { "id": "step-2.3", "title": "Remove the now-redundant pnpm.overrides block", "done": true },
+        { "id": "step-2.4", "title": "Refresh pnpm-lock.yaml so in-range transitives pick up their patches", "done": true, "note": "pnpm update also rewrote manifest range floors to the resolved minors; no majors crossed." },
+        { "id": "step-2.6", "title": "Pin eslint-plugin-react-hooks to ~7.0.1 to hold its new rule set out of scope", "done": true, "note": "7.1.1 adds purity/refs/set-state-in-effect, surfacing 6 pre-existing errors. Plugin has zero advisories, so pinning costs nothing security-wise. Cleanup tracked at step-4.6." },
+        { "id": "step-2.5", "title": "Backend slice work", "done": false, "skipped": true, "skipReason": "No .NET change: this ticket touches only src/UI/mango-ui dependency manifests." }
+      ]
+    },
+    {
+      "id": "step-3",
+      "title": "Verification and quality",
+      "done": false,
+      "tasks": [
+        { "id": "step-3.1", "title": "pnpm audit reports 0 high and 0 moderate advisories", "done": true, "note": "38 advisories to 'No known vulnerabilities found'." },
+        { "id": "step-3.2", "title": "pnpm lint and pnpm build passing for the SPA", "done": true, "note": "lint exit 0; build green on vite 8.2.1, 200 modules, identical bundle hash." },
+        { "id": "step-3.3", "title": "git diff confirms only package.json and pnpm-lock.yaml changed", "done": true, "note": "2 files changed, zero source files." },
+        { "id": "step-3.4", "title": "Manual route pass: home, product details, cart, checkout, confirmation, orders", "done": false, "note": "Requires a running AppHost; awaiting the user." },
+        { "id": "step-3.5", "title": "Backend tests", "done": false, "skipped": true, "skipReason": "No .NET change, so no xUnit coverage is applicable." }
+      ]
+    },
+    {
+      "id": "step-4",
+      "title": "Documentation, memory and completion",
+      "done": false,
+      "tasks": [
+        { "id": "step-4.1", "title": "Conventional commit created", "done": false },
+        { "id": "step-4.2", "title": "File the deferred-majors follow-up ticket (eslint 10, plugin-react 6, TS 7, i18next 26)", "done": false },
+        { "id": "step-4.3", "title": "File the CI audit-gate follow-up ticket (pnpm audit --audit-level=high)", "done": false },
+        { "id": "step-4.6", "title": "Follow-up: adopt eslint-plugin-react-hooks 7.1.1 and fix the 6 purity/refs/effect errors", "done": false, "note": "CartContext.tsx:24; useFetch.ts:46,62,77; CheckoutPage.tsx:42,150." },
+        { "id": "step-4.4", "title": "Promote Decisions/Gotchas from notes.md into .agent/memory/domains/frontend-spa.md", "done": false },
+        { "id": "step-4.5", "title": "Sync /docs with the implementation", "done": false, "skipped": true, "skipReason": "Dependency-only change; no documented behaviour or API surface moved." }
+      ]
+    }
+  ],
+  "blockers": [],
+  "links": {
+    "plan": ".agent/tickets/SEC-DEPS-001/plan.md",
+    "files": [
+      "src/UI/mango-ui/package.json",
+      "src/UI/mango-ui/pnpm-lock.yaml"
+    ],
+    "docs": [],
+    "memory": [".agent/memory/domains/frontend-spa.md"]
+  },
+  "notes": ".agent/tickets/SEC-DEPS-001/notes.md"
+}
