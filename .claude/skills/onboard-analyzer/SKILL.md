@@ -1,6 +1,6 @@
 ---
 name: onboard-analyzer
-description: Performs a deep-dive analysis of a React + .NET 10 codebase to generate an onboarding documentation pack.
+description: Use when generating or refreshing the onboarding documentation pack under /docs for a new engineer, or when explicitly triggered by /onboard, /analyze-fe, or /analyze-be.
 ---
 
 <!-- GENERATED from .agent/ by scripts/sync-agent-harness.ps1 - do not edit directly -->

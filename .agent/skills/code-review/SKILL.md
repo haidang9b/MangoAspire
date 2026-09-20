@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: Analyze code for quality, performance, and security issues. Use when reviewing pull requests, auditing code, or seeking improvements on existing implementations.
+description: Use when reviewing new code before merging, auditing existing code for vulnerabilities, or checking performance and idiomatic-usage concerns in this repo's C#/.NET or React code.
 ---
 
 # Code Review

@@ -1,6 +1,6 @@
 ---
 name: generate-commit
-description: Analyzes git diffs to generate professional Conventional Commits.
+description: Use when about to run git commit and the message should be Conventional Commits format derived from the actual diff, not guessed.
 ---
 
 <!-- GENERATED from .agent/ by scripts/sync-agent-harness.ps1 - do not edit directly -->

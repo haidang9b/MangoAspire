@@ -1,6 +1,6 @@
 ---
-name: run-project-tests
-description: Use this skill to run the .NET unit test suite (xUnit) for MangoAspire and triage failures.
+name: run-tests
+description: Use when running the .NET test suite (full solution, one project, or a single method) and triaging any failures.
 ---
 
 # Instructions

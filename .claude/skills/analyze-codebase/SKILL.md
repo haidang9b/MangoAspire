@@ -1,6 +1,6 @@
 ---
 name: analyze-codebase
-description: Analyze a .NET codebase to understand its architecture, identify tech stack variations, map out core components, and evaluate project health. Use when onboarding to a new project or planning large refactoring efforts.
+description: Use when onboarding to an unfamiliar area of this .NET solution, or before a cross-cutting change or large refactor, and the project/dependency structure and tech stack need mapping out first.
 ---
 
 <!-- GENERATED from .agent/ by scripts/sync-agent-harness.ps1 - do not edit directly -->

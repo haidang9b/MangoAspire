@@ -1,6 +1,6 @@
 ---
 name: create-unit-test
-description: Scaffolds xUnit tests using Moq and Shouldly, adhering strictly to \[Method name\]_When_\[Condition\]_Then_\[Result\] naming conventions and in-memory databases.
+description: Use when a C# class or method needs unit test coverage and the tests must follow this repo's exact xUnit/Moq/Shouldly naming and placement conventions.
 ---
 
 <!-- GENERATED from .agent/ by scripts/sync-agent-harness.ps1 - do not edit directly -->

@@ -1,6 +1,6 @@
 ---
-name: generate-conventional-commit
-description: Analyzes git diffs to generate professional Conventional Commits.
+name: generate-commit
+description: Use when about to run git commit and the message should be Conventional Commits format derived from the actual diff, not guessed.
 ---
 
 # Smart Commit Generator

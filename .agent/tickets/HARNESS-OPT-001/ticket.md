@@ -4,7 +4,7 @@ kind: chore
 status: in_progress
 priority: normal
 createdUtc: 2026-09-20T00:00:00Z
-updatedUtc: 2026-09-20T01:00:00Z
+updatedUtc: 2026-09-20T02:00:00Z
 completedUtc: null
 tags: [harness, skills, tokens]
 ---
@@ -87,6 +87,15 @@ afterward reports `.claude/` in sync with `.agent/`.
 - Memory:
 
 ## Decisions
+- **Applied `superpowers:writing-skills`'s SDO rule to all 8 skill `description` fields.** Every one
+  of them violated it: they led with "what the skill does" instead of "Use when...", which is the
+  exact anti-pattern that skill warns causes agents to follow the description instead of reading
+  the skill body. Rewrote all 8 to be trigger-only, third person, "Use when..." — no workflow
+  summary.
+- **Skipped the writing-skills Iron Law's full RED-GREEN-REFACTOR pressure-testing.** These are
+  established, already-working reference/technique skills for an in-house harness, not new
+  discipline-enforcing skills — adversarial subagent pressure-testing is calibrated for the latter
+  and would be disproportionate ceremony here. Applied the SDO correctness rules directly instead.
 - Left the 8 already-lean workflow files (`analyze-requirement`, `fix-warnings`,
   `implement-ticket`, `onboarding`, `review`, `test-gen`, `update-docs`, and the `run-tests` skill)
   untouched rather than force a diff — none were flagged by the staleness scan and none carried
@@ -96,6 +105,11 @@ afterward reports `.claude/` in sync with `.agent/`.
   useful as a lookup) and the Git Safety Protocol (repo-specific, safety-critical).
 
 ## Gotchas
+- Two skills' frontmatter `name` didn't match their directory: `generate-commit/SKILL.md` said
+  `name: generate-conventional-commit`, `run-tests/SKILL.md` said `name: run-project-tests`. The
+  sync script silently forces `name` to the directory slug on generation, so `.claude/` was never
+  wrong — but the `.agent/` source was, which is exactly the kind of drift this harness redesign is
+  meant to eliminate. Fixed both at the source.
 - Both `codebase-analyzer.agent.md` and `code-reviewer.agent.md` pointed at `.agents/skills/...`
   (wrong — the directory is `.agent/skills/`, singular). Fixed both, and added
   `.agents/skills` → `.agent/skills` to `sync-agent-harness.ps1`'s `$SafeReplacements` so this
@@ -119,5 +133,12 @@ straight to Step 2 since scope was approved in conversation.
 Rewrote 6 of 8 skills and all 3 agents for concision and fixed conceptual staleness
 (`Clean Architecture`, `Repository pattern`, `React Query`, `npm install`) plus a real path bug
 (`.agents/skills` → `.agent/skills`) in two agent files. Left the already-lean workflows and
-`run-tests` untouched. `sync-agent-harness.ps1` now runs clean with zero staleness warnings, and
-`-Check` confirms `.claude/` is in sync. Commit is pending the user's go-ahead.
+`run-tests` untouched. `sync-agent-harness.ps1` ran clean with zero staleness warnings, and
+`-Check` confirmed `.claude/` was in sync. This work landed in commit `2190af2`, committed outside
+this session between turns.
+
+### 2026-09-20 (continued)
+User invoked `/superpowers:writing-skills` and asked for a correctness pass on the 8 skills, not
+just token trimming. Applied the skill's own SDO rule to every `description` field (all 8 violated
+"Use when..., trigger-only, no workflow summary") and fixed two `name`/directory mismatches
+(`generate-commit`, `run-tests`). `sync-agent-harness.ps1` reran clean. Not yet committed.

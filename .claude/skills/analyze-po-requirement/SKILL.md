@@ -1,6 +1,6 @@
 ---
 name: analyze-po-requirement
-description: Translates high-level Product Owner (PO) requirements into a technical blueprint for the MangoAspire Vertical Slice backend and React frontend.
+description: Use when a new PO requirement, story, or feature request needs translating into a technical blueprint (backend slice plus frontend impact) before implementation starts.
 ---
 
 <!-- GENERATED from .agent/ by scripts/sync-agent-harness.ps1 - do not edit directly -->

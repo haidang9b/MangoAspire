@@ -1,6 +1,6 @@
 ---
 name: manage-documentation
-description: Analyzes code changes to synchronize or create technical documentation in the /docs folder for a React + .NET 10 codebase.
+description: Use when a feature or change just landed and /docs needs to be brought back in sync with the code, or a ticket/PR requires the docs to be updated.
 ---
 
 # Documentation Manager
