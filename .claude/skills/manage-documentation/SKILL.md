@@ -6,64 +6,42 @@ description: Analyzes code changes to synchronize or create technical documentat
 <!-- GENERATED from .agent/ by scripts/sync-agent-harness.ps1 - do not edit directly -->
 # Documentation Manager
 
-Maintain a set of accurate, up-to-date Markdown documents that reflect the current state of the Vertical Slice backend and the React frontend. This skill ensures that code changes are continuously synchronized with the project's technical documentation.
-
-## When to Use
-
-- After completing a new feature or implementing a major change in a React + .NET 10 codebase.
-- When pull requests or tickets mandate that documentation must be updated to match the code.
-- To automatically generate missing documentation for newly created architectural elements (e.g., Minimal APIs, React hooks).
-
-## When Not to Use
-
-- When writing code or refactoring logic (this skill is exclusively for documentation maintenance).
-- When a codebase analysis is needed without the intent of updating the `/docs` folder (use `analyze-codebase` or `onboard-analyzer` instead).
+Keep `/docs` accurate against the current Vertical Slice backend and React frontend. Use after a
+feature/change lands, or when a ticket requires docs to be synced. Not for writing/refactoring code
+itself, and not for a read-only codebase survey with no intent to update `/docs` (use
+`analyze-codebase` or `onboard-analyzer` instead).
 
 ## Inputs
 
 | Input | Required | Description |
 |-------|----------|-------------|
-| Code Changes | No | The specific Git diff, PR, or list of modified files to analyze. Defaults to scanning the workspace for recent additions if not provided. |
-| Target Ticket/PR | No | Ticket or PR reference to link in the documentation for traceability. |
+| Code changes | No | Git diff/PR/file list to analyze. Defaults to scanning recent workspace changes. |
+| Target ticket/PR | No | Reference to link for traceability. |
 
 ## Workflow
 
-### Step 1: Change Analysis
-1. Scan the workspace for recent file additions or modifications.
-2. If provided as input, narrow the scope of analysis strictly to the proposed Code Changes or Git diff.
+1. **Scan changes** — the given diff, or recent workspace additions/modifications.
+2. **Identify what moved:**
+   - Backend: new Minimal API endpoints, handler logic, EF Core entities.
+   - Frontend: new React components, hooks, Context/state changes.
+3. **Draft or update** — new pattern → new file in the right `/docs` subfolder; changed existing
+   code → update the existing section (e.g. `docs/api/endpoints.md`) rather than duplicating.
 
-### Step 2: Context Identification
-1. **Backend Analysis:** Detect new .NET 10 Minimal API endpoints, Application Service logic, or Entity Framework Core entities.
-2. **Frontend Analysis:** Detect new React components, custom hooks, or state management updates (e.g., Redux Toolkit slices or React Query mutations).
+   | Area | Target |
+   |---|---|
+   | Architecture | `docs/architecture/overview.md` |
+   | Backend | `docs/backend/services.md`, `docs/api/endpoints.md` |
+   | Frontend | `docs/frontend/components.md`, `docs/frontend/state-management.md` |
+   | Database | `docs/infrastructure/database-schema.md` |
 
-### Step 3: Drafting or Updating
-1. **New Features:** If a fundamentally new feature or pattern is found, generate a new Markdown file in the appropriate `/docs` subfolder.
-2. **Existing Code:** If existing code is modified, precisely update the corresponding documentation section rather than creating a new file (e.g., updating an API contract in `docs/api/endpoints.md`).
-
-*Target Documentation Map:*
-- **Architecture:** `docs/architecture/overview.md` (System-wide diagrams and flow).
-- **Backend:** `docs/backend/services.md` and `docs/api/endpoints.md`.
-- **Frontend:** `docs/frontend/components.md` and `docs/frontend/state-management.md`.
-- **Database:** `docs/infrastructure/database-schema.md`.
-
-### Step 4: Verification and Quality Constraints
-1. **Technical Accuracy:** Ensure the documentation strictly uses correct .NET 10 and C# 14 terminology.
-2. **Traceability:** Embed explicit links or references connecting the documentation changes to the specific ticket, PR, or feature.
-3. **No Hallucinations:** If complex logic is too ambiguous to infer accurately, strictly halt and ask the user for a high-level summary before writing the documentation.
-
-## Validation
-
-- [ ] Technical documentation files within the `/docs` directory accurately reflect the recent code changes.
-- [ ] Backend documentation covers Minimal APIs and Minimal API routing terminology.
-- [ ] Frontend documentation covers appropriate React rendering, hooks, and state management logic.
-- [ ] Documentation includes a reference to the related ticket/PR (if applicable).
-- [ ] No fabricated features or hallucinated C# 14/.NET 10 terminology is present.
+4. **Quality:** correct .NET 10/C# 14 terminology; link the ticket/PR; if the code's intent is too
+   ambiguous to document accurately, stop and ask rather than guess.
 
 ## Common Pitfalls
 
 | Pitfall | Solution |
 |---------|----------|
-| Creating duplicate documentation | Always search the `Target Documentation Map` for existing elements before blindly creating new files. |
-| Hallucinating logic | If the code intent is unclear, stop and execute a clarifying question to the user instead of guessing. |
-| Using outdated terminology | Strictly enforce .NET 10 and C# 14 nomenclature (e.g., Minimal APIs over Controllers if that is the established pattern). |
-| Forgetting to link the PR | Ask for or embed the Target Ticket/PR in the documentation preamble for traceability. |
+| Duplicate docs | Check the target-doc map before creating a new file. |
+| Hallucinated logic | Ask the user instead of guessing unclear intent. |
+| Outdated terminology | Minimal APIs, not Controllers; existing Context providers, not a new state library. |
+| Missing traceability | Link the ticket/PR in the doc. |

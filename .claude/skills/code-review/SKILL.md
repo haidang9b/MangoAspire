@@ -6,19 +6,9 @@ description: Analyze code for quality, performance, and security issues. Use whe
 <!-- GENERATED from .agent/ by scripts/sync-agent-harness.ps1 - do not edit directly -->
 # Code Review
 
-This skill helps you analyze code for quality, performance, and security issues, providing actionable feedback to developers.
-
-## When to Use
-
-- Reviewing new code before merging
-- Auditing existing code for vulnerabilities
-- Checking for performance bottlenecks and idiomatic usage of C#/.NET and Frontend (React/JS/HTML)
-- Analyzing code structure and maintainability
-
-## When Not to Use
-
-- Writing new feature code from scratch
-- Running tests or builds directly
+Analyze code for quality, performance, and security issues — new code before merging, an existing
+vulnerability audit, or a structure/maintainability pass. Not for writing new feature code or
+running tests/builds directly.
 
 ## Inputs
 
@@ -48,12 +38,6 @@ Identify performance bottlenecks, inefficient algorithms, or unnecessary memory 
 ### Step 5: Suggest Actionable Improvements
 
 Formulate specific, actionable recommendations for each identified issue. Prioritize findings into Critical, Warning, and Suggestion categories. Provide idiomatic code examples where appropriate.
-
-## Validation
-
-- [ ] Identified at least one area of interest (e.g., security, performance, or quality improvement) or verified the code meets high standards.
-- [ ] Suggestions are actionable, clear, and relevant to the provided code.
-- [ ] No secrets or sensitive information are exposed in the feedback.
 
 ## Common Pitfalls
 

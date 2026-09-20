@@ -30,7 +30,8 @@ $Utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 
 # Mechanical path fixups that are always safe to apply automatically.
 $SafeReplacements = [ordered]@{
-    'src/frontend' = 'src/UI/mango-ui'
+    'src/frontend'   = 'src/UI/mango-ui'
+    '.agents/skills' = '.agent/skills'
 }
 # Terms that indicate conceptual staleness vs AGENTS.md - warned, never auto-edited.
 # The docs/* entries catch anything reintroducing the retired memory/ticket locations, which now

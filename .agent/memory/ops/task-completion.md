@@ -23,8 +23,7 @@ There is no frontend test runner — do **not** invent test commands.
 
 - `.agent/{skills,agents,workflows}/` changed → `pwsh ./scripts/sync-agent-harness.ps1`
   (verify with `-Check`).
-- `.agent/tickets/**/ticket.json` changed → `pwsh ./scripts/update-ticket-board.ps1`
-  (verify with `-Check`).
+- `.agent/tickets/**/ticket.md` changed → nothing to regenerate; the file is the state.
 
 Skills exist for several of these flows: `run-tests`, `fix-warnings`, `review`,
 `manage-documentation`.

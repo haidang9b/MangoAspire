@@ -10,11 +10,9 @@ version-controlled and shared; nothing here is machine-local.
 | `rules/` | **Normative** — what you *must* do, triggered by file globs | humans |
 | `CODING_CONVENTIONS.md`, `API_PROJECT_STRUCTURE.md` | Normative, imported by `CLAUDE.md` | humans |
 | `memory/` | **Descriptive** — what is *true* about this project and what we learned | agent, at ticket completion |
-| `tickets/` | Per-ticket state (`ticket.json`) + prose memory (`notes.md`) + blueprint (`plan.md`) | agent, continuously |
+| `tickets/` | One `ticket.md` per ticket: status, plan and notes in a single file | agent, continuously |
 | `state/` | Tiny derived cache — which ticket is active | agent |
 | `tools/` | Tooling and integrations: MCP servers, dev scripts, harness generation | humans |
-| `schemas/` | JSON Schema for `ticket.json` | humans |
-| `ui/` | `board.template.html` (source) → `board.html` (**generated**) | script |
 | `skills/`, `agents/`, `workflows/` | Claude Code harness sources — the only dirs the sync script reads | humans |
 
 `docs/` is **human documentation**. It holds no agent memory and no ticket state.
@@ -30,26 +28,26 @@ what stops the same convention being restated in three files and drifting.
 | Generated | From | By |
 |---|---|---|
 | `.claude/{skills,agents,commands}/` | `.agent/{skills,agents,workflows}/` | `pwsh ./scripts/sync-agent-harness.ps1` (`-Check` for drift) |
-| `.agent/ui/board.html` | `.agent/tickets/*/ticket.json` | `pwsh ./scripts/update-ticket-board.ps1` (`-Check` for drift) |
 
-Both carry a "GENERATED — do not edit directly" banner. Edit the source, then re-run the script.
+Carries a "GENERATED — do not edit directly" banner. Edit the source, then re-run the script.
 
 ## Working a ticket
 
-Everything lives in `.agent/tickets/<TICKET-ID>/`:
+Everything for a ticket is one file: `.agent/tickets/<TICKET-ID>/ticket.md` (plus an optional
+`artifacts/` folder for extras like code reviews or walkthroughs).
 
-- `ticket.json` — **canonical state**: status, ordered steps/tasks with `done` flags, blockers, links.
-- `notes.md` — **prose memory**: decisions, gotchas, open questions, blocker detail, session log.
-- `plan.md` — the approved technical blueprint.
-- `artifacts/` — optional extras (code reviews, walkthroughs).
+- **Front-matter** (`kind`, `status`, `priority`, timestamps) is the header.
+- **`## Steps`** checkboxes are progress. A step is closed once every task under it is checked
+  (done, or struck through as `— skipped: <reason>`).
+- **`## Plan`, `## Decisions`, `## Gotchas`, `## Open Questions`, `## Blockers`, `## Session Log`**
+  are prose.
 
-Two rules keep them from contradicting each other:
+There's nothing to keep in sync across files, because there's only one file. `kind` —
+`feature | bug | chore | security | refactor | spike` — selects which template under
+`.agent/tickets/_templates/` a new ticket starts from; each kind has a lighter or heavier `## Plan`
+shape to match the work (a `chore` doesn't get feature-style BA/PO ceremony).
 
-1. **JSON owns state.** Status and progress are read from `ticket.json` only.
-2. **`notes.md` cannot claim state** — no `- [ ]` checkboxes, no "Current Status:" lines. It has no
-   syntax capable of asserting progress, so it can never disagree.
-
-Completed tickets stay where they are; `status: "completed"` *is* the archive. Nothing gets moved.
+Completed tickets stay where they are; `status: completed` *is* the archive. Nothing gets moved.
 
 ## Loading memory without burning context
 

@@ -6,75 +6,44 @@ description: Translates high-level Product Owner (PO) requirements into a techni
 <!-- GENERATED from .agent/ by scripts/sync-agent-harness.ps1 - do not edit directly -->
 # Analyze PO Requirement
 
-Transform a raw Product Owner (PO) requirement into a structured technical plan for MangoAspire (a .NET 10 + Aspire microservices e-commerce platform with a React/Vite SPA). This skill bridges the gap between business needs and technical implementation across the React frontend and the .NET backend, following **Vertical Slice Architecture** (see AGENTS.md and `.agent/rules/architecture.md`).
-
-## When to Use
-
-- When receiving a new agile story, epic, or feature request from a Product Owner.
-- When planning the technical approach for a new feature in one of the Mango services (Products, Coupons, Orders, ShoppingCart, Payments, ChatAgent, Identity).
-- When breaking down high-level business requirements into actionable development tasks.
-
-## When Not to Use
-
-- When writing code or executing technical implementation (this is an analysis and planning skill).
-- When the requirements are already fully specified with technical details (entities, DTOs, components).
+Turn a raw PO requirement into a structured technical blueprint for MangoAspire (.NET 10 + Aspire
+microservices, React/Vite SPA, **Vertical Slice Architecture** — see `AGENTS.md` and
+`.agent/rules/architecture.md`). Use for a new story/epic/feature; not for requirements already
+fully specified with entities/DTOs/components, and not for writing the implementation itself.
 
 ## Inputs
 
 | Input | Required | Description |
 |-------|----------|-------------|
-| PO Requirement | Yes | The raw description of the feature or business need. |
+| PO Requirement | Yes | The raw feature/business need description. |
 
 ## Workflow
 
-### Step 1: Requirement Intake
-1. Read the provided PO description carefully (e.g., "We need to let customers apply multiple coupons to a cart").
-2. Ask any immediate clarifying questions if the core business goal is unclear.
-
-### Step 2: Impact Analysis (per affected service)
-1. **Feature slice:** Identify the new command/query, handler, DTOs, and FluentValidation validator that make up the vertical slice. Use the `DbContext` directly in handlers (no Repository pattern).
-2. **Endpoint:** Identify the Minimal API route(s) in `Routes/` and the `ResultModel<T>` shape returned.
-3. **Persistence:** Determine whether new tables, EF Core migrations, or `DbContext` configuration changes are required. Consider cross-service events (RabbitMQ / event bus) if the change spans services.
-4. **Frontend:** Identify new React components, Context updates, and `src/UI/mango-ui/src/api/` client calls consumed through hooks.
-
-### Step 3: Edge Case Detection
-1. Identify localization concerns (i18n, currency, timezone/datetime handling).
-2. Consider edge cases around incomplete data, nullable fields, and unexpected input.
-3. Document security or permission implications (auth is provider-toggled: Duende / OpenIddict).
-
-### Step 4: Output Generation
-Produce a structured "Technical Blueprint" that the `implement-ticket` workflow can consume. Follow the Output Structure below.
-
-## Output Structure
-
-Generate a markdown document containing the following sections:
-
-### 📝 Business Summary
-Brief overview of the "What" and the "Why" behind the requirement.
-
-### 🏗️ Technical Impact Map
-- **Backend:** Affected service, feature slice (command/query + handler + validator), DTOs, and Minimal API routes.
-- **Frontend:** React components, Context usage, and API client calls/hooks.
-
-### 🧪 Acceptance Criteria (AC)
-- Formatted as: "Given [context], when [action], then [result]."
-- Include backend testing requirements with **xUnit + Moq + Shouldly**. Note there is **no frontend test runner** configured; frontend verification is `pnpm --dir src/UI/mango-ui lint` + `build`.
-
-### ❓ Clarifying Questions
-List 3-5 crucial questions to ask the PO or developer to clear up ambiguity before implementation begins.
-
-## Validation
-
-- [ ] The output contains all required sections (Business Summary, Technical Impact Map, Acceptance Criteria, Clarifying Questions).
-- [ ] Technical impact covers both the React frontend and the .NET Vertical Slice backend.
-- [ ] Acceptance criteria include explicit backend xUnit testing requirements (and note the absence of a frontend runner).
-- [ ] At least 3 clarifying questions are generated.
+1. **Intake:** read the requirement; ask immediate clarifying questions if the business goal is
+   unclear.
+2. **Impact analysis per affected service:**
+   - **Feature slice:** command/query, handler, DTOs, FluentValidation validator. `DbContext`
+     directly in handlers — no separate repository layer.
+   - **Endpoint:** Minimal API route in `Routes/`, `ResultModel<T>` shape.
+   - **Persistence:** new tables / EF Core migrations / `DbContext` config; cross-service events
+     (RabbitMQ) if the change spans services.
+   - **Frontend:** React components, Context updates, `src/UI/mango-ui/src/api/` client calls via
+     hooks.
+3. **Edge cases:** i18n/currency/timezone handling, nullable/incomplete input, auth implications
+   (provider-toggled: Duende / OpenIddict).
+4. **Output** — a blueprint the `implement-ticket` workflow can consume:
+   - **Business Summary** — what and why, briefly.
+   - **Technical Impact Map** — backend (slice/handler/validator/DTOs/routes) and frontend
+     (components/Context/API calls).
+   - **Acceptance Criteria** — Given/When/Then. Backend tests: xUnit + Moq + Shouldly. Frontend has
+     **no test runner** — verification is `pnpm --dir src/UI/mango-ui lint` + `build`.
+   - **Clarifying Questions** — 3-5, to resolve before implementation starts.
 
 ## Common Pitfalls
 
 | Pitfall | Solution |
 |---------|----------|
-| Skipping frontend or backend impact | Ensure the analysis maps across the stack (React + .NET 10). |
-| Vague acceptance criteria | Use strict BDD format ("Given... When... Then...") for all ACs. |
-| Inventing a frontend test runner | None is configured — verify the SPA with `pnpm --dir src/UI/mango-ui lint` + `build`. |
-| Proposing extra layers | Stick to Vertical Slice; do not add Repository/Application/Domain layers unless maintainers ask. |
+| Skipping frontend or backend impact | Map both sides of the stack. |
+| Vague acceptance criteria | Strict Given/When/Then for every AC. |
+| Inventing a frontend test runner | None exists — use `pnpm lint` + `build`. |
+| Adding extra layers | Vertical Slice only; no Repository/Application/Domain layers. |

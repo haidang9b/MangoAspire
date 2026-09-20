@@ -9,8 +9,8 @@ Claude Code discovers natively.
 | `.agent/agents/<x>.agent.md` | `.claude/agents/<x>.md` | non-Claude `tools:` dropped; `argument-hint:` demoted to a `> Usage:` line in the body |
 | `.agent/workflows/<x>.md` | `.claude/commands/<x>.md` | a stub carrying the workflow's `description` and `@`-importing the source doc |
 
-Everything else in `.agent/` — `rules/`, `memory/`, `tickets/`, `state/`, `tools/`, `schemas/`,
-`ui/` — is **never** synced. Those reach the agent through `CLAUDE.md` imports or on-demand reads.
+Everything else in `.agent/` — `rules/`, `memory/`, `tickets/`, `state/`, `tools/` — is **never**
+synced. Those reach the agent through `CLAUDE.md` imports or on-demand reads.
 
 ## Rules
 
@@ -24,7 +24,3 @@ Everything else in `.agent/` — `rules/`, `memory/`, `tickets/`, `state/`, `too
   (`npm run`, `Vitest`, `Repository pattern`, the retired `docs/tracking` paths…) is **warned about,
   never auto-edited** — fix it at the source and re-sync.
 
-## Related generated artifact
-
-`.agent/ui/board.html` is generated from the ticket JSONs by `scripts/update-ticket-board.ps1`. It
-is a separate pipeline: the two scripts do not touch each other's inputs or outputs.

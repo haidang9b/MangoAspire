@@ -47,8 +47,8 @@ update `index.md` in the same edit. Never append to a catch-all — an ever-grow
 ## Maintenance
 
 - Renaming or moving a memory file: grep the repo for the old path and fix every referrer
-  (`index.md` at minimum, plus any `links.memory[]` in `.agent/tickets/*/ticket.json`).
-- Every ticket records the memory files it fed in `links.memory[]`, so any line can be traced back
-  to the ticket that produced it.
+  (`index.md` at minimum, plus any `## Links` → Memory line in `.agent/tickets/*/ticket.md`).
+- Every ticket records the memory files it fed under `## Links` → Memory, so any line can be traced
+  back to the ticket that produced it.
 - Deleting: prefer deleting a stale memory to leaving it. A wrong memory costs more than a missing
   one.

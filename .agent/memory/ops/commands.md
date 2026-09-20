@@ -6,13 +6,11 @@ The dev machine is **Windows 11 + PowerShell**. Helper scripts in `scripts/` are
 ## Dev scripts (`scripts/`)
 
 - `pwsh ./scripts/bootstrap.ps1` — one-shot onboarding (restore, pnpm install, sync harness,
-  render the ticket board, start MCP).
+  start MCP).
 - `pwsh ./scripts/run-app.ps1` — launch the Aspire AppHost.
 - `pwsh ./scripts/build.ps1` · `test.ps1` · `format.ps1` · `ui.ps1` · `start-mcp.ps1`.
 - `pwsh ./scripts/sync-agent-harness.ps1` (`-Check` for a dry run) — regenerate `.claude/` from
   `.agent/`.
-- `pwsh ./scripts/update-ticket-board.ps1` (`-Check`, `-Open`) — regenerate `.agent/ui/board.html`
-  from the ticket JSONs.
 
 ## Backend (.NET)
 

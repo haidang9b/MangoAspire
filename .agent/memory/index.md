@@ -36,5 +36,5 @@ links on purpose — do **not** turn them into `@`-imports (see `.agent/memory/M
 
 ## Current and past work
 
-Ticket state lives in `.agent/tickets/<TICKET-ID>/ticket.json`; the rendered board is
-`.agent/ui/board.html` (`pwsh ./scripts/update-ticket-board.ps1`).
+Ticket state lives in `.agent/tickets/<TICKET-ID>/ticket.md` — one file per ticket, `status` in its
+front-matter.
