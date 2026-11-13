@@ -4,7 +4,7 @@ Guidance for coding agents working in `D:\Learning\MangoAspire`.
 
 ## Scope and intent
 
-- This repository is a .NET 10 + Aspire microservices solution with a React/Vite SPA.
+- This repository is a .NET 11 + Aspire microservices solution with a React/Vite SPA.
 - Prefer minimal, surgical changes that match existing architecture and conventions.
 - Follow this file plus `.agent/` rules and `.editorconfig` as the source of truth.
 
@@ -94,7 +94,7 @@ Layout and ownership are documented in `.agent/README.md`.
 
 ## C# language and project standards
 
-- Target framework: `net10.0`.
+- Target framework: `net11.0`.
 - Nullable reference types are enabled and must be respected.
 - Implicit usings are enabled.
 - Use file-scoped namespaces.

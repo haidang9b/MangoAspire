@@ -1,6 +1,6 @@
 # Architecture Overview
 
-**MangoAspire** is a modern, high-performance microservices-based e-commerce platform built using the latest **.NET 10** features and **.NET Aspire** for cloud-native orchestration.
+**MangoAspire** is a modern, high-performance microservices-based e-commerce platform built using the latest **.NET 11** features and **.NET Aspire** for cloud-native orchestration.
 
 ## High-Level Flow
 The system is composed of several autonomous microservices, each managing its own data store. Frontend applications reach the backend through `Mango.Gateway`, while the services collaborate mainly through asynchronous integration events over RabbitMQ; Azure Service Bus remains an optional production alternative scaffolded in the AppHost.

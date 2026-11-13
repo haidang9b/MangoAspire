@@ -1,6 +1,6 @@
 # Architecture — source map and invariants
 
-.NET 10 + .NET Aspire microservices e-commerce platform with a React/Vite SPA.
+.NET 11 + .NET Aspire microservices e-commerce platform with a React/Vite SPA.
 Dual identity providers (Duende IdentityServer via `Identity.API`, OpenIddict via
 `OpenIdentity.App`), PostgreSQL, RabbitMQ, Debezium.
 

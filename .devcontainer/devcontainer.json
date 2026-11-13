@@ -1,6 +1,6 @@
 {
   "name": "MangoAspire Dev",
-  "image": "mcr.microsoft.com/devcontainers/dotnet:1-10.0",
+  "image": "mcr.microsoft.com/devcontainers/dotnet:2-11.0",
   "features": {
     "ghcr.io/devcontainers/features/node:1": {
       "version": "lts"

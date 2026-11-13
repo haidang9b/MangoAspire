@@ -2,8 +2,13 @@
 
 ## Backend
 
-- **.NET 10** (`net10.0`), **C# 14** — extension blocks for route mapping, primary constructors,
-  file-scoped namespaces.
+- **.NET 11** (`net11.0`), **C# 15** (compiler default) — extension blocks for route mapping,
+  primary constructors, file-scoped namespaces.
+- **Deviation — EF Core stays on 10.0.x while everything else is 11.x.** Npgsql's EF provider had no
+  stable 11.x at the .NET 11 move (its `11.0.0-rc.3` pins EF Core to that exact RC), and
+  `EFCore.NamingConventions` caps EF Core at `< 11.0.0`. Hold back together: `Microsoft.EntityFrameworkCore.*`,
+  `Microsoft.AspNetCore.Identity.EntityFrameworkCore`, `MockQueryable.Moq` — their 11.x builds pull
+  EF Core 11 transitively. Unblock condition in `.agent/tickets/DOTNET11-001/ticket.md` (blk-1).
 - Nullable reference types **enabled**; implicit usings enabled.
 - **.NET Aspire** for orchestration and service discovery (`Mango.AppHost`,
   `Mango.ServiceDefaults`).

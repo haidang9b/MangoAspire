@@ -1,10 +1,10 @@
 # 🥭 MangoAspire
 
-[![.NET 10](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
+[![.NET 11](https://img.shields.io/badge/.NET-11.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
 [![Aspire](https://img.shields.io/badge/Aspire-Orchestration-orange?logo=dotnet)](https://learn.microsoft.com/en-us/dotnet/aspire/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**MangoAspire** is a modern, high-performance microservices-based e-commerce platform built using the latest **.NET 10** features and **.NET Aspire** for cloud-native orchestration.
+**MangoAspire** is a modern, high-performance microservices-based e-commerce platform built using the latest **.NET 11** features and **.NET Aspire** for cloud-native orchestration.
 
 ---
 
@@ -27,7 +27,7 @@ The project follows a microservices architecture, leveraging .NET Aspire to simp
 
 ## 🛠️ Tech Stack
 
-- **Framework**: [.NET 10.0](https://dotnet.microsoft.com/)
+- **Framework**: [.NET 11.0](https://dotnet.microsoft.com/)
 - **Orchestration**: [.NET Aspire](https://learn.microsoft.com/en-us/dotnet/aspire/)
 - **Frontend**: [React 18](https://reactjs.org/) (Vite) / [ASP.NET Core MVC](https://learn.microsoft.com/en-us/aspnet/core/mvc/overview)
 - **Database**: [PostgreSQL](https://www.postgresql.org/) with [Entity Framework Core](https://learn.microsoft.com/en-us/ef/core/)
@@ -82,7 +82,7 @@ MangoAspire/
 
 ### Prerequisites
 
-- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+- [.NET 11 SDK](https://dotnet.microsoft.com/download/dotnet/11.0)
 - [Docker Desktop](https://www.docker.com/products/docker-desktop) (required for Aspire container resources like PostgreSQL)
 - [Visual Studio 2022](https://visualstudio.microsoft.com/) (version 17.12 or higher recommended) or [VS Code](https://code.visualstudio.com/)
 

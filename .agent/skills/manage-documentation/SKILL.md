@@ -33,7 +33,7 @@ itself, and not for a read-only codebase survey with no intent to update `/docs`
    | Frontend | `docs/frontend/components.md`, `docs/frontend/state-management.md` |
    | Database | `docs/infrastructure/database-schema.md` |
 
-4. **Quality:** correct .NET 10/C# 14 terminology; link the ticket/PR; if the code's intent is too
+4. **Quality:** correct .NET 11/C# 15 terminology; link the ticket/PR; if the code's intent is too
    ambiguous to document accurately, stop and ask rather than guess.
 
 ## Common Pitfalls

@@ -5,7 +5,7 @@ description: Use when a new PO requirement, story, or feature request needs tran
 
 # Analyze PO Requirement
 
-Turn a raw PO requirement into a structured technical blueprint for MangoAspire (.NET 10 + Aspire
+Turn a raw PO requirement into a structured technical blueprint for MangoAspire (.NET 11 + Aspire
 microservices, React/Vite SPA, **Vertical Slice Architecture** — see `AGENTS.md` and
 `.agent/rules/architecture.md`). Use for a new story/epic/feature; not for requirements already
 fully specified with entities/DTOs/components, and not for writing the implementation itself.

@@ -30,7 +30,7 @@ function Test-Tool {
 
 Write-Host "== MangoAspire bootstrap ==" -ForegroundColor Cyan
 Write-Host "Checking prerequisites..."
-$haveDotnet = Test-Tool 'dotnet' 'install the .NET 10 SDK'
+$haveDotnet = Test-Tool 'dotnet' 'install the .NET 11 SDK'
 $haveNode = Test-Tool 'node'   'install Node.js 18+ (for pnpm via corepack)'
 $havePnpm = Test-Tool 'pnpm'   "run 'corepack enable' or install pnpm"
 $haveDocker = Test-Tool 'docker' 'install Docker Desktop (needed for the Serena MCP server + infra)'

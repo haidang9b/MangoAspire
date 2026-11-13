@@ -3,8 +3,8 @@
 This document outlines the coding standards to ensure consistency across all microservices in the MangoAspire solution.
 
 ## Framework & Language
-- Target **.NET 10**.
-- Use **C# 14** features including:
+- Target **.NET 11**.
+- Use **C# 15** (the `net11.0` default) features including:
   - **Extension blocks** for route mapping
   - **Primary Constructors** for Dependency Injection
   - **File-scoped namespaces** to reduce nesting

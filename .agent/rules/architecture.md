@@ -59,7 +59,7 @@ await app.MigrateDatabaseAsync();
 app.Run();
 ```
 
-### Feature Slice Template (.NET 10 / C# 14)
+### Feature Slice Template (.NET 11 / C# 15)
 ```csharp
 namespace Service.API.Features.FeatureName;
 
