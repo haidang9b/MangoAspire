@@ -4,9 +4,7 @@ using Mango.Infrastructure.Behaviors;
 using Mango.Infrastructure.Extensions;
 using Mango.Infrastructure.Interceptors;
 using Mediator.Extensions;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using Refit;
 using ShoppingCart.API.Services;
 
@@ -63,28 +61,7 @@ public static class IServiceCollectionExtensions
             var serviceUrls = configuration.GetSection(ServiceUrlsOptions.SectionName).Get<ServiceUrlsOptions>()
                 ?? new ServiceUrlsOptions();
 
-            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-                .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
-                {
-                    options.Authority = serviceUrls.IdentityApp;
-                    options.TokenValidationParameters = new TokenValidationParameters
-                    {
-                        ValidateAudience = false
-                    };
-                });
-
-            services.AddAuthorization(options =>
-            {
-                options.AddPolicy("ApiScope", policy =>
-                {
-                    policy.RequireAuthenticatedUser();
-                    // Duende emits one claim per scope; OpenIddict emits a single
-                    // space-delimited scope claim. Accept both formats.
-                    policy.RequireAssertion(context => context.User.FindAll("scope")
-                        .SelectMany(claim => claim.Value.Split(' ', StringSplitOptions.RemoveEmptyEntries))
-                        .Contains("mango"));
-                });
-            });
+            services.AddMangoJwtAuthentication(configuration);
 
             services.AddRefitClient<ICouponsApi>()
                 .ConfigureHttpClient(c => c.BaseAddress = new Uri(serviceUrls.CouponsApi))

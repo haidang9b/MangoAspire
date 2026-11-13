@@ -15,10 +15,8 @@ using Mango.Infrastructure.Extensions;
 using Mango.Infrastructure.Interceptors;
 using Mediator.Abstractions;
 using Mediator.Extensions;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 // Brings pgvector's UseVector() extension on NpgsqlDbContextOptionsBuilder into scope.
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using Refit;
 using System.ClientModel;
 using System.ClientModel.Primitives;
@@ -71,32 +69,7 @@ public static class IServiceCollectionExtensions
 
         services.AddApiServices(configuration);
 
-        // Configure ServiceUrls options
-        var serviceUrls = configuration.GetSection(ServiceUrlsOptions.SectionName).Get<ServiceUrlsOptions>()
-            ?? new ServiceUrlsOptions();
-
-        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
-            {
-                options.Authority = serviceUrls.IdentityApp;
-                options.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateAudience = false
-                };
-            });
-
-        services.AddAuthorization(options =>
-        {
-            options.AddPolicy("ApiScope", policy =>
-            {
-                policy.RequireAuthenticatedUser();
-                // Duende emits one claim per scope; OpenIddict emits a single
-                // space-delimited scope claim. Accept both formats.
-                policy.RequireAssertion(context => context.User.FindAll("scope")
-                    .SelectMany(claim => claim.Value.Split(' ', StringSplitOptions.RemoveEmptyEntries))
-                    .Contains("mango"));
-            });
-        });
+        services.AddMangoJwtAuthentication(configuration);
 
         services.AddCurrentUserContext();
 
