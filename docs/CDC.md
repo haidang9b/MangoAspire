@@ -199,7 +199,7 @@ This inserts a row into `public.debezium_signal`, which the connector watches (`
 
 Crucially it does this **without dropping the replication slot or the offsets file**, so consumers that are already up to date are unaffected — their fence discards the re-read rows as stale. This replaces the old "delete the volume and re-snapshot everything" procedure.
 
-> The endpoint is currently **unauthenticated**, matching every other endpoint in Products.API (which has no authentication configured at all, not even on `DELETE /api/products/{id}`). It is an administrative operation and should be locked down when auth is added to that service.
+> The endpoint requires the `AdminOnly` policy (the `mango` scope plus the `Admin` role). It sits under `/api/products`, so the gateway's products route exposes it; the policy, not the gateway, is what keeps it administrative.
 
 ## Data transformation
 

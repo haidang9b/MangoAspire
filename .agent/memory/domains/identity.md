@@ -26,6 +26,29 @@ Duende emits one claim per scope; OpenIddict emits a single space-delimited clai
 other. `ApiScope` policies use a **whitespace-splitting assertion** instead, so both token shapes
 satisfy them. Do not revert this to `RequireClaim`.
 
+The assertion lives once, in `RequireMangoScope()` inside `Mango.Infrastructure`'s
+`AddMangoJwtAuthentication()`, which every API calls (SEC-AUTH-001). Products.API and Coupons.API
+had no authentication at all before that ticket.
+
+## Signing keys are runtime-generated, never committed
+
+Duende's `AddDeveloperSigningCredential()` writes `tempkey.jwk` and automatic key management writes
+`keys/is-signing-key-*.json`, both in `Identity.API`'s content root. Both are git-ignored and
+excluded from build/publish output in `Identity.API.csproj`. The Web SDK treats every `*.json` as
+`Content`, so without that exclusion the private key ships in `bin/` and container images. They used
+to be committed; SEC-AUTH-001 rotated them by deleting them.
+Deleting them rotates the key: the provider generates new ones on its next start and stops
+publishing the old key in JWKS, so every outstanding Duende token is rejected.
+
+## Roles
+
+`Admin` comes only from `SeedUsers`; self-registration in both providers always assigns `Customer`
+(`Mango.Core.Auth.AuthRoles`). Both register forms used to offer a role picker that granted `Admin`.
+Accounts created that way before SEC-AUTH-001 still hold the role. `RequireRole` compares
+ordinally, so the casing in `SeedUsers` must be exactly `Admin`. JwtBearer maps the inbound `role`
+claim to `ClaimTypes.Role`. Duende's register action also adds a stray `role: User` claim. It grants
+nothing.
+
 ## Client configuration shapes differ
 
 Redirect and post-logout URIs are pushed into whichever provider is active, using that provider's
