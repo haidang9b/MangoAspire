@@ -19,3 +19,22 @@ React 19 + Vite + TypeScript. See `.agent/memory/stack.md` for versions.
   (`docs/frontend/state-management.md`).
 - Docker: `Dockerfile` + `nginx.conf` for containerized serving. The module carries its own
   `ARCHITECTURE.md` and `README.md`.
+
+## Deliberate version holds (`~` ranges in `package.json`)
+
+`pnpm update` re-resolves everything in range **and rewrites manifest floors**, so these holds are
+what keep a security refresh from also shipping unrelated upgrades:
+
+- `eslint-plugin-react-hooks ~7.0.1` — 7.1.x adds `purity` / `refs` / `set-state-in-effect`
+  rules that fail lint on 6 existing sites (SEC-DEPS-001).
+- `react`, `react-dom`, `@types/react`, `@types/react-dom ~19.2.x` — React 19.3 grows the JS
+  bundle ~29 kB, past Vite's 500 kB chunk warning (main chunk is ~494 kB on 19.2) (SEC-DEPS-002).
+
+`pnpm add pkg@~x.y.z` saves the range with `^` (default save-prefix) — set `~` by hand, then
+`pnpm install`.
+
+## Accepted audit residual
+
+`minimatch` 10.x (GHSA-g3hv-75wg-m249, moderate, lint-time only via typescript-eslint): fixed only
+in 11.0.1, outside typescript-eslint's `^10.2.2` range. Not overridden; recheck when
+typescript-eslint widens the range.
