@@ -60,19 +60,22 @@ void ConfigurationServices(IServiceCollection services, IConfiguration configura
     var oidcOptions = configuration.GetSection(OpenIdConnectOptions.SectionName).Get<OpenIdConnectOptions>()
         ?? new OpenIdConnectOptions();
 
-    services.AddRefitClient<IProductsApi>()
+    // AddRefitGeneratedClient, not AddRefitClient: Refit 14 moved the reflection request
+    // builder into the opt-in Refit.Reflection package, so the plain overload throws
+    // NotSupportedException when a client is resolved.
+    services.AddRefitGeneratedClient<IProductsApi>()
         .ConfigureHttpClient(c => c.BaseAddress = new Uri(serviceUrls.ProductsApi))
         .AddAuthToken();
 
-    services.AddRefitClient<ICartApi>()
+    services.AddRefitGeneratedClient<ICartApi>()
         .ConfigureHttpClient(c => c.BaseAddress = new Uri(serviceUrls.ShoppingCartApi))
         .AddAuthToken();
 
-    services.AddRefitClient<ICouponsApi>()
+    services.AddRefitGeneratedClient<ICouponsApi>()
         .ConfigureHttpClient(c => c.BaseAddress = new Uri(serviceUrls.CouponsApi))
         .AddAuthToken();
 
-    services.AddRefitClient<IOrdersApi>()
+    services.AddRefitGeneratedClient<IOrdersApi>()
         .ConfigureHttpClient(c => c.BaseAddress = new Uri(serviceUrls.OrdersApi))
         .AddAuthToken();
     services.AddHttpClient<ChatService>()

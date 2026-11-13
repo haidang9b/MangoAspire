@@ -63,7 +63,10 @@ public static class IServiceCollectionExtensions
 
             services.AddMangoJwtAuthentication(configuration);
 
-            services.AddRefitClient<ICouponsApi>()
+            // AddRefitGeneratedClient, not AddRefitClient: Refit 14 moved the reflection request
+            // builder into the opt-in Refit.Reflection package, so the plain overload throws
+            // NotSupportedException when the client is resolved.
+            services.AddRefitGeneratedClient<ICouponsApi>()
                 .ConfigureHttpClient(c => c.BaseAddress = new Uri(serviceUrls.CouponsApi))
                 .AddAuthToken();
             return services;
