@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "activeTicketId": "SEC-DEPS-002",
-  "activeSince": "2026-11-13T08:36:30Z",
+  "activeTicketId": "SEC-AUTH-001",
+  "activeSince": "2026-11-13T09:27:04Z",
   "note": "Derived cache for disambiguating the active ticket. If this disagrees with .agent/tickets/**, the tickets win."
 }
