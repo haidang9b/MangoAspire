@@ -10,8 +10,19 @@
   `Microsoft.AspNetCore.Identity.EntityFrameworkCore`, `MockQueryable.Moq` — their 11.x builds pull
   EF Core 11 transitively. Unblock condition in `.agent/tickets/DOTNET11-001/ticket.md` (blk-1).
 - Nullable reference types **enabled**; implicit usings enabled.
-- **.NET Aspire** for orchestration and service discovery (`Mango.AppHost`,
-  `Mango.ServiceDefaults`).
+- **.NET Aspire 13.6.5** for orchestration and service discovery (`Mango.AppHost`,
+  `Mango.ServiceDefaults`). The `Aspire.AppHost.Sdk` version in `Mango.AppHost.csproj` is a
+  separate pin from `Directory.Packages.props` — it sat at 9.5.0 under 13.x packages until
+  SEC-DEPS-002; bump both together.
+- **Aspire dashboard is versioned through NuGet, deliberately.** The SDK auto-references
+  `Aspire.Dashboard.Sdk.<rid>` (and DCP) at the `Aspire.Hosting.AppHost` version because
+  `AspireUseCliBundle` stays `false`; that keeps the dashboard inside NuGet audit, which is how its
+  critical advisory surfaced. `ASPIRE010` (CLI bundle off) is suppressed in the AppHost for this
+  reason; switching to the CLI bundle would take the dashboard out of NuGet audit.
+- **Shared libraries take ASP.NET Core via `<FrameworkReference Include="Microsoft.AspNetCore.App" />`**
+  (`Mango.Infrastructure`). The legacy `Microsoft.AspNetCore.Http*` 2.3.x NuGet packages are a
+  trap: even the newest 2.3.14 pulls `Microsoft.AspNetCore.WebUtilities` 2.3.13, below the
+  CVE-2026-118750 fix.
 - **Minimal APIs** (no MVC controllers) + **Mediator** — a custom `src/Shared/Mediator`,
   MediatR-style — for request handling.
 - **EF Core** with **Npgsql** (PostgreSQL). Aspire integrations: `AddNpgsqlDataSource`,
@@ -35,4 +46,6 @@
 ## Dependency management
 
 **Central Package Management** via `Directory.Packages.props`. Do not pin versions in individual
-`.csproj` files. `Directory.Build.props` enables `WarningsAsErrors`, so a warning fails the build.
+`.csproj` files. `Directory.Build.props` sets `WarningsAsErrors` for **CS1998 and CS4014 only** —
+other warnings do not fail the build, and the solution carries ~100 pre-existing nullable warnings
+(mostly `Identity.API`, `Mango.Web`). Judge "no new warnings" against a baseline, not zero.

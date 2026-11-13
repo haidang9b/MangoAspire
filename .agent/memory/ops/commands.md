@@ -30,3 +30,11 @@ The dev machine is **Windows 11 + PowerShell**. Helper scripts in `scripts/` are
 - Dev: `pnpm --dir src/UI/mango-ui dev`
 - Build: `pnpm --dir src/UI/mango-ui build`
 - Lint: `pnpm --dir src/UI/mango-ui lint`
+
+## Dependency security scan
+
+- NuGet (authoritative, includes transitives and SDK auto-references like the Aspire dashboard):
+  `dotnet list MangoAspire.sln package --vulnerable --include-transitive`. Restore also surfaces
+  these as `NU1902`–`NU1904` warnings, which do not fail the build.
+- npm: `pnpm --dir src/UI/mango-ui audit` (`--json` for scripting). Treat it, not the Dependabot
+  list, as the target — Dependabot deduplicates paths and has missed packages (SEC-DEPS-001).

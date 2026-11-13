@@ -24,7 +24,8 @@ links on purpose — do **not** turn them into `@`-imports (see `.agent/memory/M
   `.agent/memory/domains/ui-web.md`
 - `Mango.Web` cart/checkout controller, coupons, `PickupDateTime` →
   `.agent/memory/domains/cart-checkout.md`
-- The React SPA `src/UI/mango-ui` — pnpm, i18n, contexts, the `@/` alias →
+- The React SPA `src/UI/mango-ui` — pnpm, i18n, contexts, the `@/` alias, deliberate dependency
+  version holds and the accepted audit residual →
   `.agent/memory/domains/frontend-spa.md`
 
 ## Doing, not knowing

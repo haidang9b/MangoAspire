@@ -110,9 +110,14 @@ dotnet outdated
 Your solution currently uses these package categories:
 
 ### Aspire (Orchestration)
-- `Aspire.Hosting.AppHost` - 9.5.0
-- `Aspire.Hosting.PostgreSQL` - 9.5.0
-- `Aspire.Npgsql` - 13.1.0
+All `Aspire.*` packages and the AppHost's `Aspire.AppHost.Sdk` declaration are aligned on **13.6.5**:
+- Hosting: `Aspire.Hosting.AppHost`, `Aspire.Hosting.PostgreSQL`, `Aspire.Hosting.RabbitMQ`,
+  `Aspire.Hosting.Azure.ServiceBus`
+- Client integrations: `Aspire.Npgsql`, `Aspire.Npgsql.EntityFrameworkCore.PostgreSQL`,
+  `Aspire.RabbitMQ.Client`, `Aspire.Azure.Messaging.ServiceBus`
+
+The Aspire dashboard (`Aspire.Dashboard.Sdk.<rid>`) is not pinned: the SDK adds it automatically at
+the `Aspire.Hosting.AppHost` version, so upgrading that package upgrades the dashboard.
 
 ### Entity Framework Core
 - `EFCore.NamingConventions` - 10.0.0
@@ -149,7 +154,12 @@ Currently mixed versions (10.0.0, 10.0.1, 10.0.2). Recommend aligning all to **1
 ```
 
 ### Aspire Packages
-Mixed versions (9.5.0 and 13.1.0). Check compatibility and align if possible.
+Aligned on 13.6.5. When upgrading, bump every `Aspire.*` pin in `Directory.Packages.props` **and**
+the `<Sdk Name="Aspire.AppHost.Sdk" Version="…" />` line in `src/Mango.AppHost/Mango.AppHost.csproj`
+together, then confirm with:
+```powershell
+dotnet list MangoAspire.sln package --vulnerable --include-transitive
+```
 
 ## Troubleshooting
 
