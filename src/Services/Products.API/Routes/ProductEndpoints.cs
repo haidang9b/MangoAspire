@@ -1,4 +1,5 @@
-﻿using Products.API.Dtos;
+﻿using Mango.Core.Auth;
+using Products.API.Dtos;
 using Products.API.Features.Products;
 
 namespace Products.API.Routes;
@@ -9,8 +10,12 @@ public static class ProductEndpoints
     {
         public RouteGroupBuilder MapProductsApi()
         {
+            // Admin-only by default, applied to the group so a route added later cannot silently
+            // ship unauthenticated. Catalog reads opt out explicitly: Mango.Web's home page and the
+            // SPA browse products before anyone signs in.
             var group = routeGroupBuilder.MapGroup("/api/products")
-                .WithTags("Products");
+                .WithTags("Products")
+                .RequireAuthorization(AuthPolicies.AdminOnly);
 
             group.MapGet("/", async (int pageIndex, [AsParameters] ProductSearchRequestDto options, ISender sender) =>
             {
@@ -19,14 +24,16 @@ public static class ProductEndpoints
                     Options = options
                 });
                 return Results.Ok(result);
-            });
+            })
+            .AllowAnonymous();
 
 
             group.MapGet("/{id:guid}", async (Guid id, ISender sender) =>
             {
                 var result = await sender.SendAsync(new GetProductById.Query { ProductId = id });
                 return Results.Ok(result);
-            });
+            })
+            .AllowAnonymous();
 
             group.MapPost("/", async (CreateProduct.Command command, ISender sender) =>
             {

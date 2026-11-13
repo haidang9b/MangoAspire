@@ -1,4 +1,5 @@
-﻿using Products.API.Features.Cdc;
+﻿using Mango.Core.Auth;
+using Products.API.Features.Cdc;
 
 namespace Products.API.Routes;
 
@@ -11,18 +12,17 @@ public static class CdcEndpoints
     {
         public RouteGroupBuilder MapCdcApi()
         {
+            // Administrative: re-emitting every row is expensive and floods every CDC consumer.
+            // The path sits under /api/products, so the gateway's products route exposes it too.
             var group = routeGroupBuilder.MapGroup("/api/products/cdc-snapshots")
-                .WithTags("CDC");
+                .WithTags("CDC")
+                .RequireAuthorization(AuthPolicies.AdminOnly);
 
             // Requests a re-read of the captured tables, re-emitting every row into the CDC
             // stream. Use when a consumer needs history that has aged out of the stream's
             // retention window — onboarding a service long after the fact, or adding a table
             // to the capture list. Unlike dropping the replication slot, this leaves
             // up-to-date consumers untouched.
-            //
-            // NOTE: unauthenticated, matching every other endpoint in this service — Products.API
-            // has no authentication configured, not even on DELETE /api/products/{id}. This is
-            // an administrative operation and should be locked down when auth is added here.
             group.MapPost("/", async (RequestIncrementalSnapshot.Command command, ISender sender) =>
             {
                 var result = await sender.SendAsync(command);

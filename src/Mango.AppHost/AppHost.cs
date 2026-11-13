@@ -98,13 +98,19 @@ var identityRef = useOpenIddict
 var launchProfileName = ShouldUseHttpForEndpoints() ? "http" : "https";
 var identityEndpoint = identityRef.GetEndpoint(launchProfileName);
 
+// Products and Coupons validate access tokens like every other API: Products for its admin
+// writes, Coupons for every lookup.
 var products = builder.AddProject<Projects.Products_API>("products-api")
     .WaitFor(productdb).WithReference(productdb)
-    .WaitFor(rabbitMq).WithReference(rabbitMq);
+    .WaitFor(rabbitMq).WithReference(rabbitMq)
+    .WithReference(identityRef)
+    .WithEnvironment("ServiceUrls__IdentityApp", identityEndpoint);
 
 var coupon = builder.AddProject<Projects.Coupons_API>("coupons-api")
     .WaitFor(coupondb)
-    .WithReference(coupondb);
+    .WithReference(coupondb)
+    .WithReference(identityRef)
+    .WithEnvironment("ServiceUrls__IdentityApp", identityEndpoint);
 
 var shoppingcart = builder.AddProject<Projects.ShoppingCart_API>("shoppingcart-api")
     .WaitFor(rabbitMq).WithReference(rabbitMq)

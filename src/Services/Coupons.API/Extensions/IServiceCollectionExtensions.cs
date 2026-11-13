@@ -37,6 +37,9 @@ public static class IServiceCollectionExtensions
         services.AddGlobalExceptionHandler();
 
         services.AddDocumentApi("Coupons API", "v1", "Coupons API");
+
+        services.AddMangoJwtAuthentication(configuration);
+
         return services;
 
     }

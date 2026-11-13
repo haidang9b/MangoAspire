@@ -44,6 +44,8 @@ public static class IServiceCollectionExtensions
 
         services.AddDocumentApi("Products API", "v1", "Products API");
 
+        services.AddMangoJwtAuthentication(configuration);
+
         return services;
     }
 }
