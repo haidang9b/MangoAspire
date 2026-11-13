@@ -8,7 +8,7 @@ version-controlled and shared; nothing here is machine-local.
 | Directory | Holds | Written by |
 |---|---|---|
 | `rules/` | **Normative** — what you *must* do, triggered by file globs | humans |
-| `CODING_CONVENTIONS.md`, `API_PROJECT_STRUCTURE.md` | Normative, imported by `CLAUDE.md` | humans |
+| `CODING_CONVENTIONS.md`, `API_PROJECT_STRUCTURE.md` | Normative, linked from `CLAUDE.md` (read on demand) | humans |
 | `memory/` | **Descriptive** — what is *true* about this project and what we learned | agent, at ticket completion |
 | `tickets/` | One `ticket.md` per ticket: status, plan and notes in a single file | agent, continuously |
 | `state/` | Tiny derived cache — which ticket is active | agent |

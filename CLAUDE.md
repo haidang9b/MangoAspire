@@ -9,14 +9,17 @@ guidance lives in `AGENTS.md` and is imported below — keep it single-sourced t
 
 ## Additional conventions
 
-- @.agent/CODING_CONVENTIONS.md
-- @.agent/API_PROJECT_STRUCTURE.md
+Read on demand — plain paths, not `@`-imports (AGENTS.md above already carries the core rules):
+
+- `.agent/CODING_CONVENTIONS.md` — before writing backend C# (Program.cs, validation, error handling, data access, routes).
+- `.agent/API_PROJECT_STRUCTURE.md` — before adding an API project, feature slice, route group, or integration event.
 - Rule set: `.agent/rules/` (architecture, backend-dotnet, backend-testing, frontend-react, documentation-standards).
 
 ## Guardrails (these override any stale phrasing you may encounter)
 
 - **Vertical Slice Architecture** — organize by feature slice. NOT Clean/Onion/N-tier layers.
 - **No Repository pattern** — use `DbContext` directly in handlers.
+- **No cross-slice calls** — a feature never uses another feature's handlers or logic; share only infrastructure.
 - **pnpm**, not npm, for the SPA: `pnpm --dir src/UI/mango-ui <dev|build|lint>`.
 - **No frontend test runner exists.** Verify the SPA with `pnpm --dir src/UI/mango-ui lint` + `build`. Do not invent test commands.
 
@@ -26,12 +29,6 @@ guidance lives in `AGENTS.md` and is imported below — keep it single-sourced t
 
 - The line above imports the **index only** — it links out with plain paths, and you read the domain
   files it names on demand. Do not convert those links into `@`-imports.
-- **Ticket state:** one file per ticket, `.agent/tickets/<TICKET-ID>/ticket.md` — front-matter
-  (`kind`, `status`, priority, timestamps) + `## Steps` checkboxes + prose sections. No JSON, no
-  generated board. `kind` (`feature | bug | chore | security | refactor | spike`) picks the
-  template under `.agent/tickets/_templates/`.
-- **Tooling notes:** `.agent/tools/` (Serena MCP, dev scripts, harness generation).
-- `docs/` is **human documentation**. It holds no agent memory and no ticket state.
 
 ## Harness map
 

@@ -37,13 +37,6 @@ Layout and ownership are documented in `.agent/README.md`.
   scanning top to bottom. A skipped task is written `- [x] ~~title~~ — skipped: <reason>`.
 - **Tools and integrations** — `.agent/tools/` (Serena MCP, dev scripts, harness generation).
 
-## Cursor/Copilot rules status
-
-- `.cursorrules`: not present.
-- `.cursor/rules/`: not present.
-- `.github/copilot-instructions.md`: not present.
-- Therefore, `.agent/*` and `.editorconfig` are the active agent guidance files.
-
 ## Build commands
 
 - Restore all .NET dependencies:
