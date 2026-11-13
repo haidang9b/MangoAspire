@@ -174,14 +174,11 @@ public class RelevanceGuard : IRelevanceGuard
                     .Select(p => p.Name)
                     .ToListAsync(ct);
 
-                var terms = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-                foreach (var value in categories.Concat(productNames))
-                {
-                    foreach (var word in Tokenize(value))
-                    {
-                        terms.Add(word);
-                    }
-                }
+                HashSet<string> terms =
+                [
+                    with(StringComparer.OrdinalIgnoreCase),
+                    .. categories.Concat(productNames).SelectMany(Tokenize),
+                ];
 
                 return terms;
             },
@@ -191,7 +188,7 @@ public class RelevanceGuard : IRelevanceGuard
 
     private static HashSet<string> Tokenize(string text)
     {
-        var words = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        HashSet<string> words = [with(StringComparer.OrdinalIgnoreCase)];
         var current = new StringBuilder();
 
         foreach (var c in text)

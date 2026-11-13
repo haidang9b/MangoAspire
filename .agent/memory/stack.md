@@ -3,7 +3,10 @@
 ## Backend
 
 - **.NET 11** (`net11.0`), **C# 15** (compiler default) — extension blocks for route mapping,
-  primary constructors, file-scoped namespaces.
+  primary constructors, file-scoped namespaces. C# 15 in use: collection-expression `with(...)`
+  arguments and labeled `continue` (ChatAgent guards, CS15-001). **Deliberately not adopted:**
+  `union` for `ResultModel<T>` (it is the JSON wire contract the SPA and `Mango.Web` read), and
+  `closed` for `IntegrationEvent` (subtypes live in other assemblies, which `closed` forbids).
 - **Deviation — EF Core stays on 10.0.x while everything else is 11.x.** Npgsql's EF provider had no
   stable 11.x at the .NET 11 move (its `11.0.0-rc.3` pins EF Core to that exact RC), and
   `EFCore.NamingConventions` caps EF Core at `< 11.0.0`. Hold back together: `Microsoft.EntityFrameworkCore.*`,
