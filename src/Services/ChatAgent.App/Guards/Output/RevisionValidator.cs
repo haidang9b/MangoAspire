@@ -52,22 +52,19 @@ public static partial class RevisionValidator
         }
 
         var draftIndex = 0;
+nextWord:
         foreach (var word in revisionWords)
         {
-            var found = false;
             while (draftIndex < draftWords.Count)
             {
                 if (string.Equals(draftWords[draftIndex++], word, StringComparison.OrdinalIgnoreCase))
                 {
-                    found = true;
-                    break;
+                    continue nextWord;
                 }
             }
 
-            if (!found)
-            {
-                return false;
-            }
+            // The draft ran out before this word turned up, so the revision added it.
+            return false;
         }
 
         return true;
