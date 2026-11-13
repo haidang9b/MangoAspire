@@ -10,6 +10,7 @@ using Duende.IdentityServer.Models;
 using Duende.IdentityServer.Services;
 using Duende.IdentityServer.Stores;
 using Identity.API.Models;
+using Mango.Core.Auth;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -264,18 +265,15 @@ public class AccountController : Controller
             var result = await _userManager.CreateAsync(user, model.Password);
             if (result.Succeeded)
             {
-                if (!_roleManager.RoleExistsAsync(model.RoleName).GetAwaiter().GetResult())
+                // Self-registration only ever grants Customer. The role used to come from the form
+                // (and was created if missing), so anyone could sign up as Admin and pass every
+                // admin check downstream. Admin accounts come from the SeedUsers configuration.
+                if (!await _roleManager.RoleExistsAsync(AuthRoles.Customer))
                 {
-                    var userRole = new IdentityRole
-                    {
-                        Name = model.RoleName,
-                        NormalizedName = model.RoleName,
-
-                    };
-                    await _roleManager.CreateAsync(userRole);
+                    await _roleManager.CreateAsync(new IdentityRole(AuthRoles.Customer));
                 }
 
-                await _userManager.AddToRoleAsync(user, model.RoleName);
+                await _userManager.AddToRoleAsync(user, AuthRoles.Customer);
 
                 await _userManager.AddClaimsAsync(user, new Claim[]{
                         new Claim(JwtClaimTypes.Name, model.Username),
@@ -331,12 +329,6 @@ public class AccountController : Controller
     private async Task<RegisterViewModel> BuildRegisterViewModelAsync(string returnUrl)
     {
         var context = await _interaction.GetAuthorizationContextAsync(returnUrl);
-        List<string> roles = new()
-        {
-            "Admin",
-            "Customer"
-        };
-        ViewBag.message = roles;
         if (context?.IdP != null && await _schemeProvider.GetSchemeAsync(context.IdP) != null)
         {
             var local = context.IdP == Duende.IdentityServer.IdentityServerConstants.LocalIdentityProvider;

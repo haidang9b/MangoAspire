@@ -92,17 +92,6 @@
                            autocomplete="new-password" />
                 </div>
 
-                <div class="auth-form__group">
-                    <label class="auth-form__label" asp-for="RoleName">
-                        <i class="fa-solid fa-id-badge me-1"></i>Role
-                    </label>
-                    <select class="auth-form__select"
-                            asp-for="RoleName"
-                            asp-items="@(ViewBag.message != null ? new SelectList(ViewBag.message) : new SelectList(Enumerable.Empty<string>()))">
-                        <option value="">-- Select a role --</option>
-                    </select>
-                </div>
-
                 <div class="auth-form__actions">
                     <button class="mango-btn mango-btn--primary mango-btn--block"
                             name="button" value="Register" type="submit">

@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Mango.Core.Auth;
 
 namespace OpenIdentity.App.Controllers;
 
@@ -10,7 +10,6 @@ public class AccountController(
     IOpenIddictApplicationManager applicationManager,
     ILogger<AccountController> logger) : Controller
 {
-    private const string DefaultRole = "Customer";
     [HttpGet]
     public IActionResult Login(string? returnUrl = null)
     {
@@ -53,7 +52,6 @@ public class AccountController(
     public async Task<IActionResult> Register(string? returnUrl = null)
     {
         ViewData["ReturnUrl"] = returnUrl;
-        ViewBag.message = await GetRoleNamesAsync();
         return View(new RegisterViewModel { ReturnUrl = returnUrl });
     }
 
@@ -80,21 +78,21 @@ public class AccountController(
 
             if (result.Succeeded)
             {
-                // Only allow roles that already exist; fall back to the default role.
-                var role = !string.IsNullOrWhiteSpace(model.RoleName) && await roleManager.RoleExistsAsync(model.RoleName)
-                    ? model.RoleName
-                    : DefaultRole;
-
-                if (await roleManager.RoleExistsAsync(role))
+                // Self-registration only ever grants Customer. The role used to come from the form,
+                // and Admin always exists, so anyone could sign up as Admin and pass every admin
+                // check downstream. Admin accounts come from the SeedUsers configuration.
+                if (!await roleManager.RoleExistsAsync(AuthRoles.Customer))
                 {
-                    await userManager.AddToRoleAsync(user, role);
+                    await roleManager.CreateAsync(new IdentityRole(AuthRoles.Customer));
                 }
+
+                await userManager.AddToRoleAsync(user, AuthRoles.Customer);
 
                 await userManager.AddClaimsAsync(user,
                 [
                     new Claim(OpenIddictConstants.Claims.Name, user.Name!),
                     new Claim(OpenIddictConstants.Claims.Email, user.Email!),
-                    new Claim(OpenIddictConstants.Claims.Role, role)
+                    new Claim(OpenIddictConstants.Claims.Role, AuthRoles.Customer)
                 ]);
 
                 await signInManager.SignInAsync(user, isPersistent: false);
@@ -113,7 +111,6 @@ public class AccountController(
             }
         }
 
-        ViewBag.message = await GetRoleNamesAsync();
         return View(model);
     }
 
@@ -173,16 +170,6 @@ public class AccountController(
             LogoutId = logoutId,
             ShowLogoutPrompt = true
         });
-    }
-
-    private async Task<List<string>> GetRoleNamesAsync()
-    {
-        return await roleManager.Roles
-            .AsNoTracking()
-            .Where(r => r.Name != null)
-            .Select(r => r.Name!)
-            .OrderBy(name => name)
-            .ToListAsync();
     }
 
     [HttpPost("~/connect/endsession")]

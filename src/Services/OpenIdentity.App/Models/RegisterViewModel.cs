@@ -15,7 +15,6 @@ public class RegisterViewModel
     public string Password { get; set; } = string.Empty;
 
     public string? ReturnUrl { get; set; }
-    public string? RoleName { get; set; }
 
     public bool AllowRememberLogin { get; set; } = true;
     public bool EnableLocalLogin { get; set; } = true;
