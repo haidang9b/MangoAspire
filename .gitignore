@@ -413,3 +413,9 @@ FodyWeavers.xsd
 .env
 .env.*
 !.env.example
+
+# Signing keys generated at runtime by the identity providers (never commit private keys).
+# Duende AddDeveloperSigningCredential() writes tempkey.jwk to the working directory;
+# Duende automatic key management writes is-signing-key-*.json under keys/.
+**/tempkey.jwk
+src/Services/Identity.API/keys/

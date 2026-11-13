@@ -25,4 +25,13 @@
     <ProjectReference Include="..\..\Shared\Mango.ServiceDefaults\Mango.ServiceDefaults.csproj" />
   </ItemGroup>
 
+  <!-- Signing keys are generated at runtime and must never ship. The Web SDK treats every *.json as
+       Content and copies it to the build and publish output, which would bake Duende's
+       keys/is-signing-key-*.json into bin/ and any container image. -->
+  <ItemGroup>
+    <Content Remove="keys\**" />
+    <None Remove="keys\**" />
+    <None Remove="tempkey.jwk" />
+  </ItemGroup>
+
 </Project>
