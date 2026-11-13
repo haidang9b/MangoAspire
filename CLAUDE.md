@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-MangoAspire is a .NET 10 + Aspire microservices e-commerce platform (dual identity: Duende/OpenIddict; MVC + React/Vite SPA; PostgreSQL, RabbitMQ, Debezium).
+MangoAspire is a .NET 11 + Aspire microservices e-commerce platform (dual identity: Duende/OpenIddict; MVC + React/Vite SPA; PostgreSQL, RabbitMQ, Debezium).
 
 This file is a thin discovery shim for Claude Code. The authoritative build/lint/test/architecture
 guidance lives in `AGENTS.md` and is imported below — keep it single-sourced there, not duplicated here.

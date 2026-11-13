@@ -1,11 +1,11 @@
 services:
   serena:
-    # Built from the upstream Serena image + the .NET 10 SDK so its C# language server can start.
-    # See docker/serena/Dockerfile for why the stock image is insufficient for a .NET 10 project.
+    # Built from the upstream Serena image + the .NET 11 SDK so its C# language server can start.
+    # See docker/serena/Dockerfile for why the stock image is insufficient for a .NET 11 project.
     build:
       context: .
       dockerfile: docker/serena/Dockerfile
-    image: mango-serena:dotnet10
+    image: mango-serena:dotnet11
     container_name: serena
     restart: unless-stopped
 

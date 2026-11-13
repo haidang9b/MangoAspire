@@ -1,10 +1,12 @@
-# Extends the upstream Serena MCP image with the .NET 10 SDK.
+# Extends the upstream Serena MCP image with the .NET 11 SDK (+ the .NET 10 runtime).
 #
 # Serena's C# language server (Roslyn-based) requires a matching .NET runtime to start.
-# The stock ghcr.io/oraios/serena:latest image ships no .NET, so on a .NET 10 project it fails with:
+# The stock ghcr.io/oraios/serena:latest image ships no .NET, so it fails with:
 #   "Required .NET runtime version 10.0 not found (installed versions: [])"
 # which disables every semantic C# tool (find_symbol, find_referencing_symbols, get_symbols_overview, ...).
-# Layering the SDK here fixes that while keeping the upstream entrypoint/command intact.
+# The projects target net11.0, so MSBuild needs the 11.0 SDK to load them; the 10.0 runtime is kept
+# for the language server itself, which does not roll forward across major versions.
+# Layering both here fixes that while keeping the upstream entrypoint/command intact.
 FROM ghcr.io/oraios/serena:latest
 
 USER root
@@ -15,7 +17,8 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* \
     && curl -fsSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh \
     && chmod +x /tmp/dotnet-install.sh \
-    && /tmp/dotnet-install.sh --channel 10.0 --install-dir /usr/share/dotnet \
+    && /tmp/dotnet-install.sh --channel 11.0 --install-dir /usr/share/dotnet \
+    && /tmp/dotnet-install.sh --channel 10.0 --runtime dotnet --install-dir /usr/share/dotnet \
     && rm /tmp/dotnet-install.sh \
     && ln -sf /usr/share/dotnet/dotnet /usr/local/bin/dotnet
 

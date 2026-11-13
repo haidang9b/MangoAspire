@@ -1,6 +1,6 @@
 # Backend Services Architecture
 
-The back-end microservices of MangoAspire are fundamentally built on **.NET 10** utilizing a **Vertical Slice Architecture**.
+The back-end microservices of MangoAspire are fundamentally built on **.NET 11** utilizing a **Vertical Slice Architecture**.
 
 ## Vertical Slice Architecture
 Instead of separating code technically by layers (e.g., Controllers, Services, Repositories), code is grouped by feature. 

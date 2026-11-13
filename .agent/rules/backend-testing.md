@@ -1,6 +1,6 @@
 ---
 trigger: glob
-description: Enforces xUnit, Moq, and Shouldly for .NET 10/C# 14 tests.
+description: Enforces xUnit, Moq, and Shouldly for .NET 11/C# 15 tests.
 globs: **/tests/**/*.cs, **/*.Tests/**/*.cs, **/*Tests.cs
 ---
 

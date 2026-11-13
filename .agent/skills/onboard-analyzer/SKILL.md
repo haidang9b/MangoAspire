@@ -5,7 +5,7 @@ description: Use when generating or refreshing the onboarding documentation pack
 
 # Full-Stack Codebase Onboard Analyzer
 
-Generate a read-first onboarding pack under `/docs` for MangoAspire (React/Vite SPA + .NET 10,
+Generate a read-first onboarding pack under `/docs` for MangoAspire (React/Vite SPA + .NET 11,
 Vertical Slice backend — see `AGENTS.md` for the fixed stack facts; this skill documents structure
 and conventions on top of them, it doesn't re-detect the stack). Read-only: never run destructive
 commands, and never run installs/builds/tests without explicit permission — **`pnpm`, not `npm`**,

@@ -2,7 +2,7 @@
 
 ## Overview
 
-**MangoAspire** is a cloud-native, microservices-based e-commerce platform built on **.NET 10** and orchestrated by **.NET Aspire**. It demonstrates a modern, scalable architecture using industry-standard patterns like CQRS, Event-Driven Architecture, and Vertical Slices.
+**MangoAspire** is a cloud-native, microservices-based e-commerce platform built on **.NET 11** and orchestrated by **.NET Aspire**. It demonstrates a modern, scalable architecture using industry-standard patterns like CQRS, Event-Driven Architecture, and Vertical Slices.
 
 ## High-Level Architecture
 
@@ -147,5 +147,5 @@ Services follow the **Vertical Slice Architecture**, grouping code by feature (e
 
 ## Containerization
 
-- **Alpine Linux**: All microservices use **Alpine-based** Docker images (`aspnet:10.0-alpine`) to minimize footprint and reduce vulnerability surface area.
+- **Alpine Linux**: All microservices use **Alpine-based** Docker images (`aspnet:11.0-alpine`) to minimize footprint and reduce vulnerability surface area.
 - **Multi-Stage Builds**: Dockerfiles are optimized using multi-stage builds to separate build-time dependencies from the runtime environment.
