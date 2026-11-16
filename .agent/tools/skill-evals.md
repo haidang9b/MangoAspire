@@ -16,7 +16,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/eval-skills.ps1 -Ski
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/eval-skills.ps1 -Skill code-review,run-tests -Runs 2 -Model claude-sonnet-5-5
 ```
 
-Each run happens in a disposable `git worktree` of the committed `HEAD`, so **commit skill and eval
+Sessions may run only `dotnet build|test|format`, read-only `git` commands and the harness
+`-Check` lint, in either the Bash or the PowerShell tool. Each run happens in a disposable `git worktree` of the committed `HEAD`, so **commit skill and eval
 changes first**. Uncommitted edits are not evaluated. The developer's working tree is never touched.
 Before the session starts, `tests/skill-evals/` is hidden (skip-worktree) so it can't read the
 expected answers.
@@ -58,7 +59,8 @@ expected answers.
 
 `tests/skill-evals/_results/<timestamp>/` (gitignored) holds:
 - per run: `outputs/` (response, diff), `checks.json`, `grading.json` (`text`/`passed`/`evidence`,
-  in the skill-creator schema) and `meta.json`;
+  in the skill-creator schema), `grader-raw.txt` (the grader's raw reply; it is retried once if
+  unparseable) and `meta.json`;
 - per batch: `benchmark.json` and `summary.md`.
 
 | Verdict | Meaning |

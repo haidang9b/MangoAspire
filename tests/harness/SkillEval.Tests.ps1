@@ -34,6 +34,20 @@ Describe 'Get-ClaudeArgs' {
         $a = Get-ClaudeArgs -Purpose grade -Model 'claude-sonnet-5-5'
         ($a -join ' ') | Should -Match '--max-turns 1'; $a | Should -Not -Contain '--allowedTools'; $a | Should -Contain 'claude-sonnet-5-5'
     }
+    It 'allows the PowerShell tool every command it allows in Bash' {
+        $a = Get-ClaudeArgs -Purpose run
+        $tools = $a[[array]::IndexOf($a, '--allowedTools') + 1] -split ','
+        $bash = @($tools | Where-Object { $_ -like 'Bash(*' })
+        $bash.Count | Should -BeGreaterThan 0
+        foreach ($b in $bash) { $tools | Should -Contain ($b -replace '^Bash\(', 'PowerShell(') }
+    }
+    It 'allows dotnet format and the harness lint the repo guidance asks for' {
+        $a = Get-ClaudeArgs -Purpose run
+        $tools = $a[[array]::IndexOf($a, '--allowedTools') + 1] -split ','
+        $tools | Should -Contain 'PowerShell(dotnet format:*)'
+        $tools | Should -Contain 'PowerShell(./scripts/sync-agent-harness.ps1 -Check:*)'
+        $tools | Should -Contain 'Bash(powershell -NoProfile -ExecutionPolicy Bypass -File scripts/sync-agent-harness.ps1 -Check:*)'
+    }
 }
 
 Describe 'Invoke-EvalChecks' {
@@ -62,6 +76,20 @@ Describe 'Invoke-EvalGrade' {
         $g = Invoke-EvalGrade -RunDir $run -Expectations @() -Invoker { throw 'must not be called' } -GraderPromptPath $gp
         @($g.expectations).Count | Should -Be 2
         $g.pass_rate | Should -Be 0.5
+    }
+    It 'retries the grader once when its first output is unparseable' {
+        $calls = @{ n = 0 }
+        $inv = { param($WorkDir, $Prompt, $ClaudeArgs)
+            $calls.n++
+            if ($calls.n -eq 1) { 'not json' }
+            else { '{"result":"{\"expectations\":[{\"text\":\"e\",\"passed\":true,\"evidence\":\"ok\"}]}","total_cost_usd":0.01,"duration_ms":5}' } }.GetNewClosure()
+        $g = Invoke-EvalGrade -RunDir $run -Expectations @('e') -Invoker $inv -GraderPromptPath $gp
+        $calls.n | Should -Be 2
+        ($g.expectations | Where-Object source -eq 'grader').passed | Should -BeTrue
+    }
+    It 'saves the raw grader output for diagnosis' {
+        Invoke-EvalGrade -RunDir $run -Expectations @('e') -Invoker { 'not json' } -GraderPromptPath $gp | Out-Null
+        Get-Content (Join-Path $run 'grader-raw.txt') -Raw | Should -Match 'not json'
     }
     It 'records unparseable grader output as failed' {
         $g = Invoke-EvalGrade -RunDir $run -Expectations @('e') -Invoker { 'not json' } -GraderPromptPath $gp

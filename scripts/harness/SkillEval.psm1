@@ -10,7 +10,16 @@
 #>
 
 $script:CheckTypes = @('command', 'file-matches', 'no-edits', 'no-commit', 'response-matches')
-$script:RunTools = 'Read,Grep,Glob,Edit,Write,Bash(dotnet build:*),Bash(dotnet test:*),Bash(git diff:*),Bash(git status:*),Bash(git log:*)'
+# Command prefixes a session under test may run. Each is allowed in both shells: on Windows, Claude Code
+# runs commands through its PowerShell tool, so Bash-only rules deny every build and test.
+$script:RunCommands = @(
+    'dotnet build', 'dotnet test', 'dotnet format', 'git diff', 'git status', 'git log',
+    './scripts/sync-agent-harness.ps1 -Check',
+    'pwsh ./scripts/sync-agent-harness.ps1 -Check',
+    'powershell -NoProfile -ExecutionPolicy Bypass -File scripts/sync-agent-harness.ps1 -Check'
+)
+$script:RunTools = (@('Read', 'Grep', 'Glob', 'Edit', 'Write') +
+    @($script:RunCommands | ForEach-Object { 'Bash({0}:*)' -f $_; 'PowerShell({0}:*)' -f $_ })) -join ','
 $script:Utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 $script:MaxDiffChars = 60000
 
@@ -264,10 +273,14 @@ function Invoke-EvalGrade {
             "`n`n## Final response`n" + (Read-TextFile (Join-Path $RunDir 'outputs/response.md')) +
             "`n`n## Diff of the session's changes`n$fence" + "diff`n$diff`n$fence" +
             "`n`n## Deterministic check results`n$fence" + "json`n" + (Read-TextFile $checksPath) + "`n$fence`n"
-        $raw = $null
-        try { $raw = (& $Invoker -WorkDir $RunDir -Prompt $prompt -ClaudeArgs (Get-ClaudeArgs -Purpose grade -Model $Model)) | Out-String }
-        catch { $raw = $null }
-        $parsed = ConvertFrom-GraderOutput $raw
+        # One retry: a single malformed grader reply would otherwise fail every expectation of the run.
+        $raw = $null; $parsed = $null
+        for ($attempt = 1; $attempt -le 2 -and $null -eq $parsed; $attempt++) {
+            try { $raw = (& $Invoker -WorkDir $RunDir -Prompt $prompt -ClaudeArgs (Get-ClaudeArgs -Purpose grade -Model $Model)) | Out-String }
+            catch { $raw = 'invoker error: ' + $_.Exception.Message }
+            $parsed = ConvertFrom-GraderOutput $raw
+        }
+        Write-TextFile (Join-Path $RunDir 'grader-raw.txt') ([string]$raw)
         for ($i = 0; $i -lt $exp.Count; $i++) {
             if ($null -eq $parsed) {
                 $results.Add([pscustomobject]@{ text = $exp[$i]; passed = $false; evidence = 'grader returned unparseable output'; source = 'grader' })
