@@ -22,7 +22,7 @@ struck through as skipped. Do not maintain progress anywhere else.
 *Approved by the user before Step 2 starts.*
 
 ### Requirement
-*The PO requirement in one paragraph, plus acceptance criteria as a plain list.*
+Spec: `specs/<slug>/` — problem, acceptance criteria and test plan live there.
 
 ### Backend
 - **Slice:** which service and `Features/<FeatureName>/` folder
@@ -46,7 +46,7 @@ struck through as skipped. Do not maintain progress anywhere else.
 
 ## Steps
 - [ ] **Step 1 — Business analysis and technical planning**
-  - [ ] Run the analyze-requirement sub-workflow
+  - [ ] Write `specs/<slug>/` (analyze-requirement)
   - [ ] Context search: identify backend and frontend touchpoints
   - [ ] Write the technical blueprint above
   - [ ] Present clarifying questions to the user

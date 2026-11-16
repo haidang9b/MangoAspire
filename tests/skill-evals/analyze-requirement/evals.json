@@ -1,0 +1,48 @@
+{
+  "skill_name": "analyze-requirement",
+  "evals": [
+    {
+      "id": 1,
+      "name": "coupon-expiry",
+      "prompt": "Turn this PO requirement into a spec with acceptance criteria and a test plan: \"Coupons should be able to expire. A coupon gets an optional expiry date. Applying an expired coupon to a cart must fail with a clear message, and the coupon lookup must not return an expired coupon as valid.\"",
+      "expected_output": "specs/<slug>/ with spec.md, acceptance-criteria.md (Given/when/then ACs) and test-plan.md mapping every AC; the Specs lint passes.",
+      "checks": [
+        { "type": "file-matches", "glob": "specs/**/acceptance-criteria.md", "pattern": "(?m)^- \\[ \\] AC-1: Given (?!<)" },
+        { "type": "command", "run": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/sync-agent-harness.ps1 -Check -Category Specs" }
+      ],
+      "expectations": [
+        "An acceptance criterion covers rejecting an expired coupon with a clear message",
+        "An acceptance criterion covers a coupon without an expiry date continuing to work",
+        "The test plan maps every acceptance criterion to a test layer"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "order-cancellation-window",
+      "prompt": "Turn this PO requirement into a spec with acceptance criteria and a test plan: \"Customers can cancel an order within 30 minutes of placing it, unless the payment has already been captured. Cancelling releases the reserved stock.\"",
+      "expected_output": "specs/<slug>/ with testable ACs for the 30-minute window, the captured-payment rejection and the stock release; the Specs lint passes.",
+      "checks": [
+        { "type": "file-matches", "glob": "specs/**/acceptance-criteria.md", "pattern": "(?m)^- \\[ \\] AC-1: Given (?!<)" },
+        { "type": "command", "run": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/sync-agent-harness.ps1 -Check -Category Specs" }
+      ],
+      "expectations": [
+        "Acceptance criteria cover both sides of the 30-minute boundary",
+        "An acceptance criterion covers rejecting cancellation once payment is captured",
+        "An acceptance criterion covers releasing the reserved stock on cancellation"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "ambiguous-requirement",
+      "prompt": "Turn this PO requirement into a spec with acceptance criteria and a test plan: \"Make checkout faster for returning customers.\"",
+      "expected_output": "Surfaces open questions (what faster means, which steps, how returning customers are identified) instead of inventing specifics.",
+      "checks": [
+        { "type": "response-matches", "pattern": "\\?" }
+      ],
+      "expectations": [
+        "Lists concrete open questions, such as what 'faster' means, which checkout steps change, and how a returning customer is identified",
+        "Does not invent acceptance criteria for points the requirement leaves undecided; any spec it writes puts them under Open questions"
+      ]
+    }
+  ]
+}

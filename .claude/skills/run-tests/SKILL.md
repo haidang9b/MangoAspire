@@ -3,7 +3,6 @@ name: run-tests
 description: Use when running the .NET test suite (full solution, one project, or a single method) and triaging any failures.
 ---
 
-<!-- GENERATED from .agent/ by scripts/sync-agent-harness.ps1 - do not edit directly -->
 # Instructions
 
 1. From the repository root, run the full suite: `dotnet test MangoAspire.sln`.
@@ -15,7 +14,7 @@ description: Use when running the .NET test suite (full solution, one project, o
 
 ## Notes
 
-- Test stack: **xUnit + Moq + Shouldly** (see `.agent/rules/backend-testing.md`).
+- Test stack: **xUnit + Moq + Shouldly** (see `.claude/rules/backend-testing.md`).
 - There is **no frontend test runner** configured for `src/UI/mango-ui` (see AGENTS.md). Do not invent
   `npm`/`pnpm` test commands. For frontend changes, run `pnpm --dir src/UI/mango-ui lint` and
   `pnpm --dir src/UI/mango-ui build` instead.

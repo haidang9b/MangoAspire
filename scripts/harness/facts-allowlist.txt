@@ -1,0 +1,35 @@
+# Facts allowlist for scripts/sync-agent-harness.ps1 -Check (category: Facts).
+#
+# The Facts lint requires every backticked symbol or package named in harness files to exist in the
+# source corpus (src/, tests/, *.sln, *.props, docker-compose*.yml). List a token here only when it
+# is legitimately absent from the code, such as an illustrative name in a naming example or a CLI or
+# framework term, and always give the reason:
+#
+#   TokenName  # why it is not in the code
+
+# Anti-patterns and platform APIs named in review guidance (they must NOT appear in the code)
+Task.Result  # blocking-async anti-pattern listed in code-review rules
+Task.Wait  # blocking-async anti-pattern listed in code-review rules
+sessionStorage  # browser storage API named in the SPA token-storage security rule
+_camelCase  # private-field naming pattern, not a symbol
+
+# Ticket front-matter and .agent/state keys (live in .agent/, outside the source corpus)
+createdUtc  # ticket front-matter field
+updatedUtc  # ticket front-matter field
+completedUtc  # ticket front-matter field
+activeTicketId  # .agent/state/current.json key
+
+# Illustrative names in naming-convention examples
+MethodName_When_Behavior_Then_ExpectedResult  # the test-name pattern itself
+GetUser_When_UserNotFound_Then_ThrowNotFoundException  # example test name in backend-testing rule
+Method_When_Condition_Then_Result  # test-name pattern in AGENTS.md guardrails
+
+# Names memory records deliberately as absent, removed or to-avoid
+Mango.Common  # project removed in 2a525cf; memory warns that references to it are stale
+CartItemsJson  # docs/CHECKOUT_SAGA.md field that does NOT exist on CheckoutSagaState (memory warns)
+PaymentId  # docs/CHECKOUT_SAGA.md field that does NOT exist on CheckoutSagaState (memory warns)
+RequireClaim  # the scope-policy trap memory warns against; the code uses a whitespace-splitting assertion
+Microsoft.AspNetCore.WebUtilities  # vulnerable transitive package memory warns about; deliberately not referenced
+
+# Tool names
+Grep  # Claude Code tool name in the Serena MCP notes

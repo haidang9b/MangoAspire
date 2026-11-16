@@ -1,0 +1,52 @@
+{
+  "skill_name": "code-review",
+  "evals": [
+    {
+      "id": 1,
+      "name": "flags-repository-layer",
+      "prompt": "Review the uncommitted changes in this repository and report your findings. Do not modify any files.",
+      "expected_output": "Flags the new ProductRepository/IProductRepository as a violation of the no-repository Vertical Slice rule, at the highest severity.",
+      "setup": ["git apply tests/skill-evals/code-review/files/repository-layer.patch"],
+      "checks": [
+        { "type": "no-edits" },
+        { "type": "response-matches", "pattern": "(?i)repositor" }
+      ],
+      "expectations": [
+        "Identifies the new ProductRepository / IProductRepository as violating this repo's rule that handlers use the DbContext directly (no repository layer)",
+        "Ranks that finding as Critical or blocking, the highest severity used in the report",
+        "Notes that IProductRepository is never registered for dependency injection, or recommends going back to ProductDbContext in the handler"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "flags-missing-validator",
+      "prompt": "Review the uncommitted changes in this repository and report your findings. Do not modify any files.",
+      "expected_output": "Flags that the new UpdateProductPrice command has no FluentValidation validator, so non-positive prices are accepted.",
+      "setup": ["git apply tests/skill-evals/code-review/files/missing-validator.patch"],
+      "checks": [
+        { "type": "no-edits" },
+        { "type": "response-matches", "pattern": "(?i)validat" }
+      ],
+      "expectations": [
+        "Points out that UpdateProductPrice.Command has no FluentValidation validator, which this repo requires for every command",
+        "Notes that a zero or negative price would be accepted",
+        "Gives a concrete fix, such as a nested AbstractValidator<Command> with RuleFor(x => x.Price).GreaterThan(0)"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "clean-change-no-blockers",
+      "prompt": "Review the uncommitted changes in this repository and report your findings. Do not modify any files.",
+      "expected_output": "Recognizes a correct one-line improvement (passing the CancellationToken) and raises no Critical findings.",
+      "setup": ["git apply tests/skill-evals/code-review/files/clean-change.patch"],
+      "checks": [
+        { "type": "no-edits" }
+      ],
+      "expectations": [
+        "Recognizes that the change passes the CancellationToken through to FirstOrDefaultAsync",
+        "Reports no Critical or blocking findings for this change",
+        "Does not present problems in code outside the diff as findings about this change"
+      ]
+    }
+  ]
+}

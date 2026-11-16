@@ -15,7 +15,7 @@ and `OpenIdentity.App` (OpenIddict). The AppHost starts exactly one.
 
 ## Seed accounts
 
-`Mango.Core.Options.SeedUsersOptions` gives both providers one seed-account contract with **fixed
+`SeedUsersOptions` (`Mango.Core.Options`) gives both providers one seed-account contract with **fixed
 IDs**, which keeps the OIDC `sub` claim stable across a provider switch. Changing those IDs
 invalidates existing tokens and any data keyed by `sub`.
 

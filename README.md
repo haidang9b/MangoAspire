@@ -68,11 +68,12 @@ MangoAspire/
 ├── docs/                        # Human documentation
 │   ├── ARCHITECTURE.md          # Global System Architecture
 │   └── ...                      # Feature-specific guides
-├── .agent/                      # AI agent harness (see .agent/README.md)
-│   ├── rules/ skills/ workflows/  # Normative guidance, skills, slash-command workflows
+├── .claude/                     # Agent harness: rules/ (path-scoped), skills/, agents/
+├── .agent/                      # Agent knowledge and state (see .agent/README.md)
 │   ├── memory/                  # Project memory (index.md links out to domain files)
 │   ├── tickets/                 # One ticket.md per ticket (status + plan + notes)
-│   └── tools/                   # MCP servers, dev scripts, harness generation
+│   └── tools/                   # Harness, skill evals, MCP servers, dev scripts
+├── specs/                       # Feature specs: spec, acceptance criteria, test plan
 └── Directory.Packages.props     # Centralized NuGet versioning
 ```
 
@@ -123,8 +124,7 @@ MangoAspire/
 For detailed information on project-specific setups:
 - [React UI Documentation](src/UI/mango-ui/README.md)
 - [NuGet Package Management Guide](docs/PACKAGE_MANAGEMENT.md)
-- [API Project Structure & Architecture](.agent/API_PROJECT_STRUCTURE.md)
-- [Coding Conventions & Standards](.agent/CODING_CONVENTIONS.md)
+- [Backend conventions](.claude/rules/backend.md) and [feature-slice templates](.claude/skills/add-feature-slice/SKILL.md)
 - [Agent Harness Overview](.agent/README.md)
 - [Project Memory Index](.agent/memory/index.md)
 - [Tickets](.agent/tickets/) — one `ticket.md` per ticket; `status` lives in its front-matter

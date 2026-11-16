@@ -1,0 +1,50 @@
+{
+  "skill_name": "add-feature-slice",
+  "evals": [
+    {
+      "id": 1,
+      "name": "query-by-category",
+      "prompt": "Add an endpoint GET /api/products/by-catalog-type/{catalogTypeId} to Products.API that returns the products of one catalog type.",
+      "expected_output": "A new query slice under Features/Products with a nested handler using ProductDbContext + AsNoTracking + Select to ProductDto, a route calling sender.SendAsync; the project builds.",
+      "checks": [
+        { "type": "command", "run": "dotnet build src/Services/Products.API/Products.API.csproj" },
+        { "type": "file-matches", "glob": "src/Services/Products.API/Routes/*.cs", "pattern": "by-catalog-type" }
+      ],
+      "expectations": [
+        "Adds a new feature slice (query class with a nested handler) under Features/Products instead of a service or repository class",
+        "The handler reads with AsNoTracking and a Select projection to a DTO",
+        "The route sends the query through ISender.SendAsync and returns Results.Ok"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "command-with-validator",
+      "prompt": "Add a command to Products.API that sets a product's available stock: PUT /api/products/{id}/stock with a quantity that must not be negative.",
+      "expected_output": "A new command slice with a FluentValidation validator rejecting negative quantities, a DataVerificationException for unknown products, and the PUT route; the project builds.",
+      "checks": [
+        { "type": "command", "run": "dotnet build src/Services/Products.API/Products.API.csproj" },
+        { "type": "file-matches", "glob": "src/Services/Products.API/Routes/*.cs", "pattern": "/stock" }
+      ],
+      "expectations": [
+        "The new command has a FluentValidation validator that rejects a negative quantity",
+        "An unknown product id throws DataVerificationException instead of returning an error result",
+        "The handler uses ProductDbContext directly, with no repository or service layer"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "integration-event-handler",
+      "prompt": "When a product is deleted in Products.API, publish a ProductDeletedIntegrationEvent carrying the product id through the event bus so other services can react.",
+      "expected_output": "A ProductDeletedIntegrationEvent derived from IntegrationEvent, published with IEventBus.PublishAsync from the DeleteProduct handler after the delete is saved; the project builds.",
+      "checks": [
+        { "type": "command", "run": "dotnet build src/Services/Products.API/Products.API.csproj" },
+        { "type": "file-matches", "glob": "src/Services/Products.API/**/*.cs", "pattern": "(record|class)\\s+ProductDeletedIntegrationEvent" },
+        { "type": "file-matches", "glob": "src/Services/Products.API/Features/Products/DeleteProduct.cs", "pattern": "PublishAsync" }
+      ],
+      "expectations": [
+        "The event type derives from IntegrationEvent and carries the product id",
+        "The DeleteProduct handler publishes it through IEventBus.PublishAsync after SaveChangesAsync"
+      ]
+    }
+  ]
+}

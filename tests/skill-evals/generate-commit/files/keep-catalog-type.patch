@@ -1,0 +1,13 @@
+diff --git a/src/Services/Products.API/Features/Products/UpdateProduct.cs b/src/Services/Products.API/Features/Products/UpdateProduct.cs
+index f636712..c142380 100644
+--- a/src/Services/Products.API/Features/Products/UpdateProduct.cs
++++ b/src/Services/Products.API/Features/Products/UpdateProduct.cs
+@@ -46,7 +46,7 @@ public class UpdateProduct
+                 product.Name = request.Name;
+                 product.Price = request.Price;
+                 product.Description = request.Description;
+-                product.CatalogTypeId = request.CatalogTypeId;
++                product.CatalogTypeId = request.CatalogTypeId ?? product.CatalogTypeId;
+                 product.ImageUrl = request.ImageUrl;
+                 product.AvailableStock = request.Stock;
+ 

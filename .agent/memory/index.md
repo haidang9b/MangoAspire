@@ -1,16 +1,15 @@
 # Project Memory Index
 
 Descriptive memory — what is *true* about this project and what we learned the hard way.
-Normative rules ("what you must do") live in `.agent/rules/`, `.agent/CODING_CONVENTIONS.md`,
-`.agent/API_PROJECT_STRUCTURE.md` and `AGENTS.md`.
+Normative rules ("what you must do") live in `.claude/rules/` (path-scoped) and `AGENTS.md`.
 
-Read this index, then read only the file(s) covering the area you are touching. Paths are plain
-links on purpose — do **not** turn them into `@`-imports (see `.agent/memory/MEMORY_GUIDE.md`).
+Read this index, then read only the file(s) covering the area you are touching. Nothing imports this file; `AGENTS.md` links it.
+Domain files also surface automatically through `.claude/rules/memory/`.
 
 ## Always useful
 
 - `.agent/memory/architecture.md` — source map of `src/`, project-wide invariants, and the
-  deliberate exceptions (the `Mango.Orchestrators` saga repository, the legacy `Coupon.API`).
+  deliberate exception (the `Mango.Orchestrators` saga repository).
 - `.agent/memory/stack.md` — exact frameworks and versions, package-manager rules, central package
   management.
 

@@ -1,0 +1,13 @@
+diff --git a/src/Services/Products.API/Features/Products/GetProductById.cs b/src/Services/Products.API/Features/Products/GetProductById.cs
+index ce26093..6802423 100644
+--- a/src/Services/Products.API/Features/Products/GetProductById.cs
++++ b/src/Services/Products.API/Features/Products/GetProductById.cs
+@@ -16,7 +16,7 @@ public class GetProductById
+             {
+                 var product = await dbContext.Products
+                     .AsNoTracking()
+-                    .Where(x => x.Id == request.ProductId)
++                    .Where(x => x.Id != request.ProductId)
+                     .Select(x => new ProductDto
+                     {
+                         Id = x.Id,

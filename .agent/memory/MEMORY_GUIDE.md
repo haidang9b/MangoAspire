@@ -23,7 +23,7 @@ generalizable, not task-local.
 ## Normative vs descriptive
 
 Memory is **descriptive** — what is true, what we learned, what surprised us. Rules you must follow
-belong in `.agent/rules/`, `AGENTS.md`, or `.agent/CODING_CONVENTIONS.md`. If a note reads like
+belong in `.claude/rules/` (path-scoped) or `AGENTS.md`. If a note reads like
 "always do X", it is a rule and belongs there instead. The exception worth recording in memory is
 the *deviation*: "service Y breaks rule X because Z".
 

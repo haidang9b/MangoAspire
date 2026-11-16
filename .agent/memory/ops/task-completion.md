@@ -10,7 +10,9 @@ not introduce new architecture patterns without an explicit request.
    (optionally `--filter "FullyQualifiedName~..."`).
 3. Formatting: `dotnet format --verify-no-changes MangoAspire.sln` — run `dotnet format` to fix.
 
-`WarningsAsErrors` is on in `Directory.Build.props`, so a new warning is a build failure.
+`Directory.Build.props` makes only CS1998 and CS4014 build errors. About 100 nullable warnings
+already exist, so check that you added none (compare against a baseline build) rather than
+expecting zero.
 
 ## Frontend change (`src/UI/mango-ui`)
 
@@ -19,11 +21,18 @@ not introduce new architecture patterns without an explicit request.
 
 There is no frontend test runner — do **not** invent test commands.
 
-## After editing `.agent/` harness sources
+## After editing the harness
 
-- `.agent/{skills,agents,workflows}/` changed → `pwsh ./scripts/sync-agent-harness.ps1`
-  (verify with `-Check`).
-- `.agent/tickets/**/ticket.md` changed → nothing to regenerate; the file is the state.
+- `.claude/rules/` or `.claude/agents/` changed: run `pwsh ./scripts/sync-agent-harness.ps1`, then
+  `-Check`.
+- `.claude/skills/`, `AGENTS.md`, `.agent/memory/` or `specs/` changed: run
+  `pwsh ./scripts/sync-agent-harness.ps1 -Check` (Facts, Links, Specs, Budget).
+- A skill changed substantively: re-run its evals with `scripts/eval-skills.ps1 -Skill <name>` and
+  compare the verdict.
+- `.agent/tickets/**/ticket.md` changed: nothing to regenerate; the file is the state.
 
-Skills exist for several of these flows: `run-tests`, `fix-warnings`, `review`,
-`manage-documentation`.
+Windows PowerShell 5.1 has no `pwsh`: run
+`powershell -NoProfile -ExecutionPolicy Bypass -File scripts/sync-agent-harness.ps1` (add `-Check`).
+
+Skills cover several of these flows: `run-tests` and `generate-commit`, plus `/fix-warnings` and
+`/update-docs`.

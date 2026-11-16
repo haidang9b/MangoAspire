@@ -1,0 +1,67 @@
+diff --git a/src/Services/Products.API/Data/ProductRepository.cs b/src/Services/Products.API/Data/ProductRepository.cs
+new file mode 100644
+index 0000000..9188f4d
+--- /dev/null
++++ b/src/Services/Products.API/Data/ProductRepository.cs
+@@ -0,0 +1,29 @@
++using Microsoft.EntityFrameworkCore;
++using Products.API.Dtos;
++
++namespace Products.API.Data;
++
++public interface IProductRepository
++{
++    Task<ProductDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
++}
++
++public class ProductRepository(ProductDbContext dbContext) : IProductRepository
++{
++    public async Task<ProductDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
++    {
++        return await dbContext.Products
++            .Where(x => x.Id == id)
++            .Select(x => new ProductDto
++            {
++                Id = x.Id,
++                Name = x.Name,
++                Price = x.Price,
++                CatalogTypeId = x.CatalogTypeId,
++                Description = x.Description,
++                ImageUrl = x.ImageUrl,
++                Stock = x.AvailableStock
++            })
++            .FirstOrDefaultAsync(cancellationToken);
++    }
++}
+diff --git a/src/Services/Products.API/Features/Products/GetProductById.cs b/src/Services/Products.API/Features/Products/GetProductById.cs
+index ce26093..871e385 100644
+--- a/src/Services/Products.API/Features/Products/GetProductById.cs
++++ b/src/Services/Products.API/Features/Products/GetProductById.cs
+@@ -10,25 +10,11 @@ public class GetProductById
+     {
+         public Guid ProductId { get; set; }
+ 
+-        internal class Handler(ProductDbContext dbContext) : IRequestHandler<Query, ResultModel<ProductDto>>
++        internal class Handler(IProductRepository repository) : IRequestHandler<Query, ResultModel<ProductDto>>
+         {
+             public async Task<ResultModel<ProductDto>> HandleAsync(Query request, CancellationToken cancellationToken)
+             {
+-                var product = await dbContext.Products
+-                    .AsNoTracking()
+-                    .Where(x => x.Id == request.ProductId)
+-                    .Select(x => new ProductDto
+-                    {
+-                        Id = x.Id,
+-                        Name = x.Name,
+-                        Price = x.Price,
+-                        CatalogTypeId = x.CatalogTypeId,
+-                        CategoryName = x.CatalogType!.Type,
+-                        Description = x.Description,
+-                        ImageUrl = x.ImageUrl,
+-                        Stock = x.AvailableStock
+-                    }).FirstOrDefaultAsync()
+-
++                var product = await repository.GetByIdAsync(request.ProductId, cancellationToken)
+                     ?? throw new DataVerificationException("Product not found");
+ 
+                 return ResultModel<ProductDto>.Create(product);

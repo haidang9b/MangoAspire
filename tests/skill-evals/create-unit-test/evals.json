@@ -1,0 +1,52 @@
+{
+  "skill_name": "create-unit-test",
+  "evals": [
+    {
+      "id": 1,
+      "name": "products-query-handler",
+      "prompt": "Write unit tests for the GetProductById query handler in src/Services/Products.API/Features/Products/GetProductById.cs and save them in the Products.API test project.",
+      "expected_output": "A GetProductById test class in tests/Services/Products.API.Tests with Method_When_Condition_Then_Result names, Shouldly assertions, an in-memory DbContext, covering found and not-found; the tests pass.",
+      "setup": ["Remove-Item tests/Services/Products.API.Tests/Features/Products/GetProductByIdTests.cs"],
+      "checks": [
+        { "type": "file-matches", "glob": "tests/Services/Products.API.Tests/**/*.cs", "pattern": "(?s)GetProductById.*_When_\\w+_Then_\\w+" },
+        { "type": "command", "run": "dotnet test tests/Services/Products.API.Tests/Products.API.Tests.csproj --filter \"FullyQualifiedName~GetProductById\"" }
+      ],
+      "expectations": [
+        "The tests use Shouldly assertions and no xUnit Assert calls",
+        "The tests cover both the product-found path and the not-found path that throws DataVerificationException",
+        "The tests use an in-memory DbContext or mocks, never a real database"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "cart-command-handler",
+      "prompt": "Write unit tests for the RemoveFromCart command handler in src/Services/ShoppingCart.API/Features/Carts/RemoveFromCart.cs and save them in the ShoppingCart.API test project.",
+      "expected_output": "A RemoveFromCart test class in tests/Services/ShoppingCart.API.Tests following the naming and Shouldly conventions; the tests pass.",
+      "setup": ["Remove-Item tests/Services/ShoppingCart.API.Tests/Features/Carts/RemoveFromCartTests.cs"],
+      "checks": [
+        { "type": "file-matches", "glob": "tests/Services/ShoppingCart.API.Tests/**/*.cs", "pattern": "(?s)RemoveFromCart.*_When_\\w+_Then_\\w+" },
+        { "type": "command", "run": "dotnet test tests/Services/ShoppingCart.API.Tests/ShoppingCart.API.Tests.csproj --filter \"FullyQualifiedName~RemoveFromCart\"" }
+      ],
+      "expectations": [
+        "Every test method name follows MethodName_When_Condition_Then_Result",
+        "The tests use Shouldly assertions and no xUnit Assert calls",
+        "The tests cover the happy path and at least one failure path (such as a missing cart item)"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "validator-rules",
+      "prompt": "Write unit tests for CheckoutRequestValidator in src/Services/ShoppingCart.API/Features/Carts/Checkout/CheckoutRequestValidator.cs and save them in the ShoppingCart.API test project.",
+      "expected_output": "A CheckoutRequestValidator test class covering every rule, including an invalid email; the tests pass.",
+      "checks": [
+        { "type": "file-matches", "glob": "tests/Services/ShoppingCart.API.Tests/**/*.cs", "pattern": "(?s)CheckoutRequestValidator.*_When_\\w+_Then_\\w+" },
+        { "type": "command", "run": "dotnet test tests/Services/ShoppingCart.API.Tests/ShoppingCart.API.Tests.csproj --filter \"FullyQualifiedName~CheckoutRequestValidator\"" }
+      ],
+      "expectations": [
+        "The tests cover every rule: FirstName, LastName, Email (including a malformed address) and Phone",
+        "The tests use Shouldly assertions and no xUnit Assert calls",
+        "Every test method name follows MethodName_When_Condition_Then_Result"
+      ]
+    }
+  ]
+}

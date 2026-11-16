@@ -1,0 +1,13 @@
+diff --git a/src/Services/Products.API/Features/Products/GetProductById.cs b/src/Services/Products.API/Features/Products/GetProductById.cs
+index ce26093..73fa10e 100644
+--- a/src/Services/Products.API/Features/Products/GetProductById.cs
++++ b/src/Services/Products.API/Features/Products/GetProductById.cs
+@@ -27,7 +27,7 @@ public class GetProductById
+                         Description = x.Description,
+                         ImageUrl = x.ImageUrl,
+                         Stock = x.AvailableStock
+-                    }).FirstOrDefaultAsync()
++                    }).FirstOrDefaultAsync(cancellationToken)
+ 
+                     ?? throw new DataVerificationException("Product not found");
+ 

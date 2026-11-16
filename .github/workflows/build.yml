@@ -77,3 +77,18 @@ jobs:
       - name: Build
         # Runs "tsc -b && vite build", so this type-checks as well as bundles.
         run: pnpm build
+
+  harness:
+    name: Agent harness
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Pester
+        shell: pwsh
+        run: Invoke-Pester -Path tests/harness -CI
+
+      - name: Drift, budgets, links, staleness, facts, specs, evals
+        shell: pwsh
+        run: ./scripts/sync-agent-harness.ps1 -Check
