@@ -19,11 +19,15 @@ not introduce new architecture patterns without an explicit request.
 
 There is no frontend test runner — do **not** invent test commands.
 
-## After editing `.agent/` harness sources
+## After editing the harness
 
-- `.agent/{skills,agents,workflows}/` changed → `pwsh ./scripts/sync-agent-harness.ps1`
-  (verify with `-Check`).
-- `.agent/tickets/**/ticket.md` changed → nothing to regenerate; the file is the state.
+- `.claude/rules/` or `.claude/agents/` changed: run `pwsh ./scripts/sync-agent-harness.ps1`, then
+  `-Check`.
+- `.claude/skills/`, `AGENTS.md`, `.agent/memory/` or `specs/` changed: run
+  `pwsh ./scripts/sync-agent-harness.ps1 -Check` (Facts, Links, Specs, Budget).
+- A skill changed substantively: re-run its evals with `scripts/eval-skills.ps1 -Skill <name>` and
+  compare the verdict.
+- `.agent/tickets/**/ticket.md` changed: nothing to regenerate; the file is the state.
 
-Skills exist for several of these flows: `run-tests`, `fix-warnings`, `review`,
-`manage-documentation`.
+Skills cover several of these flows: `run-tests` and `generate-commit`, plus `/fix-warnings` and
+`/update-docs`.

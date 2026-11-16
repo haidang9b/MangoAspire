@@ -1,61 +1,70 @@
-# `.agent/` — the agent harness
+# `.agent/` — project knowledge and work state
 
-Single source of truth for how coding agents work in this repository. Everything here is
-version-controlled and shared; nothing here is machine-local.
+The agent harness is split by what each tool can read natively. This folder holds only what no tool
+loads by itself: **memory**, **tickets** and **tooling notes**. Everything here is version-controlled
+and shared; nothing here is machine-local.
 
-## What each directory owns
+## Where everything lives
 
-| Directory | Holds | Written by |
-|---|---|---|
-| `rules/` | **Normative** — what you *must* do, triggered by file globs | humans |
-| `CODING_CONVENTIONS.md`, `API_PROJECT_STRUCTURE.md` | Normative, linked from `CLAUDE.md` (read on demand) | humans |
-| `memory/` | **Descriptive** — what is *true* about this project and what we learned | agent, at ticket completion |
-| `tickets/` | One `ticket.md` per ticket: status, plan and notes in a single file | agent, continuously |
-| `state/` | Tiny derived cache — which ticket is active | agent |
-| `tools/` | Tooling and integrations: MCP servers, dev scripts, harness generation | humans |
-| `skills/`, `agents/`, `workflows/` | Claude Code harness sources — the only dirs the sync script reads | humans |
+| Location | Holds | Loaded | Written by |
+|---|---|---|---|
+| `AGENTS.md` | Always-on cross-tool index: commands, guardrails, pointers (≤ 4 KB) | every session (Claude via `CLAUDE.md`, Copilot directly) | humans |
+| `CLAUDE.md` | `@AGENTS.md` + Claude-only notes (≤ 1 KB) | every Claude session | humans |
+| `.claude/rules/` | **Normative**, path-scoped conventions (`paths:`) | when a matching file is read or edited | humans |
+| `.claude/skills/` | Skills: 5 model-invocable, 5 user-only workflows | description at start; body on use | humans |
+| `.claude/agents/` | Subagents (thin, point at their skill) | when spawned | humans |
+| `.github/instructions/`, `.github/agents/` | **Generated** Copilot mirror of rules and agents | by Copilot | `scripts/sync-agent-harness.ps1` |
+| `specs/<slug>/` | Feature contract: spec, acceptance criteria, test plan (agentic-devkit format) | on demand | agent + humans |
+| `.agent/memory/` | **Descriptive**: what is true, what we learned | on demand (index + pointer rules) | agent, at ticket completion |
+| `.agent/tickets/` | One `ticket.md` per ticket: status, steps, notes | on demand | agent, continuously |
+| `.agent/state/` | Tiny derived cache: which ticket is active | on demand | agent |
+| `.agent/tools/` | Tooling notes: harness, skill evals, Serena MCP, dev scripts | on demand | humans |
+| `tests/skill-evals/` | Skill output evals (`evals.json` + fixtures) | never by sessions under test | humans |
 
-`docs/` is **human documentation**. It holds no agent memory and no ticket state.
+`docs/` is **human documentation**. It holds no agent memory, ticket state or specs.
 
 ## Normative vs descriptive
 
-`rules/` says *"use FluentValidation for every command"*. `memory/` says *"`Mango.Orchestrators`
-keeps a SagaRepository — a deliberate exception to the no-repository rule"*. Keeping these apart is
-what stops the same convention being restated in three files and drifting.
+`.claude/rules/backend.md` says *"every command has a FluentValidation validator"*. Memory says
+*"`Mango.Orchestrators` keeps a SagaRepository, a deliberate exception to the no-repository rule"*.
+Keeping these apart is what stops one convention being restated in three files and drifting.
 
-## Generated files — never hand-edit
+## Keeping it honest
 
-| Generated | From | By |
-|---|---|---|
-| `.claude/{skills,agents,commands}/` | `.agent/{skills,agents,workflows}/` | `pwsh ./scripts/sync-agent-harness.ps1` (`-Check` for drift) |
+`scripts/sync-agent-harness.ps1 -Check` runs in CI. It checks:
+- size budgets;
+- rule and skill shape;
+- broken paths and links;
+- stale terms;
+- drift of the Copilot mirror;
+- **facts**: backticked symbols must exist in the code;
+- **specs**: AC ↔ test-plan traceability;
+- eval-set validity.
 
-Carries a "GENERATED — do not edit directly" banner. Edit the source, then re-run the script.
+See `.agent/tools/harness.md`. Skill quality is measured separately with
+`scripts/eval-skills.ps1` (see `.agent/tools/skill-evals.md`).
 
 ## Working a ticket
 
-Everything for a ticket is one file: `.agent/tickets/<TICKET-ID>/ticket.md` (plus an optional
-`artifacts/` folder for extras like code reviews or walkthroughs).
+Everything for a ticket is one file, `.agent/tickets/<TICKET-ID>/ticket.md`, plus an optional
+`artifacts/` folder.
 
 - **Front-matter** (`kind`, `status`, `priority`, timestamps) is the header.
-- **`## Steps`** checkboxes are progress. A step is closed once every task under it is checked
-  (done, or struck through as `— skipped: <reason>`).
-- **`## Plan`, `## Decisions`, `## Gotchas`, `## Open Questions`, `## Blockers`, `## Session Log`**
+- **`## Steps`** checkboxes are progress. A step is closed once every task under it is checked,
+  either done or struck through as `— skipped: <reason>`.
+- **`## Plan`, `## Decisions`, `## Gotchas`, `## Open Questions`, `## Blockers` and `## Session Log`**
   are prose.
+- **`kind`** (`feature | bug | chore | security | refactor | spike`) selects the template under
+  `.agent/tickets/_templates/`. Feature tickets link a spec in `specs/<slug>/`.
 
-There's nothing to keep in sync across files, because there's only one file. `kind` —
-`feature | bug | chore | security | refactor | spike` — selects which template under
-`.agent/tickets/_templates/` a new ticket starts from; each kind has a lighter or heavier `## Plan`
-shape to match the work (a `chore` doesn't get feature-style BA/PO ceremony).
-
-Completed tickets stay where they are; `status: completed` *is* the archive. Nothing gets moved.
+Completed tickets stay where they are; `status: completed` *is* the archive.
 
 ## Loading memory without burning context
 
-`CLAUDE.md` imports **only** `.agent/memory/index.md` (~1.5 KB). That index says *when* to read each
-domain file; the agent reads those on demand.
+Nothing imports `.agent/memory/index.md`. `AGENTS.md` links it, and the pointer rules in
+`.claude/rules/memory/` surface the right domain file when you touch that area's code.
 
-> **`index.md` must link with plain backticked paths, never `@`-imports.** Claude Code follows `@`
-> recursively — one `@` in the index pulls the entire memory tree into every session and defeats the
-> whole design.
+> Link memory files with plain backticked paths, never `@`-imports. Claude Code expands `@`
+> recursively, and one `@` would pull the memory tree into every session.
 
 See `.agent/memory/MEMORY_GUIDE.md` for what belongs in memory and what does not.

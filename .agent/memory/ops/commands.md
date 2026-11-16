@@ -9,8 +9,11 @@ The dev machine is **Windows 11 + PowerShell**. Helper scripts in `scripts/` are
   start MCP).
 - `pwsh ./scripts/run-app.ps1` — launch the Aspire AppHost.
 - `pwsh ./scripts/build.ps1` · `test.ps1` · `format.ps1` · `ui.ps1` · `start-mcp.ps1`.
-- `pwsh ./scripts/sync-agent-harness.ps1` (`-Check` for a dry run) — regenerate `.claude/` from
-  `.agent/`.
+- `pwsh ./scripts/sync-agent-harness.ps1`: refresh the Copilot mirror from `.claude/`. `-Check` lints
+  the harness (CI gate).
+- `pwsh ./scripts/eval-skills.ps1 -Skill <name> -DryRun`: skill output evals (costs tokens; never in
+  CI).
+- Windows PowerShell 5.1 has no `pwsh`, so use `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/<x>.ps1`.
 
 ## Backend (.NET)
 

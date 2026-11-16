@@ -11,7 +11,7 @@ React 19 + Vite + TypeScript. See `.agent/memory/stack.md` for versions.
   `import type` for type-only imports.
 - **No test runner is configured.** Verify with `pnpm lint` + `pnpm build` only — do not invent test
   commands.
-- API client code lives in `src/api/` and is consumed through hooks and components.
+- API client code lives in `src/UI/mango-ui/src/api/` and is consumed through hooks and components.
 - Reuse the existing contexts before adding a global: `AuthContext`, plus the cart, theme and
   notification patterns.
 - Localization is i18next / react-i18next, EN + VI (`docs/frontend/i18n.md`). State management is

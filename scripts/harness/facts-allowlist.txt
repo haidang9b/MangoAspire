@@ -23,3 +23,13 @@ activeTicketId  # .agent/state/current.json key
 MethodName_When_Behavior_Then_ExpectedResult  # the test-name pattern itself
 GetUser_When_UserNotFound_Then_ThrowNotFoundException  # example test name in backend-testing rule
 Method_When_Condition_Then_Result  # test-name pattern in AGENTS.md guardrails
+
+# Names memory records deliberately as absent, removed or to-avoid
+Mango.Common  # project removed in 2a525cf; memory warns that references to it are stale
+CartItemsJson  # docs/CHECKOUT_SAGA.md field that does NOT exist on CheckoutSagaState (memory warns)
+PaymentId  # docs/CHECKOUT_SAGA.md field that does NOT exist on CheckoutSagaState (memory warns)
+RequireClaim  # the scope-policy trap memory warns against; the code uses a whitespace-splitting assertion
+Microsoft.AspNetCore.WebUtilities  # vulnerable transitive package memory warns about; deliberately not referenced
+
+# Tool names
+Grep  # Claude Code tool name in the Serena MCP notes

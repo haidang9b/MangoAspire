@@ -19,8 +19,8 @@ Dual identity providers (Duende IdentityServer via `Identity.API`, OpenIddict vi
   - `ChatAgent.App` — RAG chat agent with guardrails (`docs/CHAT_AGENT_RAG.md`).
 - `Shared/` — `Mango.Core`, `Mango.Events`, `Mango.Infrastructure`, `Mango.RestApis`, `Mediator`,
   `Mango.ServiceDefaults`.
-  - Caching: `Mango.Core.Caching.ICacheManager` → `Mango.Infrastructure.Caching.HybridCacheManager`
-    (HybridCache), registered via `AddCacheManager()`.
+  - Caching: `ICacheManager` (`Mango.Core.Caching`) → `HybridCacheManager`
+    (`Mango.Infrastructure.Caching`, HybridCache), registered via `AddCacheManager()`.
 - `EventBus`, `EventBus.RabbitMQ`, `EventBus.ServiceBus` — abstracted event bus (`IEventBus`),
   RabbitMQ by default.
 - `UI/mango-ui/` — React 19 + Vite + TypeScript SPA. See
@@ -34,9 +34,11 @@ Dual identity providers (Duende IdentityServer via `Identity.API`, OpenIddict vi
 ## Project-wide invariants
 
 - Solution file: `MangoAspire.sln` at the repo root.
-- Authoritative agent guidance is `AGENTS.md` + `.agent/`; `CLAUDE.md` is a thin shim importing them.
-- The Claude Code native harness (`.claude/{skills,agents,commands}`) is **generated** from
-  `.agent/`. See `.agent/tools/harness.md`.
+- Agent guidance:
+  - `AGENTS.md` is the always-on index, and `CLAUDE.md` imports it.
+  - Rules, skills and agents live in `.claude/`.
+  - `.github/instructions/` and `.github/agents/` are a generated Copilot mirror.
+  - See `.agent/tools/harness.md`.
 
 ## Deliberate exceptions to the stated rules
 
@@ -44,6 +46,4 @@ These look like violations and are not — do not "fix" them:
 
 - **`Mango.Orchestrators` uses `Repositories/SagaRepository.cs`** even though the rest of the
   codebase forbids the repository pattern. Saga state persistence is the one place it is wanted.
-- **`Coupon.API` (singular) is legacy** and coexists with `Coupons.API` (plural). New work goes in
-  the plural one.
 - `Mango.Common` was removed in commit `2a525cf`; references to it in older docs are stale.

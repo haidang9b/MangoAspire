@@ -51,7 +51,7 @@ if (-not $SkipRestore) {
     }
 }
 
-Write-Host "`nGenerating Claude Code harness from .agent/ ..." -ForegroundColor Cyan
+Write-Host "`nSyncing the Copilot mirror of the agent harness (.claude/ -> .github/) ..." -ForegroundColor Cyan
 & (Join-Path $scripts 'sync-agent-harness.ps1')
 
 if (-not $SkipMcp) {
