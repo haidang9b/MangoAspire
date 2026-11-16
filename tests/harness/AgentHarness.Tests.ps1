@@ -96,6 +96,13 @@ Describe 'Invoke-HarnessSync and Get-HarnessDrift' {
         $d | Should -Contain 'extra: agents/ghost.agent.md'
         $d | Should -Contain 'missing: agents/code-reviewer.agent.md'
     }
+    It 'names an invalid rule and leaves the existing mirror intact when sync fails' {
+        Invoke-HarnessSync -RepoRoot $repo
+        [IO.File]::WriteAllText((Join-Path $repo '.claude/rules/backend.md'), '# no front')
+        { Invoke-HarnessSync -RepoRoot $repo } | Should -Throw '*backend.md*'
+        Join-Path $repo '.github/agents/code-reviewer.agent.md' | Should -Exist
+        Join-Path $repo '.github/instructions/memory/identity.instructions.md' | Should -Exist
+    }
 }
 
 Describe 'Invoke-HarnessLint' {
@@ -123,6 +130,20 @@ Describe 'Invoke-HarnessLint' {
         (Lint Budget).Message -join ' ' | Should -Match 'always-on'
     }
     It 'flags a rule without paths' { Set-RepoFile '.claude/rules/backend.md' '# no front'; @(Lint Rules).Count | Should -BeGreaterThan 0 }
+    It 'reports a rule without paths in a full lint instead of throwing' {
+        Set-RepoFile '.claude/rules/backend.md' '# no front'
+        $f = @(Invoke-HarnessLint -RepoRoot $repo)
+        @($f | Where-Object { $_.Category -eq 'Rules' }).File | Should -Contain '.claude/rules/backend.md'
+    }
+    It 'flags an unquoted glob that YAML reads as syntax: <front>' -TestCases @(
+        @{ front = "paths:`n  - **/*.cs" }
+        @{ front = 'paths: [**/*.ts, "b/**"]' }
+        @{ front = 'paths: **/*.md' }
+    ) {
+        param($front)
+        Set-RepoFile '.claude/rules/backend.md' "---`n$front`n---`nB"
+        (Lint Rules).Message -join ' ' | Should -Match 'quote'
+    }
     It 'flags prose in paths' {
         Set-RepoFile '.claude/rules/backend.md' "---`npaths: Only triggers for React files`n---`nB"
         @(Lint Rules).Count | Should -BeGreaterThan 0

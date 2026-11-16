@@ -144,21 +144,36 @@ function ConvertTo-CopilotAgent {
 
 function Invoke-HarnessGenerate {
     [CmdletBinding()]
-    param([Parameter(Mandatory)][string]$RepoRoot, [Parameter(Mandatory)][string]$OutRoot)
+    param(
+        [Parameter(Mandatory)][string]$RepoRoot,
+        [Parameter(Mandatory)][string]$OutRoot,
+        # Skip sources that can't be converted (the Rules and Agents lints report them) instead of throwing.
+        [switch]$SkipInvalid
+    )
+    $jobs = @()
     $rulesDir = Join-Path $RepoRoot '.claude/rules'
     if (Test-Path $rulesDir) {
         foreach ($f in Get-ChildItem -LiteralPath $rulesDir -Recurse -File -Filter '*.md') {
             $rel = (Get-RelativePath $rulesDir $f.FullName) -replace '\.md$', '.instructions.md'
-            $dest = Join-Path (Join-Path $OutRoot 'instructions') $rel
-            Write-Utf8NoBom $dest (ConvertTo-CopilotInstruction -Text ([System.IO.File]::ReadAllText($f.FullName)))
+            $jobs += @{ Src = $f.FullName; Dest = Join-Path (Join-Path $OutRoot 'instructions') $rel; Kind = 'rule' }
         }
     }
     $agentsDir = Join-Path $RepoRoot '.claude/agents'
     if (Test-Path $agentsDir) {
         foreach ($f in Get-ChildItem -LiteralPath $agentsDir -File -Filter '*.md') {
-            $dest = Join-Path (Join-Path $OutRoot 'agents') ($f.BaseName + '.agent.md')
-            Write-Utf8NoBom $dest (ConvertTo-CopilotAgent -Text ([System.IO.File]::ReadAllText($f.FullName)))
+            $jobs += @{ Src = $f.FullName; Dest = Join-Path (Join-Path $OutRoot 'agents') ($f.BaseName + '.agent.md'); Kind = 'agent' }
         }
+    }
+    foreach ($j in $jobs) {
+        $text = [System.IO.File]::ReadAllText($j.Src)
+        try {
+            if ($j.Kind -eq 'rule') { $out = ConvertTo-CopilotInstruction -Text $text } else { $out = ConvertTo-CopilotAgent -Text $text }
+        }
+        catch {
+            if ($SkipInvalid) { continue }
+            throw ("{0}: {1}" -f (Get-RepoRelative $RepoRoot $j.Src), $_.Exception.Message)
+        }
+        Write-Utf8NoBom $j.Dest $out
     }
 }
 
@@ -166,11 +181,22 @@ function Invoke-HarnessSync {
     [CmdletBinding()]
     param([Parameter(Mandatory)][string]$RepoRoot)
     $github = Join-Path $RepoRoot '.github'
-    foreach ($sub in $script:MirrorDirs) {
-        $p = Join-Path $github $sub
-        if (Test-Path $p) { Remove-Item -LiteralPath $p -Recurse -Force }
+    # Generate into a temp folder first: an invalid source then throws before the mirror is touched.
+    $tmp = Join-Path ([System.IO.Path]::GetTempPath()) ('mango-harness-' + [guid]::NewGuid().ToString('N'))
+    New-Item -ItemType Directory -Path $tmp -Force | Out-Null
+    try {
+        Invoke-HarnessGenerate -RepoRoot $RepoRoot -OutRoot $tmp
+        foreach ($sub in $script:MirrorDirs) {
+            $p = Join-Path $github $sub
+            if (Test-Path $p) { Remove-Item -LiteralPath $p -Recurse -Force }
+            $src = Join-Path $tmp $sub
+            if (Test-Path $src) {
+                New-Item -ItemType Directory -Path $github -Force | Out-Null
+                Copy-Item -LiteralPath $src -Destination $p -Recurse
+            }
+        }
     }
-    Invoke-HarnessGenerate -RepoRoot $RepoRoot -OutRoot $github
+    finally { Remove-Item -LiteralPath $tmp -Recurse -Force -ErrorAction SilentlyContinue }
 }
 
 function Get-HarnessDrift {
@@ -179,7 +205,7 @@ function Get-HarnessDrift {
     $tmp = Join-Path ([System.IO.Path]::GetTempPath()) ('mango-harness-' + [guid]::NewGuid().ToString('N'))
     New-Item -ItemType Directory -Path $tmp -Force | Out-Null
     try {
-        Invoke-HarnessGenerate -RepoRoot $RepoRoot -OutRoot $tmp
+        Invoke-HarnessGenerate -RepoRoot $RepoRoot -OutRoot $tmp -SkipInvalid
         $expected = Get-MirrorFiles $tmp
         $actual = Get-MirrorFiles (Join-Path $RepoRoot '.github')
         $out = New-Object System.Collections.Generic.List[string]
@@ -327,6 +353,30 @@ function Test-Budget([string]$RepoRoot) {
     }
 }
 
+# Raw list items under $Key (block, flow or comma-scalar form) that are unquoted and start with a
+# YAML indicator character, which makes the frontmatter invalid YAML (e.g. '- **/*.cs' is an alias).
+function Get-UnquotedYamlSyntaxItems([string[]]$Front, [string]$Key) {
+    $indicators = '*&!|>%@`{[?'
+    $items = @()
+    for ($i = 0; $i -lt $Front.Count; $i++) {
+        if ($Front[$i] -notmatch ('^' + [regex]::Escape($Key) + '\s*:\s*(.*)$')) { continue }
+        $inline = $Matches[1].Trim()
+        if ($inline -eq '') {
+            for ($j = $i + 1; $j -lt $Front.Count; $j++) {
+                if ($Front[$j] -match '^\s*-\s*(.*)$') { $items += $Matches[1].Trim() }
+                elseif ($Front[$j] -match '^\s*$') { continue }
+                else { break }
+            }
+        }
+        elseif ($inline.StartsWith('[') -and $inline.EndsWith(']')) {
+            $items += @($inline.Substring(1, $inline.Length - 2).Split(',') | ForEach-Object { $_.Trim() })
+        }
+        else { $items += $inline }
+        break
+    }
+    return @($items | Where-Object { $_ -and $indicators.IndexOf($_[0]) -ge 0 })
+}
+
 function Test-Rules([string]$RepoRoot) {
     foreach ($r in Get-MarkdownUnder (Join-Path $RepoRoot '.claude/rules') -Recurse) {
         $rel = Get-RepoRelative $RepoRoot $r
@@ -335,6 +385,9 @@ function Test-Rules([string]$RepoRoot) {
         if ($globs.Count -eq 0) { New-Finding 'Rules' $rel 'rule has no paths, so Claude Code loads it in every session' }
         foreach ($g in $globs) {
             if ($g -match '\s') { New-Finding 'Rules' $rel "paths entry '$g' is not a glob" }
+        }
+        foreach ($u in @(Get-UnquotedYamlSyntaxItems -Front $front -Key 'paths')) {
+            New-Finding 'Rules' $rel ("paths entry '{0}' must be quoted: YAML reads a leading '{1}' as syntax, the frontmatter fails to parse, and Claude Code then loads the rule in every session" -f $u, $u[0])
         }
         $size = (Get-Item -LiteralPath $r).Length
         if ($size -gt $script:Budget.Rule) { New-Finding 'Rules' $rel ("rule is {0} bytes (budget {1})" -f $size, $script:Budget.Rule) }
