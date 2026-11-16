@@ -1,0 +1,16 @@
+diff --git a/docs/EVENT_BUS.md b/docs/EVENT_BUS.md
+index ec7c31a..7625bcc 100644
+--- a/docs/EVENT_BUS.md
++++ b/docs/EVENT_BUS.md
+@@ -201,3 +201,11 @@ public class OrderCreatedHandler : IIntegrationEventHandler<OrderCreatedEvent>
+     }
+ }
+ ```
++
++## Troubleshooting
++
++- **Messages are published but never handled:** check that the subscription is registered with
++  `AddSubscription<TEvent, THandler>(...)` in the consuming service's `Program.cs`, and that both
++  services use the same exchange name.
++- **Duplicate handling after a restart:** handlers must be idempotent; the processed-message table
++  records handled event ids.

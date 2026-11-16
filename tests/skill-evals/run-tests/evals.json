@@ -1,0 +1,50 @@
+{
+  "skill_name": "run-tests",
+  "evals": [
+    {
+      "id": 1,
+      "name": "single-project-summary",
+      "prompt": "Run the Products.API unit tests and report how many passed, failed and were skipped.",
+      "expected_output": "Runs the Products.API test project and reports accurate passed/failed/skipped counts (all passing).",
+      "checks": [
+        { "type": "no-edits" },
+        { "type": "response-matches", "pattern": "(?i)pass" }
+      ],
+      "expectations": [
+        "Reports explicit passed, failed and skipped counts",
+        "The counts describe a fully passing Products.API test run (zero failed)",
+        "Runs the Products.API test project rather than only claiming results without running tests"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "triage-broken-handler",
+      "prompt": "Run the Products.API unit tests. If any fail, find the root cause and tell me exactly what to fix. Do not change any files.",
+      "expected_output": "Names the failing GetProductById tests and identifies the inverted Where filter in GetProductById.cs as the cause.",
+      "setup": ["git apply tests/skill-evals/run-tests/files/break-get-product.patch"],
+      "checks": [
+        { "type": "no-edits" },
+        { "type": "response-matches", "pattern": "GetProductById" }
+      ],
+      "expectations": [
+        "Names the failing test or tests in GetProductByIdTests",
+        "Identifies the inverted filter (x.Id != request.ProductId) in GetProductById.cs as the root cause",
+        "Proposes restoring the == comparison as the fix"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "single-method-filter",
+      "prompt": "Run only the test HandleAsync_When_ProductExists_Then_ReturnsProductData in GetProductByIdTests and tell me whether it passed.",
+      "expected_output": "Runs exactly that one test with --filter and reports that it passed.",
+      "checks": [
+        { "type": "no-edits" },
+        { "type": "response-matches", "pattern": "(?i)pass" }
+      ],
+      "expectations": [
+        "Uses a dotnet test --filter so that only this one test runs (the reported total is 1)",
+        "Reports that the test passed"
+      ]
+    }
+  ]
+}

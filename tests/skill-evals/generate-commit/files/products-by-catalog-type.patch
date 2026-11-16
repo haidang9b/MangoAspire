@@ -1,0 +1,58 @@
+diff --git a/src/Services/Products.API/Features/Products/GetProductsByCatalogType.cs b/src/Services/Products.API/Features/Products/GetProductsByCatalogType.cs
+new file mode 100644
+index 0000000..9cdbb45
+--- /dev/null
++++ b/src/Services/Products.API/Features/Products/GetProductsByCatalogType.cs
+@@ -0,0 +1,35 @@
++using Microsoft.EntityFrameworkCore;
++using Products.API.Dtos;
++
++namespace Products.API.Features.Products;
++
++public class GetProductsByCatalogType
++{
++    public class Query : IQuery<List<ProductDto>>
++    {
++        public int CatalogTypeId { get; set; }
++
++        internal class Handler(ProductDbContext dbContext) : IRequestHandler<Query, ResultModel<List<ProductDto>>>
++        {
++            public async Task<ResultModel<List<ProductDto>>> HandleAsync(Query request, CancellationToken cancellationToken)
++            {
++                var products = await dbContext.Products
++                    .AsNoTracking()
++                    .Where(x => x.CatalogTypeId == request.CatalogTypeId)
++                    .Select(x => new ProductDto
++            {
++                Id = x.Id,
++                Name = x.Name,
++                Price = x.Price,
++                CatalogTypeId = x.CatalogTypeId,
++                Description = x.Description,
++                ImageUrl = x.ImageUrl,
++                Stock = x.AvailableStock
++            })
++                    .ToListAsync(cancellationToken);
++
++                return ResultModel<List<ProductDto>>.Create(products);
++            }
++        }
++    }
++}
+diff --git a/src/Services/Products.API/Routes/ProductEndpoints.cs b/src/Services/Products.API/Routes/ProductEndpoints.cs
+index 3884e28..13fce3c 100644
+--- a/src/Services/Products.API/Routes/ProductEndpoints.cs
++++ b/src/Services/Products.API/Routes/ProductEndpoints.cs
+@@ -28,6 +28,12 @@ public static class ProductEndpoints
+                 return Results.Ok(result);
+             });
+ 
++            group.MapGet("/by-catalog-type/{catalogTypeId:int}", async (int catalogTypeId, ISender sender) =>
++            {
++                var result = await sender.SendAsync(new GetProductsByCatalogType.Query { CatalogTypeId = catalogTypeId });
++                return Results.Ok(result);
++            });
++
+             group.MapPost("/", async (CreateProduct.Command command, ISender sender) =>
+             {
+                 var result = await sender.SendAsync(command);

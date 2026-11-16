@@ -1,0 +1,51 @@
+{
+  "skill_name": "generate-commit",
+  "evals": [
+    {
+      "id": 1,
+      "name": "fix-from-null-guard",
+      "prompt": "Write a commit message for the staged changes. Do not run git commit.",
+      "expected_output": "A fix(products...) Conventional Commit explaining that an update without a catalog type no longer clears it.",
+      "setup": ["git apply tests/skill-evals/generate-commit/files/keep-catalog-type.patch", "git add -A"],
+      "checks": [
+        { "type": "no-commit" },
+        { "type": "response-matches", "pattern": "(?m)^\\s*fix(\\([^)]*\\))?!?: " }
+      ],
+      "expectations": [
+        "The message is a Conventional Commit with type fix",
+        "The scope or subject identifies the Products service or the product update",
+        "The message says that an update without a catalog type now keeps the existing one, instead of clearing it"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "feat-from-new-endpoint",
+      "prompt": "Write a commit message for the staged changes. Do not run git commit.",
+      "expected_output": "A feat(products...) Conventional Commit describing the new GET by-catalog-type endpoint.",
+      "setup": ["git apply tests/skill-evals/generate-commit/files/products-by-catalog-type.patch", "git add -A"],
+      "checks": [
+        { "type": "no-commit" },
+        { "type": "response-matches", "pattern": "(?m)^\\s*feat(\\([^)]*\\))?!?: " }
+      ],
+      "expectations": [
+        "The message is a Conventional Commit with type feat",
+        "The message mentions listing or getting products by catalog type"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "docs-only-change",
+      "prompt": "Write a commit message for the staged changes. Do not run git commit.",
+      "expected_output": "A docs(...) Conventional Commit about the event-bus troubleshooting section.",
+      "setup": ["git apply tests/skill-evals/generate-commit/files/event-bus-troubleshooting.patch", "git add -A"],
+      "checks": [
+        { "type": "no-commit" },
+        { "type": "response-matches", "pattern": "(?m)^\\s*docs(\\([^)]*\\))?!?: " }
+      ],
+      "expectations": [
+        "The message is a Conventional Commit with type docs",
+        "The message mentions the event bus troubleshooting guidance"
+      ]
+    }
+  ]
+}
