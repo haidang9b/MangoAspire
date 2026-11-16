@@ -358,4 +358,134 @@ function Get-EvalBenchmark {
     return $rows
 }
 
-Export-ModuleMember -Function Read-SkillEvalSet, Get-ClaudeArgs, Invoke-EvalChecks, Invoke-EvalGrade, Get-EvalBenchmark
+# --- running -----------------------------------------------------------------------------------
+
+# Default invoker: pipes the prompt to `claude` on stdin (avoids PowerShell 5.1 quote mangling of
+# native arguments) from inside $WorkDir, and returns stdout as one string.
+function Invoke-ClaudeCli {
+    [CmdletBinding()]
+    param([string]$WorkDir, [string]$Prompt, [string[]]$ClaudeArgs)
+    $OutputEncoding = $script:Utf8NoBom
+    $previous = $null
+    try { $previous = [Console]::OutputEncoding; [Console]::OutputEncoding = $script:Utf8NoBom } catch { $previous = $null }
+    Push-Location -LiteralPath $WorkDir
+    try { return (($Prompt | & claude @ClaudeArgs) | Out-String) }
+    finally {
+        Pop-Location
+        if ($previous) { try { [Console]::OutputEncoding = $previous } catch { } }
+    }
+}
+
+function Invoke-EvalRun {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)][string]$RepoRoot,
+        [Parameter(Mandatory)][string]$SkillName,
+        [Parameter(Mandatory)]$Eval,
+        [Parameter(Mandatory)][ValidateSet('with_skill', 'without_skill')][string]$Config,
+        [int]$RunIndex = 1,
+        [Parameter(Mandatory)][string]$OutDir,
+        [scriptblock]$Invoker = ${function:Invoke-ClaudeCli},
+        [string]$Model,
+        [int]$MaxTurns = 30,
+        [string]$Ref = 'HEAD'
+    )
+    $ErrorActionPreference = 'Continue'   # git reports progress on stderr
+    $outputs = Join-Path $OutDir 'outputs'
+    New-Item -ItemType Directory -Force -Path $outputs | Out-Null
+    $checks = @(Get-Prop $Eval 'checks' | Where-Object { $_ })
+    $prompt = [string](Get-Prop $Eval 'prompt')
+    if ($Config -eq 'with_skill') { $prompt = "/$SkillName $prompt" }
+    $wt = Join-Path ([System.IO.Path]::GetTempPath()) ('mango-eval-' + [guid]::NewGuid().ToString('N'))
+    $results = @()
+    try {
+        git -C $RepoRoot worktree add --detach $wt $Ref 2>&1 | Out-Null
+        if (-not (Test-Path -LiteralPath $wt)) { throw "git worktree add failed for ref '$Ref'" }
+        if ($Config -eq 'without_skill') {
+            $skillDir = Join-Path $wt ".claude/skills/$SkillName"
+            if (Test-Path -LiteralPath $skillDir) { Remove-Item -LiteralPath $skillDir -Recurse -Force }
+        }
+        foreach ($cmd in @(Get-Prop $Eval 'setup' | Where-Object { $_ })) {
+            $r = Invoke-Shell $wt $cmd
+            if ($r[0] -ne 0) { throw ("setup command failed (exit {0}): {1}`n{2}" -f $r[0], $cmd, $r[1]) }
+        }
+        $setupTree = Get-WorkTreeHash $wt
+        $baseCommit = (git -C $wt rev-parse HEAD).Trim()
+        $raw = (& $Invoker -WorkDir $wt -Prompt $prompt -ClaudeArgs (Get-ClaudeArgs -Purpose run -Model $Model -MaxTurns $MaxTurns)) | Out-String
+        Write-TextFile (Join-Path $outputs 'response.json') $raw
+        $resultText = $raw
+        try {
+            $j = $raw | ConvertFrom-Json
+            if (Get-Prop $j 'result') { $resultText = [string](Get-Prop $j 'result') }
+        }
+        catch { }
+        Write-TextFile (Join-Path $outputs 'response.md') $resultText
+        git -C $wt add -A 2>&1 | Out-Null
+        Write-TextFile (Join-Path $outputs 'diff.patch') ((git -C $wt diff --cached --binary $setupTree) | Out-String)
+        $results = @(Invoke-EvalChecks -WorkDir $wt -ResponseText $resultText -Checks $checks -SetupTree $setupTree -BaseCommit $baseCommit)
+    }
+    catch {
+        $message = $_.Exception.Message
+        Write-TextFile (Join-Path $OutDir 'error.txt') ($_ | Out-String)
+        $results = @(foreach ($c in $checks) { New-CheckResult ([string](Get-Prop $c 'type')) $false "run failed: $message" })
+    }
+    finally {
+        git -C $RepoRoot worktree remove --force $wt 2>&1 | Out-Null
+        if (Test-Path -LiteralPath $wt) { Remove-Item -LiteralPath $wt -Recurse -Force -ErrorAction SilentlyContinue }
+        git -C $RepoRoot worktree prune 2>&1 | Out-Null
+    }
+    Write-TextFile (Join-Path $OutDir 'checks.json') (ConvertTo-Json -InputObject @($results) -Depth 4)
+    $meta = [ordered]@{ skill = $SkillName; eval_id = (Get-Prop $Eval 'id'); eval_name = (Get-Prop $Eval 'name'); config = $Config; run = $RunIndex; ref = $Ref; prompt = $prompt }
+    Write-TextFile (Join-Path $OutDir 'meta.json') (ConvertTo-Json -InputObject $meta -Depth 3)
+    return $OutDir
+}
+
+function Invoke-SkillEvals {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)][string]$RepoRoot,
+        [Parameter(Mandatory)][string[]]$Skill,
+        [int[]]$EvalId,
+        [int]$Runs = 1,
+        [string]$Model,
+        [int]$MaxTurns = 30,
+        [scriptblock]$Invoker = ${function:Invoke-ClaudeCli},
+        [string]$Ref = 'HEAD',
+        [switch]$DryRun
+    )
+    $skills = @($Skill | ForEach-Object { $_ -split ',' } | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+    $plan = @()
+    foreach ($s in $skills) {
+        $set = Read-SkillEvalSet -Path (Join-Path $RepoRoot "tests/skill-evals/$s/evals.json")
+        foreach ($e in @($set.evals)) {
+            if ($EvalId -and ($EvalId -notcontains [int]$e.id)) { continue }
+            foreach ($cfg in 'with_skill', 'without_skill') {
+                for ($n = 1; $n -le $Runs; $n++) { $plan += [pscustomobject]@{ Skill = $s; Eval = $e; Config = $cfg; Run = $n } }
+            }
+        }
+    }
+    $argsText = (Get-ClaudeArgs -Purpose run -Model $Model -MaxTurns $MaxTurns) -join ' '
+    if ($DryRun) {
+        foreach ($p in $plan) { Write-Host ("{0} eval-{1}-{2} {3} run-{4}: claude {5}" -f $p.Skill, $p.Eval.id, $p.Eval.name, $p.Config, $p.Run, $argsText) }
+        Write-Host ("{0} planned run(s); nothing invoked." -f $plan.Count)
+        return $null
+    }
+    $dirty = git -C $RepoRoot status --porcelain -- .claude/skills tests/skill-evals
+    if ($dirty) { Write-Warning "Uncommitted changes under .claude/skills or tests/skill-evals are NOT evaluated; runs use committed '$Ref'." }
+    $results = Join-Path $RepoRoot ('tests/skill-evals/_results/' + (Get-Date -Format 'yyyyMMdd-HHmmss'))
+    $grader = Join-Path $RepoRoot 'tests/skill-evals/_grader.md'
+    $i = 0
+    foreach ($p in $plan) {
+        $i++
+        $runDir = Join-Path $results ("{0}/eval-{1}-{2}/{3}/run-{4}" -f $p.Skill, $p.Eval.id, $p.Eval.name, $p.Config, $p.Run)
+        Write-Host ("[{0}/{1}] {2} eval-{3}-{4} {5} run-{6}" -f $i, $plan.Count, $p.Skill, $p.Eval.id, $p.Eval.name, $p.Config, $p.Run)
+        Invoke-EvalRun -RepoRoot $RepoRoot -SkillName $p.Skill -Eval $p.Eval -Config $p.Config -RunIndex $p.Run -OutDir $runDir -Invoker $Invoker -Model $Model -MaxTurns $MaxTurns -Ref $Ref | Out-Null
+        $expectations = @(Get-Prop $p.Eval 'expectations' | Where-Object { $_ })
+        Invoke-EvalGrade -RunDir $runDir -Expectations $expectations -Invoker $Invoker -GraderPromptPath $grader -Model $Model | Out-Null
+    }
+    Get-EvalBenchmark -ResultsDir $results | Out-Null
+    return $results
+}
+
+Export-ModuleMember -Function Read-SkillEvalSet, Get-ClaudeArgs, Invoke-EvalChecks, Invoke-EvalGrade, Get-EvalBenchmark,
+    Invoke-ClaudeCli, Invoke-EvalRun, Invoke-SkillEvals

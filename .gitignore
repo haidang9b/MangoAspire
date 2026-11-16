@@ -413,3 +413,6 @@ FodyWeavers.xsd
 .env
 .env.*
 !.env.example
+
+# Skill eval run output (scripts/eval-skills.ps1)
+tests/skill-evals/_results/

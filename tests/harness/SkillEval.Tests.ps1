@@ -78,3 +78,44 @@ Describe 'Get-EvalBenchmark' {
         Join-Path $res 'summary.md' | Should -Exist
     }
 }
+
+Describe 'Invoke-EvalRun' {
+    BeforeEach {
+        $repo = New-Dir @{ '.claude/skills/run-tests/SKILL.md' = "---`nname: run-tests`ndescription: Use when testing.`n---`nB"; 'README.md' = 'x' }
+        git -C $repo init -q; git -C $repo add -A; git -C $repo -c user.name=t -c user.email=t@t commit -qm init
+        $eval = [pscustomobject]@{ id = 1; name = 'one'; prompt = 'run the tests'; setup = @(); checks = @([pscustomobject]@{ type = 'no-edits' }); expectations = @() }
+        $seen = @{}
+        $inv = { param($WorkDir, $Prompt, $ClaudeArgs)
+            $seen.prompt = $Prompt; $seen.skillVisible = Test-Path (Join-Path $WorkDir '.claude/skills/run-tests')
+            Set-Content (Join-Path $WorkDir 'scratch.txt') 'edit'
+            '{"result":"done","total_cost_usd":0.01,"duration_ms":5}' }.GetNewClosure()
+        $out = Join-Path $TestDrive ([guid]::NewGuid().ToString('N'))
+        function Run($config, $invoker) { Invoke-EvalRun -RepoRoot $repo -SkillName run-tests -Eval $eval -Config $config -RunIndex 1 -OutDir $out -Invoker $invoker | Out-Null }
+    }
+    It 'sends the slash command with the skill present' { Run with_skill $inv; $seen.prompt | Should -Be '/run-tests run the tests'; $seen.skillVisible | Should -BeTrue }
+    It 'hides the skill and sends the plain prompt without it' { Run without_skill $inv; $seen.prompt | Should -Be 'run the tests'; $seen.skillVisible | Should -BeFalse }
+    It 'leaves the main working tree clean and removes the worktree' {
+        Run with_skill $inv
+        git -C $repo status --porcelain | Should -BeNullOrEmpty
+        @(git -C $repo worktree list).Count | Should -Be 1
+    }
+    It 'removes the worktree when the invoker throws' {
+        Run with_skill { throw 'boom' }
+        @(git -C $repo worktree list).Count | Should -Be 1
+        Get-Content (Join-Path $out 'error.txt') -Raw | Should -Match 'boom'
+    }
+    It 'fails no-edits when the session edits files and saves outputs' {
+        Run with_skill $inv
+        (Get-Content (Join-Path $out 'checks.json') -Raw | ConvertFrom-Json)[0].passed | Should -BeFalse
+        Get-Content (Join-Path $out 'outputs/diff.patch') -Raw | Should -Match 'scratch.txt'
+        Join-Path $out 'outputs/response.json' | Should -Exist
+    }
+}
+
+Describe 'Invoke-SkillEvals -DryRun' {
+    It 'lists every planned run and invokes nothing' {
+        $repo = New-Dir @{ '.claude/skills/run-tests/SKILL.md' = "---`nname: run-tests`ndescription: Use when testing.`n---`nB"; 'tests/skill-evals/run-tests/evals.json' = $valid }
+        $lines = Invoke-SkillEvals -RepoRoot $repo -Skill run-tests -Runs 2 -Invoker { throw 'no' } -DryRun 6>&1
+        @($lines | Where-Object { "$_" -match 'claude -p' }).Count | Should -Be 4
+    }
+}
