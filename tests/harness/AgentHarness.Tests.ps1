@@ -261,6 +261,20 @@ Describe 'Evals lint' {
     }
 }
 
+Describe 'sync-agent-harness.ps1 -Check' {
+    It 'exits 1 when the lint has exactly one finding' {
+        $src = Join-Path $PSScriptRoot '../../scripts'
+        $repo = New-Repo @{ 'AGENTS.md' = ('x' * 4097) }
+        New-Item -ItemType Directory -Force (Join-Path $repo 'scripts/harness') | Out-Null
+        Copy-Item (Join-Path $src 'sync-agent-harness.ps1') (Join-Path $repo 'scripts')
+        Copy-Item (Join-Path $src 'harness/*.psm1') (Join-Path $repo 'scripts/harness')
+        $exe = (Get-Process -Id $PID).Path
+        $out = & $exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $repo 'scripts/sync-agent-harness.ps1') -Check -Category Budget 6>&1 | Out-String
+        $LASTEXITCODE | Should -Be 1
+        $out | Should -Match '1 finding'
+    }
+}
+
 Describe 'Harness scripts' {
     It 'are ASCII-only, because Windows PowerShell 5.1 reads BOM-less files as ANSI' {
         $root = Join-Path $PSScriptRoot '../..'

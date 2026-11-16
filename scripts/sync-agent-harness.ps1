@@ -33,7 +33,9 @@ Import-Module (Join-Path $PSScriptRoot 'harness/AgentHarness.psm1') -Force
 if ($Check) {
     # powershell -File passes "-Category A,B" as the single string "A,B".
     $cats = @($Category | ForEach-Object { $_ -split ',' } | ForEach-Object { $_.Trim() } | Where-Object { $_ })
-    $findings = if ($cats.Count -gt 0) { @(Invoke-HarnessLint -RepoRoot $repoRoot -Category $cats) } else { @(Invoke-HarnessLint -RepoRoot $repoRoot) }
+    # Wrap the whole if: assigning its output unrolls a one-item array, and a single object has no
+    # .Count in Windows PowerShell 5.1, so one finding would print OK and exit 0.
+    $findings = @(if ($cats.Count -gt 0) { Invoke-HarnessLint -RepoRoot $repoRoot -Category $cats } else { Invoke-HarnessLint -RepoRoot $repoRoot })
     foreach ($f in $findings) { Write-Host ("[{0}] {1}: {2}" -f $f.Category, $f.File, $f.Message) }
     if ($findings.Count -gt 0) {
         Write-Host ("harness check: {0} finding(s)" -f $findings.Count) -ForegroundColor Yellow
