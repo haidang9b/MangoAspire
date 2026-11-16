@@ -248,3 +248,25 @@ Describe 'Specs lint' {
     It 'flags an undefined AC in the test plan' { Set-Spec 'test-plan.md' "| AC-1 | x |`n| AC-2 | x |`n| AC-3 | x |`n"; (Specs).Message -join ' ' | Should -Match 'AC-3' }
     It 'flags a missing spec file' { Remove-Item (Join-Path $repo 'specs/a/test-plan.md'); @(Specs).Count | Should -BeGreaterThan 0 }
 }
+
+Describe 'Evals lint' {
+    It 'flags an eval set for a missing skill and invalid JSON' {
+        $repo = New-Repo @{
+            '.claude/skills/run-tests/SKILL.md'      = "---`nname: run-tests`ndescription: Use when testing.`n---`nB"
+            'tests/skill-evals/ghost/evals.json'     = '{"skill_name":"ghost","evals":[{"id":1,"name":"a","prompt":"p","expectations":["e"]}]}'
+            'tests/skill-evals/run-tests/evals.json' = '{ not json'
+            'tests/skill-evals/_grader.md'           = 'g'
+        }
+        @(Invoke-HarnessLint -RepoRoot $repo -Category Evals).File | Should -Be @('tests/skill-evals/ghost/evals.json', 'tests/skill-evals/run-tests/evals.json')
+    }
+}
+
+Describe 'Harness scripts' {
+    It 'are ASCII-only, because Windows PowerShell 5.1 reads BOM-less files as ANSI' {
+        $root = Join-Path $PSScriptRoot '../..'
+        $files = @(Get-ChildItem (Join-Path $root 'scripts/harness') -File -Filter *.psm1) + @(Get-ChildItem $PSScriptRoot -File -Filter *.ps1)
+        $files += @('sync-agent-harness.ps1', 'eval-skills.ps1') | ForEach-Object { Join-Path $root "scripts/$_" } | Where-Object { Test-Path $_ } | ForEach-Object { Get-Item $_ }
+        $bad = @($files | Where-Object { [IO.File]::ReadAllBytes($_.FullName) | Where-Object { $_ -gt 127 } | Select-Object -First 1 } | ForEach-Object { $_.Name })
+        $bad | Should -BeNullOrEmpty
+    }
+}

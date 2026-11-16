@@ -600,6 +600,28 @@ function Test-Specs([string]$RepoRoot) {
 
 $script:LintChecks['Specs'] = { param($r) Test-Specs $r }
 
+# --- lint: skill eval sets ---------------------------------------------------------------------
+
+Import-Module (Join-Path $PSScriptRoot 'SkillEval.psm1')
+
+function Test-Evals([string]$RepoRoot) {
+    $dir = Join-Path $RepoRoot 'tests/skill-evals'
+    if (-not (Test-Path -LiteralPath $dir)) { return }
+    foreach ($d in Get-ChildItem -LiteralPath $dir -Directory) {
+        if ($d.Name.StartsWith('_')) { continue }
+        $rel = "tests/skill-evals/$($d.Name)/evals.json"
+        $path = Join-Path $d.FullName 'evals.json'
+        if (-not (Test-Path -LiteralPath $path)) { New-Finding 'Evals' $rel 'missing evals.json'; continue }
+        if (-not (Test-Path -LiteralPath (Join-Path $RepoRoot ".claude/skills/$($d.Name)/SKILL.md"))) {
+            New-Finding 'Evals' $rel "no skill .claude/skills/$($d.Name)/SKILL.md to evaluate"
+            continue
+        }
+        try { Read-SkillEvalSet -Path $path | Out-Null } catch { New-Finding 'Evals' $rel $_.Exception.Message }
+    }
+}
+
+$script:LintChecks['Evals'] = { param($r) Test-Evals $r }
+
 # --- lint: public ------------------------------------------------------------------------------
 
 function Invoke-HarnessLint {
