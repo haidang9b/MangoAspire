@@ -126,6 +126,24 @@ Describe 'Invoke-EvalRun index handling' {
     }
 }
 
+Describe 'Invoke-EvalRun answer hiding' {
+    It 'hides tests/skill-evals from the session without dirtying git status' {
+        $repo = New-Dir @{ '.claude/skills/run-tests/SKILL.md' = "---`nname: run-tests`ndescription: Use when testing.`n---`nB"; 'tests/skill-evals/run-tests/evals.json' = $valid }
+        git -C $repo init -q; git -C $repo add -A; git -C $repo -c user.name=t -c user.email=t@t commit -qm init
+        $eval = [pscustomobject]@{ id = 1; name = 'one'; prompt = 'p'; setup = @(); checks = @([pscustomobject]@{ type = 'no-edits' }); expectations = @() }
+        $seen = @{}
+        $inv = { param($WorkDir, $Prompt, $ClaudeArgs)
+            $seen.visible = Test-Path (Join-Path $WorkDir 'tests/skill-evals/run-tests/evals.json')
+            $seen.status = (git -C $WorkDir status --porcelain) -join ','
+            '{"result":"ok"}' }.GetNewClosure()
+        $out = Join-Path $TestDrive ([guid]::NewGuid().ToString('N'))
+        Invoke-EvalRun -RepoRoot $repo -SkillName run-tests -Eval $eval -Config with_skill -OutDir $out -Invoker $inv | Out-Null
+        $seen.visible | Should -BeFalse
+        $seen.status | Should -BeNullOrEmpty
+        (Get-Content (Join-Path $out 'checks.json') -Raw | ConvertFrom-Json)[0].passed | Should -BeTrue
+    }
+}
+
 Describe 'Invoke-SkillEvals -DryRun' {
     It 'lists every planned run and invokes nothing' {
         $repo = New-Dir @{ '.claude/skills/run-tests/SKILL.md' = "---`nname: run-tests`ndescription: Use when testing.`n---`nB"; 'tests/skill-evals/run-tests/evals.json' = $valid }

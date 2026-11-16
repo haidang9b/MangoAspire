@@ -423,6 +423,12 @@ function Invoke-EvalRun {
             $r = Invoke-Shell $wt $cmd
             if ($r[0] -ne 0) { throw ("setup command failed (exit {0}): {1}`n{2}" -f $r[0], $cmd, $r[1]) }
         }
+        # Hide eval definitions (expected answers) from the session: skip-worktree keeps git status clean.
+        $evalFiles = @(git -C $wt ls-files -- tests/skill-evals)
+        if ($evalFiles.Count -gt 0) {
+            git -C $wt update-index --skip-worktree -- @evalFiles 2>&1 | Out-Null   # args, not --stdin: PS pipes CRLF
+            Remove-Item -LiteralPath (Join-Path $wt 'tests/skill-evals') -Recurse -Force -ErrorAction SilentlyContinue
+        }
         $setupTree = Get-WorkTreeHash $wt
         $baseCommit = (git -C $wt rev-parse HEAD).Trim()
         $raw = (& $Invoker -WorkDir $wt -Prompt $prompt -ClaudeArgs (Get-ClaudeArgs -Purpose run -Model $Model -MaxTurns $MaxTurns)) | Out-String
