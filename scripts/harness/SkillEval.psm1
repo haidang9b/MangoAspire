@@ -93,9 +93,23 @@ function Resolve-GlobFiles([string]$WorkDir, [string]$Glob) {
     }
 }
 
+# Tree hash of the working tree's current content, computed through a temporary index so the real
+# index (what is staged vs unstaged) stays exactly as the setup or the session left it.
 function Get-WorkTreeHash([string]$WorkDir) {
-    git -C $WorkDir add -A 2>$null | Out-Null
-    return (git -C $WorkDir write-tree).Trim()
+    $index = (git -C $WorkDir rev-parse --git-path index).Trim()
+    if (-not [System.IO.Path]::IsPathRooted($index)) { $index = Join-Path $WorkDir $index }
+    $tmp = Join-Path ([System.IO.Path]::GetTempPath()) ('mango-eval-index-' + [guid]::NewGuid().ToString('N'))
+    $previous = $env:GIT_INDEX_FILE
+    try {
+        if (Test-Path -LiteralPath $index) { Copy-Item -LiteralPath $index -Destination $tmp -Force }
+        $env:GIT_INDEX_FILE = $tmp
+        git -C $WorkDir add -A 2>&1 | Out-Null
+        return (git -C $WorkDir write-tree).Trim()
+    }
+    finally {
+        $env:GIT_INDEX_FILE = $previous
+        Remove-Item -LiteralPath $tmp -Force -ErrorAction SilentlyContinue
+    }
 }
 
 # --- eval sets ---------------------------------------------------------------------------------
@@ -420,8 +434,8 @@ function Invoke-EvalRun {
         }
         catch { }
         Write-TextFile (Join-Path $outputs 'response.md') $resultText
-        git -C $wt add -A 2>&1 | Out-Null
-        Write-TextFile (Join-Path $outputs 'diff.patch') ((git -C $wt diff --cached --binary $setupTree) | Out-String)
+        $afterTree = Get-WorkTreeHash $wt
+        Write-TextFile (Join-Path $outputs 'diff.patch') ((git -C $wt diff --binary $setupTree $afterTree) | Out-String)
         $results = @(Invoke-EvalChecks -WorkDir $wt -ResponseText $resultText -Checks $checks -SetupTree $setupTree -BaseCommit $baseCommit)
     }
     catch {
