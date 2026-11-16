@@ -1,24 +1,22 @@
 ---
 name: fix-warnings
-description: Scans the .NET solution for warnings and applies modern C# 14 fixes.
+description: Use when the user runs /fix-warnings to clear .NET build warnings (WarningsAsErrors is on) with modern C# 15 fixes.
 disable-model-invocation: true
 ---
 
-# Workflow: fix-warnings
-Description: Scans the .NET solution for warnings and applies modern C# 14 fixes.
+# Fix Warnings
 
-## Execution Steps
+`WarningsAsErrors` is on in `Directory.Build.props`, so any warning is a build failure. Scan,
+categorize and fix with modern C# 15 idioms.
 
-### Step 1: Scan and Categorize
-1. Build: Run 'dotnet build /warnaserror:false' to capture all current warnings.
-2. Analyze: Group warnings into Nullable (CS86xx), Modernization (Primary Constructors), and Deprecation.
-3. Report: Display a summary table of warning counts.
+## Workflow
 
-### Step 2: Proposed Fixes
-1. Selection: User targets specific projects or categories.
-2. Drafting: Apply C# 14 syntax (field keyword, Primary Constructors) and proper null checks.
-
-### Step 3: Verification
-1. Rebuild: Ensure the build is clean.
-2. Test: Run 'dotnet test' to verify business logic.
-3. Commit: Trigger the generate-commit skill.
+1. **Scan:** `dotnet build MangoAspire.sln /warnaserror:false` to capture every warning.
+2. **Categorize:** Nullable (CS86xx), Modernization (e.g. primary constructors, the `field`
+   keyword, collection expressions) and Deprecation. Show a table of counts per project and category.
+3. **Select:** the user picks projects or categories (default: all).
+4. **Fix:** apply C# 15 syntax and explicit, fail-fast null checks. Never suppress a warning with a
+   `#pragma` or `!` unless the user agrees.
+5. **Verify:** `dotnet build MangoAspire.sln` must be clean, and `dotnet test MangoAspire.sln`
+   (or the affected `*.Tests` projects) must pass.
+6. **Hand off:** suggest the `generate-commit` skill.

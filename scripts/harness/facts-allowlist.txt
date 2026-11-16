@@ -6,3 +6,15 @@
 # framework term, and always give the reason:
 #
 #   TokenName  # why it is not in the code
+
+# Anti-patterns and platform APIs named in review guidance (they must NOT appear in the code)
+Task.Result  # blocking-async anti-pattern listed in code-review rules
+Task.Wait  # blocking-async anti-pattern listed in code-review rules
+sessionStorage  # browser storage API named in the SPA token-storage security rule
+_camelCase  # private-field naming pattern, not a symbol
+
+# Ticket front-matter and .agent/state keys (live in .agent/, outside the source corpus)
+createdUtc  # ticket front-matter field
+updatedUtc  # ticket front-matter field
+completedUtc  # ticket front-matter field
+activeTicketId  # .agent/state/current.json key

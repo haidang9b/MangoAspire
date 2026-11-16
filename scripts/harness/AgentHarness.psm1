@@ -432,11 +432,19 @@ function Test-Links([string]$RepoRoot) {
     }
 }
 
+# Case-sensitive, with word boundaries at word-character ends, so 'pnpm install' is not 'npm install'.
+function Get-StaleTermPattern([string]$Term) {
+    $p = [regex]::Escape($Term)
+    if ($Term -match '^\w') { $p = '(?<![A-Za-z0-9_])' + $p }
+    if ($Term -match '\w$') { $p = $p + '(?![A-Za-z0-9_])' }
+    return $p
+}
+
 function Test-Staleness([string]$RepoRoot) {
     foreach ($f in Get-HarnessFiles $RepoRoot) {
         $text = [System.IO.File]::ReadAllText($f)
         foreach ($term in $script:StaleTerms) {
-            if ($text.Contains($term)) { New-Finding 'Staleness' (Get-RepoRelative $RepoRoot $f) "stale term '$term'" }
+            if ([regex]::IsMatch($text, (Get-StaleTermPattern $term))) { New-Finding 'Staleness' (Get-RepoRelative $RepoRoot $f) "stale term '$term'" }
         }
     }
 }

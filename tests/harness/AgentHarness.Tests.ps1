@@ -172,6 +172,10 @@ Describe 'Invoke-HarnessLint' {
         Set-RepoFile '.claude/skills/run-tests/SKILL.md' "---`nname: run-tests`ndescription: Use when testing.`n---`nThen npm run dev."
         @(Lint Staleness).Count | Should -Be 1
     }
+    It 'does not flag pnpm install as npm install' {
+        Set-RepoFile '.claude/skills/run-tests/SKILL.md' "---`nname: run-tests`ndescription: Use when testing.`n---`nRun pnpm install --dir x, then pnpm run build."
+        @(Lint Staleness).Count | Should -Be 0
+    }
     It 'flags drift' {
         Add-Content (Join-Path $repo '.github/agents/code-reviewer.agent.md') 'edit'
         (Lint Drift).File | Should -Contain '.github/agents/code-reviewer.agent.md'
