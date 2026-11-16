@@ -223,3 +223,24 @@ Describe 'Facts lint' {
         @(Facts '# ok').Count | Should -Be 0
     }
 }
+
+Describe 'Specs lint' {
+    BeforeEach {
+        $repo = New-Repo @{
+            'specs/_template/spec.md'                = '**Status:** draft | in-review | approved | shipped'
+            'specs/_template/acceptance-criteria.md' = '- [ ] AC-1: Given'
+            'specs/_template/test-plan.md'           = '| AC-1 | x |'
+            'specs/a/spec.md'                        = "# A`n`n**Status:** approved`n"
+            'specs/a/acceptance-criteria.md'         = "- [ ] AC-1: Given a when b then c`n- [x] AC-2: Given d when e then f`n"
+            'specs/a/test-plan.md'                   = "| AC | Unit |`n|---|---|`n| AC-1 | x |`n| AC-2 | x |`n"
+        }
+        function Set-Spec($rel, $text) { [IO.File]::WriteAllText((Join-Path $repo "specs/a/$rel"), $text) }
+        function Specs { @(Invoke-HarnessLint -RepoRoot $repo -Category Specs) }
+    }
+    It 'accepts a complete spec' { @(Specs).Count | Should -Be 0 }
+    It 'flags an invalid status' { Set-Spec 'spec.md' '**Status:** done'; @(Specs).Count | Should -Be 1 }
+    It 'flags duplicate AC ids' { Set-Spec 'acceptance-criteria.md' "- [ ] AC-1: x`n- [ ] AC-1: y`n"; (Specs).Message -join ' ' | Should -Match 'AC-1' }
+    It 'flags an AC missing from the test plan' { Set-Spec 'test-plan.md' "| AC-1 | x |`n"; (Specs).Message -join ' ' | Should -Match 'AC-2' }
+    It 'flags an undefined AC in the test plan' { Set-Spec 'test-plan.md' "| AC-1 | x |`n| AC-2 | x |`n| AC-3 | x |`n"; (Specs).Message -join ' ' | Should -Match 'AC-3' }
+    It 'flags a missing spec file' { Remove-Item (Join-Path $repo 'specs/a/test-plan.md'); @(Specs).Count | Should -BeGreaterThan 0 }
+}

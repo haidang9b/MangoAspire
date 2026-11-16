@@ -547,6 +547,51 @@ function Test-Facts([string]$RepoRoot) {
 
 $script:LintChecks['Facts'] = { param($r) Test-Facts $r }
 
+# --- lint: specs (agentic-devkit spec format) --------------------------------------------------
+
+$script:SpecFiles = @('spec.md', 'acceptance-criteria.md', 'test-plan.md')
+
+function Test-Specs([string]$RepoRoot) {
+    $specs = Join-Path $RepoRoot 'specs'
+    if (-not (Test-Path -LiteralPath $specs)) { return }
+    foreach ($f in $script:SpecFiles) {
+        if (-not (Test-Path -LiteralPath (Join-Path $specs "_template/$f"))) { New-Finding 'Specs' "specs/_template/$f" 'template file is missing' }
+    }
+    foreach ($d in Get-ChildItem -LiteralPath $specs -Directory) {
+        if ($d.Name -eq '_template') { continue }
+        $rel = "specs/$($d.Name)"
+        foreach ($f in $script:SpecFiles) {
+            if (-not (Test-Path -LiteralPath (Join-Path $d.FullName $f))) { New-Finding 'Specs' "$rel/$f" 'spec file is missing (copy it from specs/_template/)' }
+        }
+        $specPath = Join-Path $d.FullName 'spec.md'
+        if ((Test-Path -LiteralPath $specPath) -and -not [regex]::IsMatch([System.IO.File]::ReadAllText($specPath), '(?m)^\*\*Status:\*\*\s*(draft|in-review|approved|shipped)\s*$')) {
+            New-Finding 'Specs' "$rel/spec.md" 'needs one line **Status:** draft | in-review | approved | shipped'
+        }
+        $acPath = Join-Path $d.FullName 'acceptance-criteria.md'
+        if (-not (Test-Path -LiteralPath $acPath)) { continue }
+        $ids = @([regex]::Matches([System.IO.File]::ReadAllText($acPath), '(?m)^- \[[ xX]\] (AC-\d+):') | ForEach-Object { $_.Groups[1].Value })
+        if ($ids.Count -eq 0) { New-Finding 'Specs' "$rel/acceptance-criteria.md" "has no '- [ ] AC-n:' items" }
+        foreach ($g in @($ids | Group-Object | Where-Object { $_.Count -gt 1 })) {
+            New-Finding 'Specs' "$rel/acceptance-criteria.md" "duplicate AC id $($g.Name)"
+        }
+        $tpPath = Join-Path $d.FullName 'test-plan.md'
+        if (-not (Test-Path -LiteralPath $tpPath)) { continue }
+        $mapped = @()
+        foreach ($line in [System.IO.File]::ReadAllLines($tpPath)) {
+            if ($line.TrimStart().StartsWith('|')) { $mapped += @([regex]::Matches($line, 'AC-\d+') | ForEach-Object { $_.Value }) }
+        }
+        $defined = @($ids | Select-Object -Unique)
+        foreach ($id in $defined) {
+            if ($mapped -notcontains $id) { New-Finding 'Specs' "$rel/test-plan.md" "$id is not mapped in the coverage table" }
+        }
+        foreach ($id in @($mapped | Select-Object -Unique)) {
+            if ($defined -notcontains $id) { New-Finding 'Specs' "$rel/test-plan.md" "coverage table maps undefined $id" }
+        }
+    }
+}
+
+$script:LintChecks['Specs'] = { param($r) Test-Specs $r }
+
 # --- lint: public ------------------------------------------------------------------------------
 
 function Invoke-HarnessLint {
