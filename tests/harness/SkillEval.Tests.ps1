@@ -144,6 +144,25 @@ Describe 'Invoke-EvalRun answer hiding' {
     }
 }
 
+Describe 'Invoke-EvalRun skill removal' {
+    It 'does not let a setup git add -A stage the removed skill in without_skill runs' {
+        $repo = New-Dir @{ '.claude/skills/run-tests/SKILL.md' = "---`nname: run-tests`ndescription: Use when testing.`n---`nB"; 'README.md' = 'x' }
+        git -C $repo init -q; git -C $repo add -A; git -C $repo -c user.name=t -c user.email=t@t commit -qm init
+        $eval = [pscustomobject]@{ id = 1; name = 'one'; prompt = 'p'; setup = @('git add -A'); checks = @([pscustomobject]@{ type = 'no-edits' }); expectations = @() }
+        $seen = @{}
+        $inv = { param($WorkDir, $Prompt, $ClaudeArgs)
+            $seen.visible = Test-Path (Join-Path $WorkDir '.claude/skills/run-tests')
+            $seen.staged = (git -C $WorkDir diff --cached --name-only) -join ','
+            $seen.status = (git -C $WorkDir status --porcelain) -join ','
+            '{"result":"ok"}' }.GetNewClosure()
+        $out = Join-Path $TestDrive ([guid]::NewGuid().ToString('N'))
+        Invoke-EvalRun -RepoRoot $repo -SkillName run-tests -Eval $eval -Config without_skill -OutDir $out -Invoker $inv | Out-Null
+        $seen.visible | Should -BeFalse
+        $seen.staged | Should -BeNullOrEmpty
+        $seen.status | Should -BeNullOrEmpty
+    }
+}
+
 Describe 'Invoke-SkillEvals -DryRun' {
     It 'lists every planned run and invokes nothing' {
         $repo = New-Dir @{ '.claude/skills/run-tests/SKILL.md' = "---`nname: run-tests`ndescription: Use when testing.`n---`nB"; 'tests/skill-evals/run-tests/evals.json' = $valid }

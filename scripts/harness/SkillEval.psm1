@@ -416,6 +416,9 @@ function Invoke-EvalRun {
         git -C $RepoRoot worktree add --detach $wt $Ref 2>&1 | Out-Null
         if (-not (Test-Path -LiteralPath $wt)) { throw "git worktree add failed for ref '$Ref'" }
         if ($Config -eq 'without_skill') {
+            # skip-worktree first, so neither git status nor a setup 'git add -A' sees the removal.
+            $skillFiles = @(git -C $wt ls-files -- ".claude/skills/$SkillName")
+            if ($skillFiles.Count -gt 0) { git -C $wt update-index --skip-worktree -- @skillFiles 2>&1 | Out-Null }
             $skillDir = Join-Path $wt ".claude/skills/$SkillName"
             if (Test-Path -LiteralPath $skillDir) { Remove-Item -LiteralPath $skillDir -Recurse -Force }
         }
