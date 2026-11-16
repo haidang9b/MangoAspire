@@ -456,6 +456,97 @@ $script:LintChecks['Links'] = { param($r) Test-Links $r }
 $script:LintChecks['Staleness'] = { param($r) Test-Staleness $r }
 $script:LintChecks['Drift'] = { param($r) Test-Drift $r }
 
+# --- lint: facts (AI-written guidance vs the code) ---------------------------------------------
+
+$script:CorpusExtensions = @('.cs', '.csproj', '.cshtml', '.razor', '.ts', '.tsx', '.json', '.props', '.yml')
+$script:CorpusSkipDirs = @('bin', 'obj', 'node_modules', 'dist', '.git')
+$script:FactPattern = '^(@[a-z0-9-]+/[a-z0-9.-]+|[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)*)$'
+$script:AllowlistRel = 'scripts/harness/facts-allowlist.txt'
+
+# Concatenated text of the source corpus. Walks directories by hand so it never enters node_modules.
+function Get-SourceCorpus([string]$RepoRoot) {
+    $sb = New-Object System.Text.StringBuilder
+    $skipFull = @()
+    $evalDir = Join-Path $RepoRoot 'tests/skill-evals'
+    if (Test-Path -LiteralPath $evalDir) { $skipFull += (Get-Item -LiteralPath $evalDir).FullName.TrimEnd('\', '/') }
+    $stack = New-Object System.Collections.Generic.Stack[System.IO.DirectoryInfo]
+    foreach ($top in 'src', 'tests') {
+        $p = Join-Path $RepoRoot $top
+        if (Test-Path -LiteralPath $p) { $stack.Push((New-Object System.IO.DirectoryInfo((Get-Item -LiteralPath $p).FullName))) }
+    }
+    while ($stack.Count -gt 0) {
+        $dir = $stack.Pop()
+        foreach ($sub in $dir.GetDirectories()) {
+            if ($script:CorpusSkipDirs -contains $sub.Name) { continue }
+            if (($sub.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0) { continue }
+            if ($skipFull -contains $sub.FullName.TrimEnd('\', '/')) { continue }
+            $stack.Push($sub)
+        }
+        foreach ($f in $dir.GetFiles()) {
+            if ($script:CorpusExtensions -contains $f.Extension.ToLowerInvariant()) {
+                [void]$sb.Append([System.IO.File]::ReadAllText($f.FullName)).Append("`n")
+            }
+        }
+    }
+    foreach ($f in (New-Object System.IO.DirectoryInfo((Get-Item -LiteralPath $RepoRoot).FullName)).GetFiles()) {
+        if ($f.Name -like '*.sln' -or $f.Name -like '*.props' -or $f.Name -like 'docker-compose*.yml') {
+            [void]$sb.Append([System.IO.File]::ReadAllText($f.FullName)).Append("`n")
+        }
+    }
+    return $sb.ToString()
+}
+
+# Identifier-shaped backticked tokens outside fenced blocks: Name, Name.Member, Name<T>, Name(), useX, @scope/pkg.
+function Get-FactCandidates([string]$Text) {
+    foreach ($l in Get-UnfencedLines $Text) {
+        foreach ($m in [regex]::Matches($l.Line, '`([^`]+)`')) {
+            $t = $m.Groups[1].Value.Trim()
+            $t = $t -replace '\(.*\)$', ''
+            $t = $t -replace '<[^<>]*>$', ''
+            if ($t.Length -lt 4 -or $t -notmatch $script:FactPattern) { continue }
+            if (-not ($t -cmatch '[A-Z]' -or $t -cmatch '^use[A-Z]' -or $t.StartsWith('@'))) { continue }
+            if ($t -cmatch '^[A-Z0-9_.]+$') { continue }                                     # acronym
+            if ($t.Contains('.') -and $t.Split('.')[-1] -cmatch '^[a-z]{1,6}$') { continue }  # file name (.md .json .props .cshtml .csproj)
+            [pscustomobject]@{ Token = $t; Line = $l.Number }
+        }
+    }
+}
+
+function Get-FactsAllowlist([string]$RepoRoot) {
+    $tokens = New-Object 'System.Collections.Generic.HashSet[string]'
+    $findings = @()
+    $path = Join-Path $RepoRoot $script:AllowlistRel
+    if (Test-Path -LiteralPath $path) {
+        foreach ($raw in [System.IO.File]::ReadAllLines($path)) {
+            $line = $raw.Trim()
+            if (-not $line -or $line.StartsWith('#')) { continue }
+            if ($line -match '^(\S+)\s+#\s*\S') { [void]$tokens.Add($Matches[1]) }
+            else { $findings += New-Finding 'Facts' $script:AllowlistRel "allowlist entry '$line' has no '# reason'" }
+        }
+    }
+    return @{ Tokens = $tokens; Findings = $findings }
+}
+
+function Test-Facts([string]$RepoRoot) {
+    $allow = Get-FactsAllowlist $RepoRoot
+    $allow.Findings
+    $corpus = $null
+    foreach ($f in Get-HarnessFiles $RepoRoot) {
+        $rel = Get-RepoRelative $RepoRoot $f
+        $reported = New-Object 'System.Collections.Generic.HashSet[string]'
+        foreach ($c in Get-FactCandidates ([System.IO.File]::ReadAllText($f))) {
+            if ($allow.Tokens.Contains($c.Token) -or $reported.Contains($c.Token)) { continue }
+            if ($null -eq $corpus) { $corpus = Get-SourceCorpus $RepoRoot }
+            if ($corpus.IndexOf($c.Token, [System.StringComparison]::OrdinalIgnoreCase) -lt 0) {
+                [void]$reported.Add($c.Token)
+                New-Finding 'Facts' $rel ("``{0}`` not found in source corpus (line {1}); fix the claim or allowlist it with a reason in {2}" -f $c.Token, $c.Line, $script:AllowlistRel)
+            }
+        }
+    }
+}
+
+$script:LintChecks['Facts'] = { param($r) Test-Facts $r }
+
 # --- lint: public ------------------------------------------------------------------------------
 
 function Invoke-HarnessLint {

@@ -100,3 +100,29 @@ a `Coupon.API` project that doesn't exist, and MediatR, which isn't a dependency
 Then read `D:\Learning\agentic-devkit`: its spec templates, `check_kit.py`, `skill-creator` evals
 and grader, and `analyze-fx-efficiency`. The user chose root `specs/`, spec format only, and the
 fact-check plus output-eval layers. Wrote `specs/ai-native-harness/`. Awaiting review.
+
+### 2026-11-16 — Task 3 Facts baseline (23 findings, 3.3 s)
+Backtick-named symbols in harness files that are absent from the source corpus. Tasks 6–8 and 12 burn these down, by fixing the claim or allowlisting it with a reason:
+  - `AGENTS.md` — `CreateCart`
+  - `AGENTS.md` — `MethodName_When_Behavior_Then_ExpectedResult`
+  - `AGENTS.md` — `ResultModel.Error`
+  - `.claude/agents/unit-test-creator.md` — `Assert.X`
+  - `.claude/skills/code-review/references/rules.md` — `sessionStorage`
+  - `.claude/skills/code-review/references/rules.md` — `Task.Result`
+  - `.claude/skills/code-review/references/rules.md` — `Task.Wait`
+  - `.claude/skills/code-review/references/rules.md` — `_camelCase`
+  - `.claude/skills/create-unit-test/SKILL.md` — `CalculateTotal_When_CartIsEmpty_Then_ReturnsZero`
+  - `.claude/skills/create-unit-test/SKILL.md` — `action.ShouldThrow`
+  - `.claude/skills/create-unit-test/SKILL.md` — `Assert.X`
+  - `.agent/tools/harness.md` — `Vitest`
+  - `.agent/tools/mcp-serena.md` — `Grep`
+  - `.agent/memory/architecture.md` — `Mango.Core.Caching.ICacheManager`
+  - `.agent/memory/architecture.md` — `Mango.Infrastructure.Caching.HybridCacheManager`
+  - `.agent/memory/architecture.md` — `Coupon.API`
+  - `.agent/memory/architecture.md` — `Mango.Common`
+  - `.agent/memory/index.md` — `Coupon.API`
+  - `.agent/memory/stack.md` — `Microsoft.AspNetCore.WebUtilities`
+  - `.agent/memory/domains/checkout-saga.md` — `PaymentId`
+  - `.agent/memory/domains/checkout-saga.md` — `CartItemsJson`
+  - `.agent/memory/domains/identity.md` — `Mango.Core.Options.SeedUsersOptions`
+  - `.agent/memory/domains/identity.md` — `RequireClaim`

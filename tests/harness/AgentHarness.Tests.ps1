@@ -190,3 +190,36 @@ Describe 'Get-HarnessContextReport' {
         $r.AlwaysOnBytes | Should -Be 14; $r.ModelSkillCount | Should -Be 1; $r.UserSkillCount | Should -Be 1
     }
 }
+
+Describe 'Facts lint' {
+    BeforeEach {
+        $repo = New-Repo @{
+            'src/Shared/Errors.cs'                    = 'public class DataVerificationException : Exception {} public record ResultModel<T>(T Data);'
+            'src/UI/mango-ui/src/hooks/useFetch.ts'   = 'export function useFetch() {}'
+            'src/UI/mango-ui/node_modules/x/index.js' = 'GhostService'
+            'Directory.Packages.props'                = '<PackageVersion Include="Shouldly" />'
+            'scripts/harness/facts-allowlist.txt'     = "GetWidgetById  # illustrative name in naming examples`n"
+        }
+        function Facts($agents) { [IO.File]::WriteAllText((Join-Path $repo 'AGENTS.md'), $agents); @(Invoke-HarnessLint -RepoRoot $repo -Category Facts) }
+    }
+    It 'accepts symbols, generics, calls and packages found in the corpus' {
+        @(Facts 'Use `DataVerificationException`, `ResultModel<T>`, `useFetch()` and `Shouldly`.').Count | Should -Be 0
+    }
+    It 'flags a symbol that exists only in node_modules' { (Facts 'Call `GhostService`.').Message | Should -Match 'GhostService' }
+    It 'skips file names, lowercase words, acronyms and fenced code' {
+        @(Facts "Read ``AGENTS.md`` and ``Directory.Packages.props``; run ``pnpm``; ``CRLF``.`n~~~`n``GhostService```n~~~").Count | Should -Be 0
+    }
+    It 'skips six-letter extensions such as .cshtml and .csproj' {
+        @(Facts 'Edit `_Layout.cshtml` and `Products.API.csproj`.').Count | Should -Be 0
+    }
+    It 'honours the allowlist' { @(Facts 'e.g. `GetWidgetById`').Count | Should -Be 0 }
+    It 'flags an allowlist entry without a reason' {
+        [IO.File]::WriteAllText((Join-Path $repo 'scripts/harness/facts-allowlist.txt'), "GetWidgetById`n")
+        (Facts '# ok').File | Should -Contain 'scripts/harness/facts-allowlist.txt'
+    }
+    It 'does not scan specs' {
+        New-Item -ItemType Directory -Force (Join-Path $repo 'specs/x') | Out-Null
+        [IO.File]::WriteAllText((Join-Path $repo 'specs/x/spec.md'), 'Add `CouponExpiryJob`.')
+        @(Facts '# ok').Count | Should -Be 0
+    }
+}

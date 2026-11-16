@@ -1,0 +1,8 @@
+# Facts allowlist for scripts/sync-agent-harness.ps1 -Check (category: Facts).
+#
+# The Facts lint requires every backticked symbol or package named in harness files to exist in the
+# source corpus (src/, tests/, *.sln, *.props, docker-compose*.yml). List a token here only when it
+# is legitimately absent from the code, such as an illustrative name in a naming example or a CLI or
+# framework term, and always give the reason:
+#
+#   TokenName  # why it is not in the code
