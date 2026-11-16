@@ -1,5 +1,7 @@
 ---
+name: test-gen
 description: Generates a unit test for the currently open or specified file.
+disable-model-invocation: true
 ---
 
 # Workflow: /test-gen

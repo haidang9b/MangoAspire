@@ -1,8 +1,9 @@
 ---
 name: codebase-analyzer
 description: Expert in exploring, documenting, and understanding large .NET codebases.
-argument-hint: Ask me to analyze the current workspace or explain the architecture.
 ---
+
+<!-- GENERATED from .claude/ by scripts/sync-agent-harness.ps1 - do not edit directly -->
 
 # Codebase Analyzer Agent
 

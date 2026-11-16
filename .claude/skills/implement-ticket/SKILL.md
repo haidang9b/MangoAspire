@@ -1,5 +1,7 @@
 ---
+name: implement-ticket
 description: End-to-end execution of a feature or bug fix from requirements to documentation.
+disable-model-invocation: true
 ---
 
 # Workflow: implement-ticket

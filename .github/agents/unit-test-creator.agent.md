@@ -1,12 +1,9 @@
 ---
 name: unit-test-creator
 description: Generates xUnit tests using Moq and Shouldly, adhering strictly to project test naming and placement conventions.
-argument-hint: Please provide the class or file you want me to generate unit tests for.
-tools:
-  - search
-  - fetch
-  - codebase
 ---
+
+<!-- GENERATED from .claude/ by scripts/sync-agent-harness.ps1 - do not edit directly -->
 
 # Unit Test Creator
 

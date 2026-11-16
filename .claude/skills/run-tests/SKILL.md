@@ -3,7 +3,6 @@ name: run-tests
 description: Use when running the .NET test suite (full solution, one project, or a single method) and triaging any failures.
 ---
 
-<!-- GENERATED from .agent/ by scripts/sync-agent-harness.ps1 - do not edit directly -->
 # Instructions
 
 1. From the repository root, run the full suite: `dotnet test MangoAspire.sln`.

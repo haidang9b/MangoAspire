@@ -1,5 +1,7 @@
 ---
+name: review
 description: Triggers the automated code review and facilitates modern C# 14 and React 19 fixes.
+disable-model-invocation: true
 ---
 
 # Workflow: review

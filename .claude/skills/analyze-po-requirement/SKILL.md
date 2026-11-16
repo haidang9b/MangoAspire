@@ -3,7 +3,6 @@ name: analyze-po-requirement
 description: Use when a new PO requirement, story, or feature request needs translating into a technical blueprint (backend slice plus frontend impact) before implementation starts.
 ---
 
-<!-- GENERATED from .agent/ by scripts/sync-agent-harness.ps1 - do not edit directly -->
 # Analyze PO Requirement
 
 Turn a raw PO requirement into a structured technical blueprint for MangoAspire (.NET 11 + Aspire

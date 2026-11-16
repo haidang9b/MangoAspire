@@ -1,5 +1,7 @@
 ---
+name: analyze-requirement
 description: Orchestrates the transformation of PO requirements into a developer-ready plan.
+disable-model-invocation: true
 ---
 
 # Workflow: analyze-requirement

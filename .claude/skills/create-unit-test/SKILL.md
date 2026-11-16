@@ -3,7 +3,6 @@ name: create-unit-test
 description: Use when a C# class or method needs unit test coverage and the tests must follow this repo's exact xUnit/Moq/Shouldly naming and placement conventions.
 ---
 
-<!-- GENERATED from .agent/ by scripts/sync-agent-harness.ps1 - do not edit directly -->
 # Create Unit Test
 
 Generate xUnit tests using Moq and Shouldly, following this repo's exact naming convention and

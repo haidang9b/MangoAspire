@@ -1,5 +1,7 @@
 ---
+name: update-docs
 description: Triggers a comprehensive update of the project documentation.
+disable-model-invocation: true
 ---
 
 # Workflow: update-docs

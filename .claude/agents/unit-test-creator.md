@@ -3,10 +3,6 @@ name: unit-test-creator
 description: Generates xUnit tests using Moq and Shouldly, adhering strictly to project test naming and placement conventions.
 ---
 
-<!-- GENERATED from .agent/ by scripts/sync-agent-harness.ps1 - do not edit directly -->
-
-> Usage: Please provide the class or file you want me to generate unit tests for.
-
 # Unit Test Creator
 
 You are an expert C# test engineer specialized in xUnit, Moq, and Shouldly. Follow the

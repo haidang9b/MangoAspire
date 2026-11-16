@@ -1,8 +1,9 @@
 ---
 name: code-reviewer
 description: Review C# and .NET code for quality, performance, and security issues.
-argument-hint: Ask me to review a specific file or piece of code.
 ---
+
+<!-- GENERATED from .claude/ by scripts/sync-agent-harness.ps1 - do not edit directly -->
 
 # Code Reviewer Agent
 

@@ -3,7 +3,6 @@ name: code-review
 description: Use when reviewing new code before merging, auditing existing code for vulnerabilities, or checking performance and idiomatic-usage concerns in this repo's C#/.NET or React code.
 ---
 
-<!-- GENERATED from .agent/ by scripts/sync-agent-harness.ps1 - do not edit directly -->
 # Code Review
 
 Analyze code for quality, performance, and security issues — new code before merging, an existing

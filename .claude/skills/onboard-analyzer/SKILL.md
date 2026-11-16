@@ -3,7 +3,6 @@ name: onboard-analyzer
 description: Use when generating or refreshing the onboarding documentation pack under /docs for a new engineer, or when explicitly triggered by /onboard, /analyze-fe, or /analyze-be.
 ---
 
-<!-- GENERATED from .agent/ by scripts/sync-agent-harness.ps1 - do not edit directly -->
 # Full-Stack Codebase Onboard Analyzer
 
 Generate a read-first onboarding pack under `/docs` for MangoAspire (React/Vite SPA + .NET 11,

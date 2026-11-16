@@ -1,5 +1,7 @@
 ---
+name: fix-warnings
 description: Scans the .NET solution for warnings and applies modern C# 14 fixes.
+disable-model-invocation: true
 ---
 
 # Workflow: fix-warnings

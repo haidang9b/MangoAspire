@@ -3,7 +3,6 @@ name: generate-commit
 description: Use when about to run git commit and the message should be Conventional Commits format derived from the actual diff, not guessed.
 ---
 
-<!-- GENERATED from .agent/ by scripts/sync-agent-harness.ps1 - do not edit directly -->
 # Smart Commit Generator
 
 Generate a Conventional Commits message from the actual diff — type, scope and description derived

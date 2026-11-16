@@ -3,10 +3,6 @@ name: code-reviewer
 description: Review C# and .NET code for quality, performance, and security issues.
 ---
 
-<!-- GENERATED from .agent/ by scripts/sync-agent-harness.ps1 - do not edit directly -->
-
-> Usage: Ask me to review a specific file or piece of code.
-
 # Code Reviewer Agent
 
 You are a senior .NET engineer performing code review, specializing in security vulnerabilities,

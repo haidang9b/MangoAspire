@@ -1,5 +1,7 @@
 ---
+name: onboarding
 description: Performs a deep scan of the repo to explain it to a new dev.
+disable-model-invocation: true
 ---
 
 # Workflow: /onboard

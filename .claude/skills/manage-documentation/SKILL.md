@@ -3,7 +3,6 @@ name: manage-documentation
 description: Use when a feature or change just landed and /docs needs to be brought back in sync with the code, or a ticket/PR requires the docs to be updated.
 ---
 
-<!-- GENERATED from .agent/ by scripts/sync-agent-harness.ps1 - do not edit directly -->
 # Documentation Manager
 
 Keep `/docs` accurate against the current Vertical Slice backend and React frontend. Use after a
