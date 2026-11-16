@@ -58,6 +58,11 @@ Describe 'Invoke-EvalChecks' {
             @{ type = 'response-matches'; pattern = '^fix\(' })
         $r.passed | Should -Be @($true, $true)
     }
+    It 'limits file-matches to the files the session changed' {
+        $chk = @(@{ type = 'file-matches'; glob = 'tests/**/*Tests.cs'; pattern = '_When_' })
+        (@(Invoke-EvalChecks -WorkDir $wd -Checks $chk -ChangedFiles @()))[0].passed | Should -BeFalse
+        (@(Invoke-EvalChecks -WorkDir $wd -Checks $chk -ChangedFiles @('tests/X.Tests/FooTests.cs')))[0].passed | Should -BeTrue
+    }
     It 'fails a command with non-zero exit and records evidence' {
         $r = @(Invoke-EvalChecks -WorkDir $wd -ResponseText '' -Checks @(@{ type = 'command'; run = 'exit 3' }))
         $r[0].passed | Should -BeFalse; $r[0].evidence | Should -Match '3'
@@ -91,6 +96,21 @@ Describe 'Invoke-EvalGrade' {
         Invoke-EvalGrade -RunDir $run -Expectations @('e') -Invoker { 'not json' } -GraderPromptPath $gp | Out-Null
         Get-Content (Join-Path $run 'grader-raw.txt') -Raw | Should -Match 'not json'
     }
+    It 'does not call the grader when the run failed' {
+        Set-Content (Join-Path $run 'error.txt') 'boom'
+        $g = Invoke-EvalGrade -RunDir $run -Expectations @('e') -Invoker { throw 'must not be called' } -GraderPromptPath $gp
+        ($g.expectations | Where-Object source -eq 'grader').evidence | Should -Match 'run failed'
+    }
+    It 'grades in an empty folder outside the run directory' {
+        $seen = @{}
+        $inv = { param($WorkDir, $Prompt, $ClaudeArgs)
+            $seen.dir = $WorkDir; $seen.count = @(Get-ChildItem -LiteralPath $WorkDir -Force).Count
+            '{"result":"{\"expectations\":[{\"text\":\"e\",\"passed\":true,\"evidence\":\"ok\"}]}"}' }.GetNewClosure()
+        Invoke-EvalGrade -RunDir $run -Expectations @('e') -Invoker $inv -GraderPromptPath $gp | Out-Null
+        $seen.dir.StartsWith($run) | Should -BeFalse
+        $seen.count | Should -Be 0
+        Test-Path -LiteralPath $seen.dir | Should -BeFalse
+    }
     It 'records unparseable grader output as failed' {
         $g = Invoke-EvalGrade -RunDir $run -Expectations @('e') -Invoker { 'not json' } -GraderPromptPath $gp
         ($g.expectations | Where-Object source -eq 'grader').evidence | Should -Match 'unparseable'
@@ -113,6 +133,33 @@ Describe 'Get-EvalBenchmark' {
     }
 }
 
+Describe 'Get-EvalBenchmark health' {
+    It 'reports run health per skill' {
+        $ok = '{"pass_rate":1.0,"cost_usd":0.1,"duration_ms":1,"expectations":[{"text":"a","passed":true}]}'
+        $res = New-Dir @{
+            'run-tests/eval-1-one/with_skill/run-1/grading.json'    = $ok
+            'run-tests/eval-1-one/with_skill/run-1/meta.json'       = '{"health":{"subtype":"error_max_turns","is_error":true,"num_turns":31,"permission_denials":2,"run_error":null}}'
+            'run-tests/eval-1-one/without_skill/run-1/grading.json' = $ok
+            'run-tests/eval-1-one/without_skill/run-1/meta.json'    = '{"health":{"subtype":"success","is_error":false,"num_turns":3,"permission_denials":1,"run_error":null}}'
+        }
+        $b = @(Get-EvalBenchmark -ResultsDir $res)
+        $b[0].permission_denials | Should -Be 3
+        $b[0].max_turns_hits | Should -Be 1
+        $b[0].run_errors | Should -Be 0
+        Get-Content (Join-Path $res 'summary.md') -Raw | Should -Match 'Denials'
+    }
+}
+
+Describe 'Invoke-ClaudeCli' {
+    It 'sends the prompt as UTF-8 and decodes the reply as UTF-8' {
+        $d = New-Dir @{ 'x.txt' = 'x' }; git -C $d init -q
+        $text = 'A' + [char]0x2013 + 'B' + [char]0x0393 + 'C'
+        $sha = (Invoke-ClaudeCli -WorkDir $d -Prompt $text -ClaudeArgs @('hash-object', '-w', '--stdin') -Exe git).Trim()
+        $back = Invoke-ClaudeCli -WorkDir $d -Prompt '' -ClaudeArgs @('cat-file', '-p', $sha) -Exe git
+        $back.TrimEnd() | Should -Be $text
+    }
+}
+
 Describe 'Invoke-EvalRun' {
     BeforeEach {
         $repo = New-Dir @{ '.claude/skills/run-tests/SKILL.md' = "---`nname: run-tests`ndescription: Use when testing.`n---`nB"; 'README.md' = 'x' }
@@ -132,6 +179,31 @@ Describe 'Invoke-EvalRun' {
         Run with_skill $inv
         git -C $repo status --porcelain | Should -BeNullOrEmpty
         @(git -C $repo worktree list).Count | Should -Be 1
+    }
+    It 'checks file-matches only against files the session changed' {
+        $eval.checks = @([pscustomobject]@{ type = 'file-matches'; glob = '**/*.md'; pattern = 'x' })
+        Run with_skill $inv
+        $c = [IO.File]::ReadAllText((Join-Path $out 'checks.json')) | ConvertFrom-Json
+        @($c)[0].passed | Should -BeFalse
+    }
+    It 'saves the diff byte-exact, including non-ASCII text' {
+        $inv2 = { param($WorkDir, $Prompt, $ClaudeArgs)
+            [IO.File]::WriteAllText((Join-Path $WorkDir 'note.md'), ('dash ' + [char]0x2013), (New-Object System.Text.UTF8Encoding $false))
+            '{"result":"done"}' }
+        $prev = $null
+        try { $prev = [Console]::OutputEncoding; [Console]::OutputEncoding = [Text.Encoding]::GetEncoding(28591) } catch { $prev = $null }
+        try { Run with_skill $inv2 } finally { if ($prev) { try { [Console]::OutputEncoding = $prev } catch { } } }
+        $hex = -join ([IO.File]::ReadAllBytes((Join-Path $out 'outputs/diff.patch')) | ForEach-Object { $_.ToString('X2') })
+        $hex | Should -Match 'E28093'
+    }
+    It 'records run health and blanks the response when the run returned no result' {
+        $inv3 = { param($WorkDir, $Prompt, $ClaudeArgs) '{"type":"result","subtype":"error_max_turns","is_error":true,"num_turns":31,"permission_denials":[{"tool_name":"PowerShell"},{"tool_name":"Bash"}]}' }
+        Run with_skill $inv3
+        $m = [IO.File]::ReadAllText((Join-Path $out 'meta.json')) | ConvertFrom-Json
+        $m.health.subtype | Should -Be 'error_max_turns'
+        $m.health.permission_denials | Should -Be 2
+        $m.health.num_turns | Should -Be 31
+        [IO.File]::ReadAllText((Join-Path $out 'outputs/response.md')) | Should -BeNullOrEmpty
     }
     It 'removes the worktree when the invoker throws' {
         Run with_skill { throw 'boom' }

@@ -175,8 +175,14 @@ function Invoke-EvalChecks {
         [AllowEmptyString()][string]$ResponseText = '',
         [AllowEmptyCollection()][object[]]$Checks = @(),
         [string]$SetupTree,
-        [string]$BaseCommit
+        [string]$BaseCommit,
+        # Repo-relative paths the session changed since setup. When given, file-matches looks only at
+        # these, so a file that already matched before the session can't make the check pass.
+        [AllowEmptyCollection()][string[]]$ChangedFiles
     )
+    $limit = $PSBoundParameters.ContainsKey('ChangedFiles')
+    $changed = @{}
+    foreach ($p in @($ChangedFiles | Where-Object { $_ })) { $changed[$p.Replace('\', '/')] = $true }
     foreach ($c in $Checks) {
         $type = Get-Prop $c 'type'
         switch ($type) {
@@ -191,9 +197,15 @@ function Invoke-EvalChecks {
             'file-matches' {
                 $glob = Get-Prop $c 'glob'; $pattern = Get-Prop $c 'pattern'
                 $files = @(Resolve-GlobFiles $WorkDir $glob)
+                if ($limit) {
+                    $base = (Get-Item -LiteralPath $WorkDir).FullName.TrimEnd('\', '/')
+                    $files = @($files | Where-Object { $changed.ContainsKey($_.Substring($base.Length).TrimStart('\', '/').Replace('\', '/')) })
+                }
                 $hit = $null
                 foreach ($f in $files) { if ([regex]::IsMatch([System.IO.File]::ReadAllText($f), $pattern)) { $hit = $f; break } }
-                $evidence = if ($hit) { "matched in $($hit.Substring($WorkDir.Length).TrimStart('\','/'))" } else { "$($files.Count) file(s) under '$glob', none match /$pattern/" }
+                $scope = ''
+                if ($limit) { $scope = ' changed by the session' }
+                $evidence = if ($hit) { "matched in $($hit.Substring($WorkDir.Length).TrimStart('\','/'))" } else { "$($files.Count) file(s) under '$glob'$scope, none match /$pattern/" }
                 New-CheckResult "file-matches: $glob /$pattern/" ($null -ne $hit) $evidence
             }
             'no-edits' {
@@ -264,6 +276,11 @@ function Invoke-EvalGrade {
         catch { }
     }
     $exp = @($Expectations | Where-Object { $_ })
+    if ($exp.Count -gt 0 -and (Test-Path -LiteralPath (Join-Path $RunDir 'error.txt'))) {
+        # The run itself failed: there is nothing to grade, so spend no grader call on it.
+        foreach ($e in $exp) { $results.Add([pscustomobject]@{ text = $e; passed = $false; evidence = 'not graded: the run failed (see error.txt)'; source = 'grader' }) }
+        $exp = @()
+    }
     if ($exp.Count -gt 0) {
         $diff = Read-TextFile (Join-Path $RunDir 'outputs/diff.patch')
         if ($diff.Length -gt $script:MaxDiffChars) { $diff = $diff.Substring(0, $script:MaxDiffChars) + "`n[diff truncated]" }
@@ -274,12 +291,19 @@ function Invoke-EvalGrade {
             "`n`n## Diff of the session's changes`n$fence" + "diff`n$diff`n$fence" +
             "`n`n## Deterministic check results`n$fence" + "json`n" + (Read-TextFile $checksPath) + "`n$fence`n"
         # One retry: a single malformed grader reply would otherwise fail every expectation of the run.
+        # Grade from an empty folder: inside the repo the grader would load CLAUDE.md and project
+        # settings, and any tool call ends its single turn with error_max_turns.
+        $gradeDir = Join-Path ([System.IO.Path]::GetTempPath()) ('mango-grade-' + [guid]::NewGuid().ToString('N'))
+        New-Item -ItemType Directory -Path $gradeDir -Force | Out-Null
         $raw = $null; $parsed = $null
-        for ($attempt = 1; $attempt -le 2 -and $null -eq $parsed; $attempt++) {
-            try { $raw = (& $Invoker -WorkDir $RunDir -Prompt $prompt -ClaudeArgs (Get-ClaudeArgs -Purpose grade -Model $Model)) | Out-String }
-            catch { $raw = 'invoker error: ' + $_.Exception.Message }
-            $parsed = ConvertFrom-GraderOutput $raw
+        try {
+            for ($attempt = 1; $attempt -le 2 -and $null -eq $parsed; $attempt++) {
+                try { $raw = (& $Invoker -WorkDir $gradeDir -Prompt $prompt -ClaudeArgs (Get-ClaudeArgs -Purpose grade -Model $Model)) | Out-String }
+                catch { $raw = 'invoker error: ' + $_.Exception.Message }
+                $parsed = ConvertFrom-GraderOutput $raw
+            }
         }
+        finally { Remove-Item -LiteralPath $gradeDir -Recurse -Force -ErrorAction SilentlyContinue }
         Write-TextFile (Join-Path $RunDir 'grader-raw.txt') ([string]$raw)
         for ($i = 0; $i -lt $exp.Count; $i++) {
             if ($null -eq $parsed) {
@@ -323,6 +347,7 @@ function Get-EvalBenchmark {
     foreach ($skillDir in Get-ChildItem -LiteralPath $ResultsDir -Directory) {
         $rates = @{ with_skill = @(); without_skill = @() }
         $cost = 0.0; $duration = 0; $evalCount = 0
+        $denials = 0; $maxTurnHits = 0; $runErrors = 0
         $nonDiscriminating = @()
         foreach ($evalDir in Get-ChildItem -LiteralPath $skillDir.FullName -Directory -Filter 'eval-*') {
             $evalCount++
@@ -337,6 +362,16 @@ function Get-EvalBenchmark {
                     $rates[$cfg] += [double]$g.pass_rate
                     $cost += [double]$g.cost_usd
                     $duration += [int]$g.duration_ms
+                }
+                if (Test-Path -LiteralPath $cfgDir) {
+                    foreach ($mf in Get-ChildItem -LiteralPath $cfgDir -Recurse -File -Filter 'meta.json') {
+                        $h = Get-Prop ([System.IO.File]::ReadAllText($mf.FullName) | ConvertFrom-Json) 'health'
+                        if (-not $h) { continue }
+                        $denials += [int](Get-Prop $h 'permission_denials')
+                        $sub = [string](Get-Prop $h 'subtype')
+                        if ($sub -like 'error_max_turns*') { $maxTurnHits++ }
+                        elseif ((Get-Prop $h 'run_error') -or (Get-Prop $h 'is_error')) { $runErrors++ }
+                    }
                 }
                 $byConfig[$cfg] = $gradings
             }
@@ -367,17 +402,21 @@ function Get-EvalBenchmark {
             verdict                 = $verdict
             cost_usd                = [math]::Round($cost, 4)
             duration_s              = [math]::Round($duration / 1000.0, 1)
+            permission_denials      = $denials
+            max_turns_hits          = $maxTurnHits
+            run_errors              = $runErrors
             non_discriminating      = $nonDiscriminating
         }
     }
     Write-TextFile (Join-Path $ResultsDir 'benchmark.json') (ConvertTo-Json -InputObject @($rows) -Depth 4)
     $deltaSign = [string][char]0x0394
-    $md = @('# Skill eval summary', '', "| Skill | Evals | With skill | Without | $deltaSign | Verdict | Cost (USD) | Time (s) |", '|---|---|---|---|---|---|---|---|')
+    $md = @('# Skill eval summary', '', "| Skill | Evals | With skill | Without | $deltaSign | Verdict | Cost (USD) | Time (s) | Denials | Max-turns | Errors |", '|---|---|---|---|---|---|---|---|---|---|---|')
     foreach ($r in $rows) {
-        $md += "| {0} | {1} | {2:N2} | {3:N2} | {4:+0.00;-0.00;0.00} | {5} | {6:N4} | {7:N1} |" -f $r.skill, $r.evals, $r.with_skill_pass_rate, $r.without_skill_pass_rate, $r.delta, $r.verdict, $r.cost_usd, $r.duration_s
+        $md += "| {0} | {1} | {2:N2} | {3:N2} | {4:+0.00;-0.00;0.00} | {5} | {6:N4} | {7:N1} | {8} | {9} | {10} |" -f $r.skill, $r.evals, $r.with_skill_pass_rate, $r.without_skill_pass_rate, $r.delta, $r.verdict, $r.cost_usd, $r.duration_s, $r.permission_denials, $r.max_turns_hits, $r.run_errors
     }
     $md += ''
     $md += "Verdict: helps if $deltaSign >= +0.10, hurts if $deltaSign <= -0.10, otherwise neutral."
+    $md += 'Run health: Denials = tool calls the allowlist refused; Max-turns = sessions cut off by --max-turns; Errors = sessions that failed. A row with Max-turns or Errors measures the runner, not only the skill.'
     foreach ($r in @($rows | Where-Object { @($_.non_discriminating).Count -gt 0 })) {
         $md += ''
         $md += "Non-discriminating expectations for $($r.skill) (pass with and without the skill):"
@@ -393,14 +432,18 @@ function Get-EvalBenchmark {
 # native arguments) from inside $WorkDir, and returns stdout as one string.
 function Invoke-ClaudeCli {
     [CmdletBinding()]
-    param([string]$WorkDir, [string]$Prompt, [string[]]$ClaudeArgs)
-    $OutputEncoding = $script:Utf8NoBom
+    param([string]$WorkDir, [string]$Prompt, [string[]]$ClaudeArgs, [string]$Exe = 'claude')
+    # Windows PowerShell 5.1 encodes a native pipe with the GLOBAL $OutputEncoding (US-ASCII by
+    # default) and ignores a function-local one, so non-ASCII prompt text would arrive as '?'.
+    $previousPipe = $global:OutputEncoding
+    $global:OutputEncoding = $script:Utf8NoBom
     $previous = $null
     try { $previous = [Console]::OutputEncoding; [Console]::OutputEncoding = $script:Utf8NoBom } catch { $previous = $null }
     Push-Location -LiteralPath $WorkDir
-    try { return (($Prompt | & claude @ClaudeArgs) | Out-String) }
+    try { return (($Prompt | & $Exe @ClaudeArgs) | Out-String) }
     finally {
         Pop-Location
+        $global:OutputEncoding = $previousPipe
         if ($previous) { try { [Console]::OutputEncoding = $previous } catch { } }
     }
 }
@@ -427,6 +470,7 @@ function Invoke-EvalRun {
     if ($Config -eq 'with_skill') { $prompt = "/$SkillName $prompt" }
     $wt = Join-Path ([System.IO.Path]::GetTempPath()) ('mango-eval-' + [guid]::NewGuid().ToString('N'))
     $results = @()
+    $health = [ordered]@{ subtype = $null; is_error = $null; num_turns = $null; permission_denials = $null; run_error = $null }
     try {
         git -C $RepoRoot worktree add --detach $wt $Ref 2>&1 | Out-Null
         if (-not (Test-Path -LiteralPath $wt)) { throw "git worktree add failed for ref '$Ref'" }
@@ -454,16 +498,26 @@ function Invoke-EvalRun {
         $resultText = $raw
         try {
             $j = $raw | ConvertFrom-Json
-            if (Get-Prop $j 'result') { $resultText = [string](Get-Prop $j 'result') }
+            # A session cut off by --max-turns returns JSON with no result: grade an empty answer, not
+            # the JSON envelope (a response-matches check could match its field names).
+            $resultText = [string](Get-Prop $j 'result')
+            $health.subtype = [string](Get-Prop $j 'subtype')
+            $health.is_error = [bool](Get-Prop $j 'is_error')
+            $health.num_turns = Get-Prop $j 'num_turns'
+            $health.permission_denials = @(Get-Prop $j 'permission_denials' | Where-Object { $_ }).Count
         }
         catch { }
         Write-TextFile (Join-Path $outputs 'response.md') $resultText
         $afterTree = Get-WorkTreeHash $wt
-        Write-TextFile (Join-Path $outputs 'diff.patch') ((git -C $wt diff --binary $setupTree $afterTree) | Out-String)
-        $results = @(Invoke-EvalChecks -WorkDir $wt -ResponseText $resultText -Checks $checks -SetupTree $setupTree -BaseCommit $baseCommit)
+        # --output: git writes the bytes itself. Captured through PowerShell, the console codepage
+        # would garble every non-ASCII character.
+        git -C $wt diff --binary "--output=$(Join-Path $outputs 'diff.patch')" $setupTree $afterTree 2>&1 | Out-Null
+        $changedFiles = @(git -C $wt -c core.quotepath=off diff --name-only $setupTree $afterTree | Where-Object { $_ })
+        $results = @(Invoke-EvalChecks -WorkDir $wt -ResponseText $resultText -Checks $checks -SetupTree $setupTree -BaseCommit $baseCommit -ChangedFiles $changedFiles)
     }
     catch {
         $message = $_.Exception.Message
+        $health.run_error = $message
         Write-TextFile (Join-Path $OutDir 'error.txt') ($_ | Out-String)
         $results = @(foreach ($c in $checks) { New-CheckResult ([string](Get-Prop $c 'type')) $false "run failed: $message" })
     }
@@ -473,7 +527,7 @@ function Invoke-EvalRun {
         git -C $RepoRoot worktree prune 2>&1 | Out-Null
     }
     Write-TextFile (Join-Path $OutDir 'checks.json') (ConvertTo-Json -InputObject @($results) -Depth 4)
-    $meta = [ordered]@{ skill = $SkillName; eval_id = (Get-Prop $Eval 'id'); eval_name = (Get-Prop $Eval 'name'); config = $Config; run = $RunIndex; ref = $Ref; prompt = $prompt }
+    $meta = [ordered]@{ skill = $SkillName; eval_id = (Get-Prop $Eval 'id'); eval_name = (Get-Prop $Eval 'name'); config = $Config; run = $RunIndex; ref = $Ref; prompt = $prompt; health = $health }
     Write-TextFile (Join-Path $OutDir 'meta.json') (ConvertTo-Json -InputObject $meta -Depth 3)
     return $OutDir
 }
