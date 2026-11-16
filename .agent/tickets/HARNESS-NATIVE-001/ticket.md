@@ -38,7 +38,7 @@ See `spec.md` → Open questions and `test-plan.md` → Risks.
   - [x] Define goal and scope
   - [x] Write the spec, design and plan (`specs/ai-native-harness/`)
   - [x] Plan approved by the user
-- [ ] **Step 2 — Execute**
+- [x] **Step 2 — Execute**
   - [x] Task 1: Harness module — parsing, Copilot mirror, drift
   - [x] Task 2: Harness lint core and context report
   - [x] Task 3: Fact-check lint for AI-written content
@@ -49,7 +49,7 @@ See `spec.md` → Open questions and `test-plan.md` → Risks.
   - [x] Task 8: Lean always-on files
   - [x] Task 9: Skill eval engine
   - [x] Task 10: Skill eval runner
-  - [ ] Task 11: Author evals for six skills and run the first benchmark
+  - [x] Task 11: Author evals for six skills and run the first benchmark
   - [x] Task 12: Docs, CI, close-out
 - [ ] **Step 3 — Verification**
   - [x] `sync-agent-harness.ps1 -Check` exits 0
@@ -92,6 +92,41 @@ See `spec.md` → Open questions and `test-plan.md` → Risks.
   `@()` before reading `.Count`. Three bugs on this branch had this cause.
 
 ## Open Questions
+Follow-ups from the benchmark (AC-10). Every skill whose verdict isn't `helps` gets one. Whether to act
+in this ticket or a new one is the spec's open question for the user.
+
+- **Four of the five model-invocable skills are neutral.** create-unit-test, run-tests,
+  generate-commit and add-feature-slice score the same without the skill, because `AGENTS.md` and the
+  path-scoped rules already carry their conventions. Making them user-only would cut the 758-char
+  skill listing to code-review's alone. Decide whether to make them user-only, retire them, or write
+  harder evals first.
+- **add-feature-slice** (neutral, 0.93 / 0.93):
+  - Non-discriminating: all 14 other expectations (slice layout, `AsNoTracking` + `Select`,
+    `ISender.SendAsync`, the validator, `DataVerificationException`, `IEventBus.PublishAsync`, builds).
+  - The one failure, in both configs, is an eval defect. Eval 3 looks for `ProductDeletedIntegrationEvent`
+    under `src/Services/Products.API/**`, but shared events live in `src/Shared/Mango.Events/<Area>/`,
+    and both sessions put it there (verified from their diffs). Fix the glob; the corrected check
+    passes both configs, so Δ stays 0.00.
+  - Health: 34 denials (mostly compound `dotnet … | Select-Object` commands) and 2 max-turn cut-offs,
+    both without the skill.
+  - Next: harder evals, such as a new API project with AppHost wiring, which only the skill's
+    references cover.
+- **analyze-requirement** (neutral, 0.89 / 0.89):
+  - Non-discriminating: the AC format, the Specs lint, the coupon and cancellation ACs, and asking open
+    questions about the vague requirement.
+  - Both configs fail eval 3's "Does not invent acceptance criteria for points the requirement leaves
+    undecided": each wrote 12–13 ACs for its own reading of "faster". In the first run the with-skill
+    config passed it, so the skill's guard is weak, not absent.
+  - Next: tighten the skill to stop at Open questions when the outcome itself is undefined. It is
+    user-only, so being neutral costs no session context.
+  - Health: 13 denials and 1 max-turn cut-off (eval 2, with the skill).
+- **create-unit-test** (neutral, 1.00 / 1.00): all 15 expectations are non-discriminating, and the
+  `backend-testing` rule already loads for test files. Add evals for what only the skill states, or
+  make it user-only.
+- **generate-commit** (neutral, 1.00 / 1.00): all 13 expectations are non-discriminating. Same options.
+- **run-tests** (neutral, 1.00 / 1.00): all 14 expectations are non-discriminating. The first run's
+  `helps` (+0.17) came from denied `dotnet test` calls, not from the skill. Same options.
+- Still pending from the spec: is a 0.10 Δ the right bar for `helps`? It is the default in use.
 
 ## Blockers
 
@@ -135,3 +170,63 @@ Backtick-named symbols in harness files that are absent from the source corpus. 
 
 ### 2026-11-16 — Task 8 context report
 `AlwaysOnBytes: 3548  ModelSkillCount: 5  UserSkillCount: 5  SkillListingChars: 758` (before: 12,730 B always-on; 15 listing entries, 1,246 chars of model-visible descriptions).
+
+### 2026-11-16 — Task 11 benchmark (clean run)
+Results: `tests/skill-evals/_results/20261116-185611` (gitignored), 36 sessions at ref `a8e4ae8`,
+1 run per config, $30.52, about 95 min.
+
+| Skill | Evals | With skill | Without | Δ | Verdict | Cost (USD) | Denials | Max-turns | Errors |
+|---|---|---|---|---|---|---|---|---|---|
+| add-feature-slice | 3 | 0.93 | 0.93 | 0.00 | neutral | 8.31 | 34 | 2 | 0 |
+| analyze-requirement | 3 | 0.89 | 0.89 | 0.00 | neutral | 10.57 | 13 | 1 | 0 |
+| code-review | 3 | 1.00 | 0.85 | +0.15 | helps | 4.12 | 3 | 0 | 0 |
+| create-unit-test | 3 | 1.00 | 1.00 | 0.00 | neutral | 4.69 | 23 | 0 | 0 |
+| generate-commit | 3 | 1.00 | 1.00 | 0.00 | neutral | 1.42 | 1 | 0 | 0 |
+| run-tests | 3 | 1.00 | 1.00 | 0.00 | neutral | 1.41 | 0 | 0 | 0 |
+
+code-review helps on two expectations:
+- eval 1 "Ranks that finding as Critical". It failed with the skill in the first run; the
+  `references/rules.md` fix in `8e8c2d5` made the skill pass it.
+- eval 3 "Does not present problems in code outside the diff as findings about this change".
+
+Follow-ups for the neutral skills are under Open Questions.
+
+How the benchmark got here (about $68 of evals in all):
+- **First full run** (`20261116-163734`, ref `1183f1b`, $30.58): invalid for 4 of 6 skills.
+  - The allowlist was Bash-only, but sessions on Windows run `dotnet` through the PowerShell tool,
+    so every build and test was denied.
+  - One unparseable grader reply gave create-unit-test a false `hurts`.
+  - Fixed in `1c85f8c`.
+- **Partial re-run** (`20261116-182019`, 12 sessions, $6.25): stopped after the final review.
+  - Prompts reached `claude` as US-ASCII, and diffs were decoded through the console codepage.
+  - analyze-requirement's file check matched this branch's own spec.
+  - No run health was recorded.
+  - Fixed in `6b98682`.
+- **Clean run:** above, after a smoke run (`20261116-185459`) of the fixed pipeline.
+
+### 2026-11-16 — Close-out (Tasks 11–12, final review)
+| Measure | Before | After |
+|---|---|---|
+| Always-on context (`CLAUDE.md` + imports + rules without `paths`) | 12,730 B | 3,656 B |
+| Skill listing | 15 entries, 1,246 description chars | 5 model-invocable, 758 chars, plus 5 user-only |
+| Duplicate rule text | 13.6 KB | 0 |
+| Rules auto-loading by path | none | Claude `.claude/rules/` + Copilot `.github/instructions/` |
+| Guidance checked against the code | nothing | `-Check`: 10 lint categories in 1.7 s, run in CI |
+
+- Pester: 92/92 on Windows PowerShell 5.1. `-Check`: OK.
+- The Facts lint removed false claims:
+  - `Coupon.API`, which doesn't exist;
+  - MediatR APIs (the mediator is in-house);
+  - `IRepository`;
+  - RTK and MUI, which the SPA doesn't use.
+- The final review caught one false claim that Facts can't, because the token is real:
+  "`WarningsAsErrors` is on" (only CS1998/CS4014 are errors).
+- Final review (fresh context, opus): 0 Critical, 6 Important (all fixed, TDD), 16 Minor
+  (13 deferred, 3 fixed as re-graded or unfinished plan steps).
+- Also found and fixed while gathering evidence: `-Check` exited 0 on exactly one finding under
+  Windows PowerShell (`48d5151`).
+- Still open before `completed`:
+  - AC-3, AC-4 and AC-12 (the VS Code hand-check and the first CI run);
+  - AC-8 (no `/implement-ticket` run on a feature ticket yet);
+  - Portability (PowerShell 7 on Linux runs only in CI);
+  - push, PR and merge.
