@@ -57,6 +57,12 @@ Describe 'Invoke-EvalGrade' {
         $g = Invoke-EvalGrade -RunDir $run -Expectations @('e') -Invoker $inv -GraderPromptPath $gp
         @($g.expectations).Count | Should -Be 2; $g.pass_rate | Should -Be 0.5; $g.cost_usd | Should -Be 0.03
     }
+    It 'counts each deterministic check separately, including a failed one' {
+        [IO.File]::WriteAllText((Join-Path $run 'checks.json'), '[{"text":"no-edits","passed":true,"evidence":"clean","source":"check"},{"text":"response-matches","passed":false,"evidence":"no match","source":"check"}]')
+        $g = Invoke-EvalGrade -RunDir $run -Expectations @() -Invoker { throw 'must not be called' } -GraderPromptPath $gp
+        @($g.expectations).Count | Should -Be 2
+        $g.pass_rate | Should -Be 0.5
+    }
     It 'records unparseable grader output as failed' {
         $g = Invoke-EvalGrade -RunDir $run -Expectations @('e') -Invoker { 'not json' } -GraderPromptPath $gp
         ($g.expectations | Where-Object source -eq 'grader').evidence | Should -Match 'unparseable'

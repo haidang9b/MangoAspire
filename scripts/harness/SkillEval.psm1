@@ -238,7 +238,9 @@ function Invoke-EvalGrade {
     $results = New-Object System.Collections.Generic.List[object]
     $checksPath = Join-Path $RunDir 'checks.json'
     if (Test-Path -LiteralPath $checksPath) {
-        foreach ($c in @([System.IO.File]::ReadAllText($checksPath) | ConvertFrom-Json)) {
+        # Assign first: Windows PowerShell 5.1 ConvertFrom-Json emits a JSON array as ONE pipeline object.
+        $checkItems = [System.IO.File]::ReadAllText($checksPath) | ConvertFrom-Json
+        foreach ($c in $checkItems) {
             $results.Add([pscustomobject]@{ text = $c.text; passed = [bool]$c.passed; evidence = $c.evidence; source = 'check' })
         }
     }
