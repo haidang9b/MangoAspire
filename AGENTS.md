@@ -1,172 +1,51 @@
 # AGENTS.md
 
-Guidance for coding agents working in `D:\Learning\MangoAspire`.
+MangoAspire: .NET 11 + Aspire microservices (Vertical Slice), a React/Vite SPA in `src/UI/mango-ui`,
+PostgreSQL, RabbitMQ, Debezium. The dev machine runs Windows + PowerShell; scripts are in `scripts/`.
 
-## Scope and intent
+## Commands
 
-- This repository is a .NET 11 + Aspire microservices solution with a React/Vite SPA.
-- Prefer minimal, surgical changes that match existing architecture and conventions.
-- Follow this file plus `.agent/` rules and `.editorconfig` as the source of truth.
+- Restore / build: `dotnet restore MangoAspire.sln` · `dotnet build MangoAspire.sln`
+- Run: `dotnet run --project src/Mango.AppHost/Mango.AppHost.csproj`
+- Test: `dotnet test MangoAspire.sln`. For one project, pass its `.csproj`; for one test, add
+  `--filter "FullyQualifiedName~Class.Method"`.
+- Format: `dotnet format --verify-no-changes MangoAspire.sln` (`WarningsAsErrors` is on)
+- SPA, from the repo root: `pnpm install --dir src/UI/mango-ui` · `pnpm --dir src/UI/mango-ui dev|build|lint`.
+  There is no frontend test runner, so verify with lint + build and never invent test commands.
 
-## Rule files discovered
+## Guardrails
 
-- `.agent/CODING_CONVENTIONS.md`
-- `.agent/API_PROJECT_STRUCTURE.md`
-- `.agent/rules/backend-dotnet.md`
-- `.agent/rules/backend-testing.md`
-- `.agent/rules/frontend-react.md`
-- `.agent/rules/architecture.md`
-- `.editorconfig`
+- Vertical Slice Architecture by feature (`Features/` + `Routes/`). No Clean/Onion/N-tier layers.
+- No repository layer: `DbContext` directly in handlers. Only `Mango.Orchestrators` keeps one, for its saga.
+- No cross-slice calls; share infrastructure only.
+- Thin `Program.cs`: `AddApiDefaults()` / `UseApiPipeline()` / `MigrateDatabaseAsync()`.
+- Handlers return `ResultModel<T>`. Business errors throw `DataVerificationException`, which
+  `GlobalExceptionHandler` turns into ProblemDetails.
+- Every command has a FluentValidation validator. The in-house mediator (`src/Shared/Mediator`)
+  runs behaviours in this order: Logging → Validation → Tx.
+- Package versions only in `Directory.Packages.props`. pnpm, never npm, for the SPA.
+- TypeScript is strict; no `any`.
+- Tests use xUnit + Moq + Shouldly, named `Method_When_Condition_Then_Result`.
+- Keep changes minimal: don't touch unrelated files or introduce new patterns unasked.
 
-## Project memory & ticket state
+## Where guidance lives
 
-`.agent/` is the whole harness; `docs/` is human documentation and holds neither memory nor state.
-Layout and ownership are documented in `.agent/README.md`.
+- **Rules** load automatically by file path from `.claude/rules/`; Copilot reads the generated
+  mirror in `.github/instructions/`. Never hand-edit `.github/instructions/` or `.github/agents/`.
+  Regenerate them with `scripts/sync-agent-harness.ps1`, and lint with its `-Check` switch.
+- **Skills** live in `.claude/skills/`. The human-run workflows are `/implement-ticket`,
+  `/analyze-requirement`, `/onboarding`, `/update-docs` and `/fix-warnings`.
+- **Memory** (what is true, and lessons learned): start at `.agent/memory/index.md`, then read only the
+  domain files you need.
+- **Done checklist:** `.agent/memory/ops/task-completion.md`.
 
-- **Project memory** — `.agent/memory/`. Start at `.agent/memory/index.md`, which says when to read
-  each domain file, and read only what your change touches. Rules you must follow live in
-  `.agent/rules/` and this file; memory is descriptive, not normative.
-- **Ticket state** — one file, `.agent/tickets/<TICKET-ID>/ticket.md`: YAML front-matter (`kind`,
-  `status`, priority, timestamps) for the header, `## Steps` checkboxes for progress, `## Plan`,
-  `## Decisions`, `## Gotchas`, `## Open Questions`, `## Blockers`, `## Session Log` for prose. No
-  JSON, no generated board — the file is the whole state.
-- **Kind** picks the template: `feature | bug | chore | security | refactor | spike`, from
-  `.agent/tickets/_templates/<kind>.md`. Create or resume a ticket for any multi-step task, not
-  only when a specific command names one.
-- **Resume** a ticket at the first unchecked `- [ ]` step, then the first unchecked task inside it,
-  scanning top to bottom. A skipped task is written `- [x] ~~title~~ — skipped: <reason>`.
-- **Tools and integrations** — `.agent/tools/` (Serena MCP, dev scripts, harness generation).
+## Specs and tickets
 
-## Build commands
-
-- Restore all .NET dependencies:
-  - `dotnet restore MangoAspire.sln`
-- Build entire solution:
-  - `dotnet build MangoAspire.sln`
-- Build one backend project:
-  - `dotnet build src/Services/Products.API/Products.API.csproj`
-- Run Aspire host locally:
-  - `dotnet run --project src/Mango.AppHost/Mango.AppHost.csproj`
-- Frontend install (preferred package manager is pnpm because `pnpm-lock.yaml` exists):
-  - `pnpm install --dir src/UI/mango-ui`
-- Frontend dev server:
-  - `pnpm --dir src/UI/mango-ui dev`
-- Frontend production build:
-  - `pnpm --dir src/UI/mango-ui build`
-
-## Lint/format commands
-
-- .NET formatting and analyzer compliance (uses `.editorconfig`):
-  - `dotnet format MangoAspire.sln`
-- Verify .NET formatting without modifying files:
-  - `dotnet format --verify-no-changes MangoAspire.sln`
-- Frontend lint:
-  - `pnpm --dir src/UI/mango-ui lint`
-
-## Test commands
-
-- Run all tests in solution:
-  - `dotnet test MangoAspire.sln`
-- Run one test project:
-  - `dotnet test tests/Services/Products.API.Tests/Products.API.Tests.csproj`
-- Run tests for one class:
-  - `dotnet test tests/Services/Products.API.Tests/Products.API.Tests.csproj --filter "ClassName~GetProductByIdTests"`
-- Run one test method (most useful single-test command):
-  - `dotnet test tests/Services/Products.API.Tests/Products.API.Tests.csproj --filter "FullyQualifiedName~GetProductByIdTests.HandleAsync_When_ProductExists_Then_ReturnsProductData"`
-- Alternative precise single-test filter:
-  - `dotnet test --filter "FullyQualifiedName=Products.API.Tests.Features.Products.GetProductByIdTests.HandleAsync_When_ProductExists_Then_ReturnsProductData" tests/Services/Products.API.Tests/Products.API.Tests.csproj`
-
-## Frontend test status
-
-- No frontend test runner is currently configured in `src/UI/mango-ui/package.json` scripts.
-- Do not invent frontend test commands unless a test tool is added.
-
-## Architecture rules (backend)
-
-- Follow Vertical Slice Architecture by feature, not layered controllers/repositories.
-- Use Minimal APIs in `Routes/` and MediatR/Mediator for request handling.
-- Keep `Program.cs` thin; wire services/pipeline through extension methods.
-- Preferred extension method pattern:
-  - `AddApiDefaults()`
-  - `UseApiPipeline()`
-  - `MigrateDatabaseAsync()`
-- Avoid repository pattern unless explicitly introduced by maintainers.
-
-## C# language and project standards
-
-- Target framework: `net11.0`.
-- Nullable reference types are enabled and must be respected.
-- Implicit usings are enabled.
-- Use file-scoped namespaces.
-- Use C# 14 patterns already present in repo (for example extension blocks for route mapping).
-- Use `required` for mandatory init-only properties where applicable.
-
-## Imports and dependencies
-
-- Prefer project/global usings for common namespaces, local `using` for feature-specific needs.
-- Keep dependencies centralized through `Directory.Packages.props`.
-- Do not hardcode package versions in individual projects unless there is a documented exception.
-- In TypeScript, prefer alias imports from `@/` (configured in Vite + tsconfig).
-- In TypeScript, use `import type` for types when possible.
-
-## Naming conventions
-
-- Route segments use kebab-case and REST nouns.
-- Commands/queries should be descriptive (`GetProductById`, `CreateCart`, etc.).
-- Handler classes are typically nested within feature classes.
-- Database tables/entities are pluralized where appropriate.
-- Constants use PascalCase (per `.editorconfig` naming rule).
-- Test method names follow `MethodName_When_Behavior_Then_ExpectedResult`.
-
-## Data access and performance
-
-- Query with EF Core projections (`Select` to DTO) for read paths.
-- Use `AsNoTracking()` for read-only queries.
-- Load full entities only when needed for mutation workflows.
-- Use explicit transactions only when multiple `SaveChangesAsync` calls or external side effects require them.
-
-## Validation and error handling
-
-- Every command/request should have FluentValidation validators.
-- Keep validation in the feature slice; enforce complex business checks in handler logic when needed.
-- Throw `DataVerificationException` for business/data integrity validation failures.
-- Do not return ad-hoc `ResultModel.Error` from handlers when global exception handling is in place.
-- Use centralized exception handling (`GlobalExceptionHandler` + ProblemDetails).
-- Prefer fail-fast null checks with explicit exceptions.
-
-## API response conventions
-
-- Return `ResultModel<T>` consistently from application handlers.
-- In endpoints, map to HTTP results using `Results.Ok(...)`, `Results.Created(...)`, etc.
-- Keep route handlers thin; delegate business logic to mediator handlers.
-
-## MediatR pipeline order
-
-- Register behaviors in this order:
-  - `LoggingBehavior<,>`
-  - `ValidationBehavior<,>`
-  - `TxBehavior<,>`
-
-## Testing standards
-
-- Framework stack: xUnit + Moq + Shouldly.
-- Unit tests should follow AAA structure.
-- For unit tests, isolate external dependencies (db/files/network) via mocking or in-memory strategy already used by that test project.
-- Verify critical side effects with Moq `Verify(...)`.
-
-## Frontend standards
-
-- TypeScript strict mode is enabled; do not use `any`.
-- Respect eslint rules from `src/UI/mango-ui/eslint.config.js`.
-- Keep API client calls in `src/UI/mango-ui/src/api/` and consume through hooks/components.
-- Reuse existing contexts (`AuthContext`, cart/theme/notification patterns) before adding new globals.
-- Preserve existing CSS/token/component patterns in the touched feature.
-
-## Agent execution expectations
-
-- Before finalizing: run relevant build/lint/tests for changed areas.
-- Prefer smallest valid command set:
-  - Backend change: `dotnet build` + affected `dotnet test` project/filter.
-  - Frontend change: `pnpm lint` and `pnpm build` in `src/UI/mango-ui`.
-- Do not modify unrelated files.
-- Do not introduce new architecture patterns without explicit request.
+- Feature work gets a spec in `specs/<slug>/` (copy `specs/_template/`): `spec.md`,
+  `acceptance-criteria.md` and `test-plan.md`. Tick an AC only with cited evidence.
+- Track any multi-step task in `.agent/tickets/<TICKET-ID>/ticket.md`, a single file:
+  - Front-matter holds `kind` / `status`; `## Steps` checkboxes are progress; the rest is prose.
+  - `kind` (`feature | bug | chore | security | refactor | spike`) picks the template in
+    `.agent/tickets/_templates/`.
+  - Resume at the first unchecked step, then its first unchecked task.
+  - A skipped task is written `- [x] ~~title~~ — skipped: <reason>`.

@@ -22,3 +22,4 @@ activeTicketId  # .agent/state/current.json key
 # Illustrative names in naming-convention examples
 MethodName_When_Behavior_Then_ExpectedResult  # the test-name pattern itself
 GetUser_When_UserNotFound_Then_ThrowNotFoundException  # example test name in backend-testing rule
+Method_When_Condition_Then_Result  # test-name pattern in AGENTS.md guardrails
