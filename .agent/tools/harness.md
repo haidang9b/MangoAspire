@@ -19,7 +19,7 @@ source and re-run the script. Write mode deletes and regenerates **only** `.gith
   It prints a context report:
 
   ```text
-  AlwaysOnBytes: 3548  ModelSkillCount: 5  UserSkillCount: 5  SkillListingChars: 758
+  AlwaysOnBytes: 3656  ModelSkillCount: 5  UserSkillCount: 5  SkillListingChars: 758
   ```
 
 - Lint: add `-Check`, optionally with `-Category A,B`. It exits 1 on any finding. CI runs it.
@@ -30,7 +30,7 @@ source and re-run the script. Write mode deletes and regenerates **only** `.gith
 | Category | Enforces |
 |---|---|
 | Budget | `AGENTS.md` ≤ 4,096 B · `CLAUDE.md` ≤ 1,024 B · always-on (`CLAUDE.md` + `@`-imports + rules without `paths`) ≤ 5,120 B |
-| Rules | ≥ 1 glob in `paths`, no prose, ≤ 4,096 B. A rule without valid `paths` loads in every session |
+| Rules | ≥ 1 glob in `paths`, quoted when it starts with a YAML indicator such as `*`, no prose, ≤ 4,096 B. A rule without valid `paths` loads in every session |
 | Skills | name = folder; description starts `Use when`, ≤ 300 chars; `SKILL.md` ≤ 6,144 B; ≤ 6 model-invocable; user-only skills referenced by path, never by bare name |
 | Agents | name = file; description ≤ 300 chars; body ≤ 3,072 B |
 | Links | backticked repo paths resolve (harness files); relative markdown links resolve (harness files + `specs/`) |

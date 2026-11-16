@@ -47,11 +47,13 @@ expected answers.
   `files/` and are kept byte-exact by `.gitattributes`.
 - **`checks`** are deterministic:
   - `command` passes on exit 0 (or `expect_exit`);
-  - `file-matches` passes if any file under `glob` matches `pattern`;
+  - `file-matches` passes if any file under `glob` that the session changed matches `pattern`, so a
+    file that already matched before the session can't pass it;
   - `no-edits` passes if the working tree is unchanged since setup;
   - `no-commit` passes if HEAD is unchanged;
   - `response-matches` applies a regex to the final response.
-- **`expectations`** are graded by a separate `claude -p` call using `tests/skill-evals/_grader.md`.
+- **`expectations`** are graded by a separate `claude -p` call, run from an empty temp folder, using
+  `tests/skill-evals/_grader.md`. A run that failed is not graded.
   Write them as verifiable sentences. Prefer a check whenever the outcome can be checked mechanically.
 - `-Check -Category Evals` validates every eval set.
 
@@ -60,7 +62,8 @@ expected answers.
 `tests/skill-evals/_results/<timestamp>/` (gitignored) holds:
 - per run: `outputs/` (response, diff), `checks.json`, `grading.json` (`text`/`passed`/`evidence`,
   in the skill-creator schema), `grader-raw.txt` (the grader's raw reply; it is retried once if
-  unparseable) and `meta.json`;
+  unparseable) and `meta.json` (with `health`: `subtype`, `is_error`, `num_turns`,
+  `permission_denials`, `run_error`);
 - per batch: `benchmark.json` and `summary.md`.
 
 | Verdict | Meaning |
@@ -68,6 +71,11 @@ expected answers.
 | `helps` | with-skill pass rate − without-skill ≥ +0.10 |
 | `neutral` | within ±0.10: the model does as well without the skill. Make the skill cheaper or retire it, or write harder evals |
 | `hurts` | ≤ −0.10: the skill steers the model wrong; fix it |
+
+`summary.md` also reports run health per skill: **Denials** counts tool calls the allowlist refused,
+**Max-turns** counts sessions cut off by `--max-turns`, and **Errors** counts sessions that failed. A row
+with max-turns hits or errors partly measures the runner, so check its `response.json` files before
+acting on the verdict.
 
 **Non-discriminating** expectations pass in both configs. They show what the evals fail to measure,
 not what the skill adds.
