@@ -126,3 +126,6 @@ Backtick-named symbols in harness files that are absent from the source corpus. 
   - `.agent/memory/domains/checkout-saga.md` — `CartItemsJson`
   - `.agent/memory/domains/identity.md` — `Mango.Core.Options.SeedUsersOptions`
   - `.agent/memory/domains/identity.md` — `RequireClaim`
+
+### 2026-11-16 — Task 8 context report
+`AlwaysOnBytes: 3548  ModelSkillCount: 5  UserSkillCount: 5  SkillListingChars: 758` (before: 12,730 B always-on; 15 listing entries, 1,246 chars of model-visible descriptions).
