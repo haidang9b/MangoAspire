@@ -1,7 +1,7 @@
 ---
 id: HARNESS-NATIVE-001
 kind: chore
-status: awaiting_approval
+status: in_progress
 priority: normal
 createdUtc: 2026-11-16T00:00:00Z
 updatedUtc: 2026-11-16T00:00:00Z
@@ -34,36 +34,37 @@ checks in Claude Code and VS Code.
 See `spec.md` → Open questions and `test-plan.md` → Risks.
 
 ## Steps
-- [ ] **Step 1 — Scope and plan**
+- [x] **Step 1 — Scope and plan**
   - [x] Define goal and scope
   - [x] Write the spec, design and plan (`specs/ai-native-harness/`)
-  - [ ] Plan approved by the user
+  - [x] Plan approved by the user
 - [ ] **Step 2 — Execute**
-  - [ ] Task 1: Harness module — parsing, Copilot mirror, drift
-  - [ ] Task 2: Harness lint core and context report
-  - [ ] Task 3: Fact-check lint for AI-written content
-  - [ ] Task 4: Spec layer from agentic-devkit
-  - [ ] Task 5: Make `.claude/` canonical (mechanical move)
-  - [ ] Task 6: Consolidate skills and agents; make workflows spec-aware
-  - [ ] Task 7: Path-scoped rules
-  - [ ] Task 8: Lean always-on files
-  - [ ] Task 9: Skill eval engine
-  - [ ] Task 10: Skill eval runner
+  - [x] Task 1: Harness module — parsing, Copilot mirror, drift
+  - [x] Task 2: Harness lint core and context report
+  - [x] Task 3: Fact-check lint for AI-written content
+  - [x] Task 4: Spec layer from agentic-devkit
+  - [x] Task 5: Make `.claude/` canonical (mechanical move)
+  - [x] Task 6: Consolidate skills and agents; make workflows spec-aware
+  - [x] Task 7: Path-scoped rules
+  - [x] Task 8: Lean always-on files
+  - [x] Task 9: Skill eval engine
+  - [x] Task 10: Skill eval runner
   - [ ] Task 11: Author evals for six skills and run the first benchmark
-  - [ ] Task 12: Docs, CI, close-out
+  - [x] Task 12: Docs, CI, close-out
 - [ ] **Step 3 — Verification**
-  - [ ] `sync-agent-harness.ps1 -Check` exits 0
-  - [ ] Pester harness tests pass
+  - [x] `sync-agent-harness.ps1 -Check` exits 0
+  - [x] Pester harness tests pass
   - [ ] Each AC ticked in `specs/ai-native-harness/acceptance-criteria.md` with evidence
   - [ ] Hand-check in Claude Code and VS Code Copilot
 - [ ] **Step 4 — Documentation, memory and completion**
   - [x] ~~Sync `/docs`~~ — skipped: agent harness only, `/docs` is human documentation
-  - [ ] Conventional commits created (one per plan task)
-  - [ ] Promote Decisions/Gotchas into `.agent/memory/`, if non-obvious
+  - [x] Conventional commits created (one or more per plan task)
+  - [x] Promote Decisions/Gotchas into `.agent/memory/`, if non-obvious: the Windows PowerShell rules went to
+    `.agent/tools/harness.md` and `.agent/tools/skill-evals.md`; the rest is in those docs already
 
 ## Links
 - Branch: chore/HARNESS-NATIVE-001-ai-native-harness
-- Commits:
+- Commits: 9bbaaea..HEAD on the branch (one or more conventional commits per plan task; see `git log 15e0fdf..`)
 - PRs:
 - Files: AGENTS.md, CLAUDE.md, .claude/, .github/instructions/, .github/agents/, .agent/, specs/, scripts/harness/, scripts/eval-skills.ps1, tests/harness/, tests/skill-evals/
 - Docs: specs/ai-native-harness/
@@ -84,6 +85,11 @@ See `spec.md` → Open questions and `test-plan.md` → Risks.
 - No `pwsh` on the dev machine (Windows PowerShell 5.1 + Pester 3.4). The plan installs Pester 5
   per user.
 - PowerShell 5.1 mangles quotes in native arguments, so the eval runner pipes the prompt to `claude` on stdin.
+- On Windows, `claude -p` sessions run commands through the **PowerShell** tool. `--allowedTools` needs
+  `PowerShell(<prefix>:*)` next to every `Bash(<prefix>:*)`, or every build and test is denied.
+- Windows PowerShell 5.1: `ConvertFrom-Json` emits a JSON array as one object, assigning an `if`
+  statement unrolls a one-item array, and a lone object has no `.Count`. Wrap the whole expression in
+  `@()` before reading `.Count`. Three bugs on this branch had this cause.
 
 ## Open Questions
 

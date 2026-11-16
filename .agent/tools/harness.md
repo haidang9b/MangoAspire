@@ -64,4 +64,6 @@ example, allowlist it with `Token  # reason`. Prose claims without backticks are
 - `tests/harness/*.Tests.ps1` — Pester tests on fixture repos.
 
 Everything must run on Windows PowerShell 5.1 and PowerShell 7. Keep scripts ASCII-only (5.1
-reads BOM-less files as ANSI), and avoid `??`, `?.` and the ternary operator.
+reads BOM-less files as ANSI), and avoid `??`, `?.` and the ternary operator. Before reading `.Count`,
+wrap the whole expression, including an `if` statement, in `@()`. In 5.1 a single object has no
+`.Count`, and `ConvertFrom-Json` emits an array as one object.

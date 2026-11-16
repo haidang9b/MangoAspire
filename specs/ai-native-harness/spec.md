@@ -1,6 +1,6 @@
 # AI-native harness
 
-**Status:** in-review
+**Status:** approved
 **Owner:** Dang Phan
 **Last updated:** 2026-11-16
 
