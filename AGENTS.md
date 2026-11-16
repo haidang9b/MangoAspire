@@ -9,7 +9,9 @@ PostgreSQL, RabbitMQ, Debezium. The dev machine runs Windows + PowerShell; scrip
 - Run: `dotnet run --project src/Mango.AppHost/Mango.AppHost.csproj`
 - Test: `dotnet test MangoAspire.sln`. For one project, pass its `.csproj`; for one test, add
   `--filter "FullyQualifiedName~Class.Method"`.
-- Format: `dotnet format --verify-no-changes MangoAspire.sln` (`WarningsAsErrors` is on)
+- Format: `dotnet format --verify-no-changes MangoAspire.sln`
+- Warnings: only CS1998 and CS4014 fail the build. About 100 nullable warnings already exist, so add
+  no new ones; don't aim for zero
 - SPA, from the repo root: `pnpm install --dir src/UI/mango-ui` · `pnpm --dir src/UI/mango-ui dev|build|lint`.
   There is no frontend test runner, so verify with lint + build and never invent test commands.
 

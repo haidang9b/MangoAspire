@@ -10,7 +10,9 @@ not introduce new architecture patterns without an explicit request.
    (optionally `--filter "FullyQualifiedName~..."`).
 3. Formatting: `dotnet format --verify-no-changes MangoAspire.sln` — run `dotnet format` to fix.
 
-`WarningsAsErrors` is on in `Directory.Build.props`, so a new warning is a build failure.
+`Directory.Build.props` makes only CS1998 and CS4014 build errors. About 100 nullable warnings
+already exist, so check that you added none (compare against a baseline build) rather than
+expecting zero.
 
 ## Frontend change (`src/UI/mango-ui`)
 
@@ -28,6 +30,9 @@ There is no frontend test runner — do **not** invent test commands.
 - A skill changed substantively: re-run its evals with `scripts/eval-skills.ps1 -Skill <name>` and
   compare the verdict.
 - `.agent/tickets/**/ticket.md` changed: nothing to regenerate; the file is the state.
+
+Windows PowerShell 5.1 has no `pwsh`: run
+`powershell -NoProfile -ExecutionPolicy Bypass -File scripts/sync-agent-harness.ps1` (add `-Check`).
 
 Skills cover several of these flows: `run-tests` and `generate-commit`, plus `/fix-warnings` and
 `/update-docs`.

@@ -1,13 +1,14 @@
 ---
 name: fix-warnings
-description: Use when the user runs /fix-warnings to clear .NET build warnings (WarningsAsErrors is on) with modern C# 15 fixes.
+description: Use when the user runs /fix-warnings to clear .NET build warnings with modern C# 15 fixes.
 disable-model-invocation: true
 ---
 
 # Fix Warnings
 
-`WarningsAsErrors` is on in `Directory.Build.props`, so any warning is a build failure. Scan,
-categorize and fix with modern C# 15 idioms.
+`Directory.Build.props` makes only CS1998 and CS4014 build errors, and the solution carries about
+100 existing nullable warnings. Scan, categorize and fix the warnings the user selects with modern
+C# 15 idioms.
 
 ## Workflow
 
@@ -17,6 +18,7 @@ categorize and fix with modern C# 15 idioms.
 3. **Select:** the user picks projects or categories (default: all).
 4. **Fix:** apply C# 15 syntax and explicit, fail-fast null checks. Never suppress a warning with a
    `#pragma` or `!` unless the user agrees.
-5. **Verify:** `dotnet build MangoAspire.sln` must be clean, and `dotnet test MangoAspire.sln`
+5. **Verify:** `dotnet build MangoAspire.sln` shows no warnings left in the selected scope and no new
+   ones elsewhere, and `dotnet test MangoAspire.sln`
    (or the affected `*.Tests` projects) must pass.
 6. **Hand off:** suggest the `generate-commit` skill.

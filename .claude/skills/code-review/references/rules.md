@@ -14,15 +14,23 @@ When performing a code review, analyze the provided C#/.NET backend and Frontend
 - **CSRF Protection**: Verify anti-forgery tokens are used where appropriate, especially in CSHTML forms (`@Html.AntiForgeryToken()`).
 - **Sensitive Data in Browser**: Prevent storage of sensitive tokens, PII, or secrets in `localStorage` or `sessionStorage` in plaintext.
 
-## 2. Architecture & Design (Warning)
-**Backend (.NET):**
-- **Separation of Concerns**: Business logic should not be within API Controllers, Minimal API endpoints, or UI components. It belongs in the Application/Domain layers.
+## 2. Architecture & Design
+**Repo guardrails (Critical):** a violation of an `AGENTS.md` guardrail blocks the merge. Rank it
+**Critical**, the highest severity in the report:
+- a repository or service layer wrapping the `DbContext` in a feature slice (only `Mango.Orchestrators` keeps one, for its saga);
+- Clean, Onion or N-tier layers instead of Vertical Slice folders (`Features/` + `Routes/`);
+- one slice calling another slice's handler;
+- a command without a FluentValidation validator;
+- business logic or wiring beyond `AddApiDefaults()` / `UseApiPipeline()` / `MigrateDatabaseAsync()` in `Program.cs`.
+
+**Backend design (Warning):**
+- **Separation of Concerns**: Business logic belongs in the feature slice's handler, not in Minimal API endpoints, `Program.cs` or UI components.
 - **Dependency Injection**: Classes should receive their dependencies via constructor injection.
 - **SOLID Principles**: Flag violations of Single Responsibility, Open/Closed, Liskov Substitution, Interface Segregation, and Dependency Inversion.
 
-**Frontend (React/JS/CSHTML/HTML):**
+**Frontend design (Warning):**
 - **Component Reusability**: Ensure React components are small, focused, and reusable. Avoid massive monolithic components.
-- **State Management**: Verify that state is managed at the appropriate level. Avoid prop drilling by using Context API or state management libraries when necessary.
+- **State Management**: Keep state at the lowest level that needs it, and use React Context (as `src/UI/mango-ui/src/context/` does) to avoid prop drilling. Don't recommend adding a state-management library; the SPA has none.
 - **Separation of Logic and UI**: Keep complex business logic out of UI components; utilize custom hooks or utility files.
 
 ## 3. Performance & Efficiency (Warning)

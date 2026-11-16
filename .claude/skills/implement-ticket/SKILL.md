@@ -53,8 +53,9 @@ Follow `## Steps` → Step 2 and the spec's ACs. Check each task's box as you go
 1. **Backend:** use the `create-unit-test` skill for new or changed logic, then
    `dotnet test MangoAspire.sln` (or the affected `*.Tests` project with `--filter`).
 2. **Frontend:** there is no test runner. Run `pnpm --dir src/UI/mango-ui lint` and `build`.
-3. **Warnings:** read and follow `.claude/skills/fix-warnings/SKILL.md` until the build is clean
-   (`WarningsAsErrors` is on).
+3. **Warnings:** the change adds no new build warnings. Compare against a baseline build: only CS1998
+   and CS4014 fail the build, and about 100 nullable warnings already exist. To clear warnings, follow
+   `.claude/skills/fix-warnings/SKILL.md`.
 4. **ACs:** for each `AC-n` in `specs/<slug>/acceptance-criteria.md`, tick it `[x]` **only** with
    cited evidence (a test name, or a command plus its output line). List every unmet AC.
 5. **On failure** (a failing test or an unmet AC): set `status: blocked`, add
